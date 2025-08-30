@@ -1,44 +1,31 @@
 {
-  "name": "kpitournir",
-  "version": "0.1.0",
+  "name": "kptournir",
+  "version": "1.0.0",
   "private": true,
-  "dependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/jest-dom": "^6.7.0",
-    "@testing-library/react": "^16.3.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.126",
-    "@types/react": "^19.1.10",
-    "@types/react-dom": "^19.1.7",
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1",
-    "react-scripts": "5.0.1",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
-  },
+  "description": "Full-stack: Node.js server + Vite React TS frontend",
+  "license": "MIT",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "postinstall": "npm --prefix frontend install",
+    "dev": "concurrently -k -n SERVER,WEB \"nodemon server.js\" \"npm:dev:frontend\"",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "preview": "node server.js",
+    "bump:patch": "npm version patch -m \"chore: bump root to %s\"",
+    "bump:minor": "npm version minor -m \"chore: bump root to %s\"",
+    "bump:major": "npm version major -m \"chore: bump root to %s\"",
+    "bump:front:patch": "npm --prefix frontend version patch -m \"chore(frontend): bump to %s\"",
+    "bump:front:minor": "npm --prefix frontend version minor -m \"chore(frontend): bump to %s\"",
+    "bump:front:major": "npm --prefix frontend version major -m \"chore(frontend): bump to %s\"",
+    "set-version": "npm version",
+    "set-version:front": "npm --prefix frontend version",
+    "bump:all:1.1.11": "npm version 1.1.11 && npm --prefix frontend version 1.1.11"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
   },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+  "devDependencies": {
+    "concurrently": "^9.0.1",
+    "nodemon": "^3.1.0"
   }
 }
