@@ -20,8 +20,8 @@
     "typecheck:front": "npm --prefix frontend run typecheck",
 
     "bump:patch": "npm version patch -m \"chore: bump to %s\"",
-    "bump:minor": "npm version minor -m \"chore: bump to %s\"\n",
-    "bump:major": "npm version major -m \"chore: bump to %s\"\n"
+    "bump:minor": "npm version minor -m \"chore: bump to %s\"",
+    "bump:major": "npm version major -m \"chore: bump to %s\""
   },
   "dependencies": {
     "cors": "^2.8.5",
