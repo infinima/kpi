@@ -1,6 +1,6 @@
 {
   "name": "kpi",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "workspaces": ["frontend"],
   "description": "Full-stack: Node.js server + Vite React TS frontend",
