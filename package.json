@@ -1,24 +1,19 @@
 {
   "name": "kpi",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "private": true,
   "description": "Full-stack: Node.js server + Vite React TS frontend",
   "license": "MIT",
   "scripts": {
     "postinstall": "npm --prefix frontend install",
-
     "dev": "concurrently -k -n SERVER,WEB \"npm run dev:server\" \"npm run dev:front\"",
     "dev:server": "nodemon server.js",
     "dev:front": "npm --prefix frontend run dev",
-
     "build": "npm --prefix frontend run build",
     "start": "node server.js",
     "serve": "npm run build && npm run start",
-
     "preview:front": "npm --prefix frontend run preview",
-
     "typecheck:front": "npm --prefix frontend run typecheck",
-
     "bump:patch": "npm version patch -m \"chore: bump to %s\"",
     "bump:minor": "npm version minor -m \"chore: bump to %s\"",
     "bump:major": "npm version major -m \"chore: bump to %s\""
