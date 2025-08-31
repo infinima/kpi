@@ -6,19 +6,22 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "npm --prefix frontend install",
-    "dev": "concurrently -k -n SERVER,WEB \"nodemon server.js\" \"npm:dev:frontend\"",
-    "dev:frontend": "npm --prefix frontend run dev",
+
+    "dev": "concurrently -k -n SERVER,WEB \"npm run dev:server\" \"npm run dev:front\"",
+    "dev:server": "nodemon server.js",
+    "dev:front": "npm --prefix frontend run dev",
+
     "build": "npm --prefix frontend run build",
-    "preview": "node server.js",
-    "bump:patch": "npm version patch -m \"chore: bump root to %s\"",
-    "bump:minor": "npm version minor -m \"chore: bump root to %s\"",
-    "bump:major": "npm version major -m \"chore: bump root to %s\"",
-    "bump:front:patch": "npm --prefix frontend version patch -m \"chore(frontend): bump to %s\"",
-    "bump:front:minor": "npm --prefix frontend version minor -m \"chore(frontend): bump to %s\"",
-    "bump:front:major": "npm --prefix frontend version major -m \"chore(frontend): bump to %s\"",
-    "set-version": "npm version",
-    "set-version:front": "npm --prefix frontend version",
-    "bump:all:1.1.11": "npm version 1.1.11 && npm --prefix frontend version 1.1.11"
+    "start": "node server.js",
+    "serve": "npm run build && npm run start",
+
+    "preview:front": "npm --prefix frontend run preview",
+
+    "typecheck:front": "npm --prefix frontend run typecheck",
+
+    "bump:patch": "npm version patch -m \"chore: bump to %s\" && npm --prefix frontend version $npm_package_version --no-git-tag-version",
+    "bump:minor": "npm version minor -m \"chore: bump to %s\" && npm --prefix frontend version $npm_package_version --no-git-tag-version",
+    "bump:major": "npm version major -m \"chore: bump to %s\" && npm --prefix frontend version $npm_package_version --no-git-tag-version"
   },
   "dependencies": {
     "cors": "^2.8.5",
