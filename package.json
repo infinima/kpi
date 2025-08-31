@@ -2,7 +2,6 @@
   "name": "kpi",
   "version": "0.0.1",
   "private": true,
-  "workspaces": ["frontend"],
   "description": "Full-stack: Node.js server + Vite React TS frontend",
   "license": "MIT",
   "scripts": {
@@ -20,9 +19,9 @@
 
     "typecheck:front": "npm --prefix frontend run typecheck",
 
-    "bump:patch": "npm version patch -ws -m \"chore: bump to %s\"",
-    "bump:minor": "npm version minor -ws -m \"chore: bump to %s\"\n",
-    "bump:major": "npm version major -ws -m \"chore: bump to %s\"\n"
+    "bump:patch": "npm version patch -m \"chore: bump to %s\"",
+    "bump:minor": "npm version minor -m \"chore: bump to %s\"\n",
+    "bump:major": "npm version major -m \"chore: bump to %s\"\n"
   },
   "dependencies": {
     "cors": "^2.8.5",
