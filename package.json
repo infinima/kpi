@@ -2,28 +2,26 @@
   "name": "kpi",
   "version": "0.0.2",
   "private": true,
+  "workspaces": ["backend", "frontend"],
   "description": "Full-stack: Node.js server + Vite React TS frontend",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "postinstall": "npm --prefix frontend install",
-    "dev": "concurrently -k -n SERVER,WEB \"npm run dev:server\" \"npm run dev:front\"",
-    "dev:server": "nodemon server.js",
-    "dev:front": "npm --prefix frontend run dev",
-    "build": "npm --prefix frontend run build",
-    "start": "node server.js",
-    "serve": "npm run build && npm run start",
+    "dev": "concurrently -k -n BACKEND,FRONTEND \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix backend run build && npm --prefix frontend run build",
+    "start": "npm --prefix backend start",
+    "serve": "npm run build && npm start",
     "preview:front": "npm --prefix frontend run preview",
+
+    "typecheck:back": "npm --prefix backend run typecheck",
     "typecheck:front": "npm --prefix frontend run typecheck",
+    "typecheck": "npm run typecheck:back && npm run typecheck:front",
+
     "bump:patch": "npm version patch -m \"chore: bump to %s\"",
     "bump:minor": "npm version minor -m \"chore: bump to %s\"",
     "bump:major": "npm version major -m \"chore: bump to %s\""
   },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "express": "^4.19.2"
-  },
   "devDependencies": {
-    "concurrently": "^9.0.1",
-    "nodemon": "^3.1.0"
+    "concurrently": "^9.0.1"
   }
 }

@@ -14,7 +14,7 @@ export default defineConfig({
         }
     },
     build: {
-        outDir: '../public', // сборка в корневую public
+        outDir: 'dist',
         emptyOutDir: true
     }
 });
