@@ -1,8 +1,11 @@
 {
   "name": "kpi",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "private": true,
-  "workspaces": ["backend", "frontend"],
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
   "description": "Full-stack: Node.js server + Vite React TS frontend",
   "license": "MIT",
   "type": "module",
@@ -12,11 +15,9 @@
     "start": "npm --prefix backend start",
     "serve": "npm run build && npm start",
     "preview:front": "npm --prefix frontend run preview",
-
     "typecheck:back": "npm --prefix backend run typecheck",
     "typecheck:front": "npm --prefix frontend run typecheck",
     "typecheck": "npm run typecheck:back && npm run typecheck:front",
-
     "bump:patch": "npm version patch -m \"chore: bump to %s\"",
     "bump:minor": "npm version minor -m \"chore: bump to %s\"",
     "bump:major": "npm version major -m \"chore: bump to %s\""
