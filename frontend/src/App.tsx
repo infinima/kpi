@@ -15,7 +15,7 @@ export default function App() {
 
   return (
       <div style={{ fontFamily: 'system-ui, sans-serif', padding: 24 }}>
-        <h1>kptournir</h1>
+        <h1>kpi</h1>
         <p>Vite + React + TS</p>
         <button onClick={ping}>Проверить API</button>
         <pre>{health}</pre>

@@ -11,7 +11,7 @@ app.use(express.json());
 
 // Пример API
 app.get('/api/health', (_req, res) => {
-    res.json({ ok: true, name: 'kptournir', ts: Date.now() });
+    res.json({ ok: true, name: 'Турнир математических игр kπца', ts: Date.now() });
 });
 
 // Статика из /public (результат сборки Vite)
