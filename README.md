@@ -1,4 +1,4 @@
-# kptournir
+# Турнир математических игр kπца
 
 Full-stack: Node.js (Express) + Vite + React + TypeScript.
 
