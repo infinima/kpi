@@ -11,7 +11,9 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "feat":
+    "express": "^4.19.2",
+    "mysql2": "^3.14.4"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
