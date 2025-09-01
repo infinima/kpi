@@ -3,7 +3,7 @@ import cors from 'cors';
 import { join, resolve } from 'path';
 
 const app = express();
-const PORT = Number(process.env.PORT || 3001);
+const PORT = Number(process.env.PORT || 3000);
 
 app.use(cors());
 app.use(express.json());
@@ -13,7 +13,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 });
 
 // раздача собранного фронта (после `npm run build`)
-const staticDir = resolve('../frontend/dist');
+const staticDir = join(__dirname, "..", "public");
 app.use(express.static(staticDir));
 app.get('*', (_req, res) => res.sendFile(join(staticDir, 'index.html')));
 
