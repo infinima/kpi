@@ -34,6 +34,12 @@ jobs:
       - name: Build backend
         run: npm run build -w backend
 
+      - name: Generate backend package-lock.json (monorepo safe)
+        run: |
+          cd backend
+          NPM_CONFIG_WORKSPACES=false npm install --package-lock-only --omit=dev
+          cd ..
+
       - name: Assemble release layout
         run: |
           rm -rf release && mkdir -p release/{public,dist}
