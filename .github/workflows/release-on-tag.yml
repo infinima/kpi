@@ -96,7 +96,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           npx caprover@2.x deploy \
-            -h "${{ secrets.CAPROVER_URL }}" \
-            -a "${{ secrets.CAPROVER_APP }}" \
-            -i "$IMAGE:$TAG" \
-            -t "${{ secrets.CAPROVER_TOKEN }}"
+            --caproverUrl "${{ secrets.CAPROVER_URL }}" \
+            --appName "${{ secrets.CAPROVER_APP }}" \
+            --appToken "${{ secrets.CAPROVER_TOKEN }}" \
+            --imageName "$IMAGE:$TAG"
