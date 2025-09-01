@@ -37,7 +37,7 @@ jobs:
       - name: Generate backend package-lock.json (monorepo safe)
         run: |
           cd backend
-          NPM_CONFIG_WORKSPACES=false npm install --package-lock-only --omit=dev
+          npm install --package-lock-only --omit=dev --workspaces=false
           cd ..
 
       - name: Assemble release layout
