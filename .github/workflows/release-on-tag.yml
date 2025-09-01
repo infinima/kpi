@@ -5,8 +5,8 @@ on:
     tags: ['v*']
 
 permissions:
-  contents: write      # для релиза
-  packages: write      # для push в ghcr
+  contents: write
+  packages: write
 
 jobs:
   build-release:
@@ -34,7 +34,6 @@ jobs:
       - name: Build backend
         run: npm run build -w backend
 
-      # Собираем чистый релиз-лейаут: package.json (бэка), dist/ (бэк), public/ (фронт)
       - name: Assemble release layout (no node_modules)
         run: |
           rm -rf release && mkdir -p release/{public,dist}
@@ -43,7 +42,6 @@ jobs:
           cp -r frontend/dist/* release/public/
           find release -name "*.map" -delete
 
-      # --- Создание GitHub Release с архивами (опционально, можно оставить как у тебя)
       - name: Pack artifacts
         run: |
           tar -czf kpi-${{ github.ref_name }}.tar.gz -C release .
@@ -71,7 +69,6 @@ jobs:
           COPY package.json ./package.json
           COPY dist ./dist
           COPY public ./public
-          # если есть runtime-зависимости, поставятся; если нет — просто пройдёт
           RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev || true
           EXPOSE 3000
           CMD ["node","dist/server.js"]
@@ -87,9 +84,14 @@ jobs:
           docker push $IMAGE:latest
 
       - name: Deploy to CapRover (by image)
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/kpi
+          TAG: ${{ github.ref_name }}
         run: |
+          TMP_DIR="$(mktemp -d)"
+          cd "$TMP_DIR"
           npx caprover@2.x deploy \
             -h "${{ secrets.CAPROVER_URL }}" \
             -a "${{ secrets.CAPROVER_APP }}" \
-            -i "ghcr.io/${{ github.repository_owner }}/kpi:${{ github.ref_name }}" \
+            -i "$IMAGE:$TAG" \
             -t "${{ secrets.CAPROVER_TOKEN }}"
