@@ -90,6 +90,6 @@ jobs:
         run: |
           npx caprover@2.x deploy \
             -h "${{ secrets.CAPROVER_URL }}" \
-            -p "${{ secrets.CAPROVER_PASSWORD }}" \
             -a "${{ secrets.CAPROVER_APP }}" \
-            -i "ghcr.io/${{ github.repository_owner }}/kpi:${{ github.ref_name }}"
+            -i "ghcr.io/${{ github.repository_owner }}/kpi:${{ github.ref_name }}" \
+            -t "${{ secrets.CAPROVER_TOKEN }}"
