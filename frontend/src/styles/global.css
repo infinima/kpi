@@ -1,0 +1,57 @@
+:root {
+    color-scheme: light;
+
+    --bg: #ffffff;
+    --fg: #0f172a;
+    --muted: #6b7280;
+
+    --surface: #f3f4f6;   /* нейтральный фон элементов */
+    --surface-2: #e5e7eb; /* бордеры/тонкие линии */
+
+    --accent: #2563eb;    /* один и тот же синий */
+    --accent-strong: #1e40af;
+
+    /* кнопки: neutral */
+    --btn-neutral-bg: var(--surface);
+    --btn-neutral-bg-hover: #eef2f7;
+    --btn-neutral-fg: var(--fg);
+    --btn-neutral-bd: var(--surface-2);
+
+    /* кнопки: primary */
+    --btn-primary-bg: var(--accent);
+    --btn-primary-bg-hover: #1d4ed8;
+    --btn-primary-fg: #ffffff;
+    --btn-primary-bd: var(--accent-strong);
+
+    /* focus ring */
+    --ring: rgba(37,99,235,.35);
+    --ring-offset: var(--bg);
+}
+
+html.dark {
+    color-scheme: dark;
+
+    --bg: #111827;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+
+    --surface: #1f2937;
+    --surface-2: #374151;
+
+    /* accent тот же */
+    --accent: #2563eb;
+    --accent-strong: #1e40af;
+
+    --btn-neutral-bg: var(--surface);
+    --btn-neutral-bg-hover: #273244;
+    --btn-neutral-fg: var(--fg);
+    --btn-neutral-bd: var(--surface-2);
+
+    --btn-primary-bg: var(--accent);
+    --btn-primary-bg-hover: #1d4ed8;
+    --btn-primary-fg: #ffffff;
+    --btn-primary-bd: var(--accent-strong);
+
+    --ring: rgba(59,130,246,.4);
+    --ring-offset: var(--bg);
+}
