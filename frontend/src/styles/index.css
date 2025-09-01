@@ -1,14 +1,12 @@
 @import "tailwindcss";
 @import "./fonts.css";
+@import "./global.css";
+@import "./btn.css";
 
-/* ДЕЛАЕМ dark: ПО КЛАССУ */
 @custom-variant dark (&:where(.dark *));
 
 @source "./index.html";
 @source "./src/**/*.{js,ts,jsx,tsx}";
-
-:root { color-scheme: light; }
-.dark  { color-scheme: dark; }
 
 html, body, #root { height: 100%; }
 body { font-family: 'Nunito', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }

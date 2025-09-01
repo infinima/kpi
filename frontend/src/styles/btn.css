@@ -1,0 +1,30 @@
+@layer components {
+    .btn {
+        @apply inline-flex items-center justify-center gap-2 font-semibold
+        px-4 py-2.5 transition select-none relative
+        hover:-translate-y-px active:translate-y-0
+        focus-visible:outline-none focus-visible:ring-4 ring-offset-2
+        disabled:opacity-60 disabled:pointer-events-none
+        rounded-lg
+    }
+
+    .btn-neutral {
+        @apply border
+        text-[color:var(--btn-neutral-fg)]
+        bg-[color:var(--btn-neutral-bg)]
+        border-[color:var(--btn-neutral-bd)]
+        hover:bg-[color:var(--btn-neutral-bg-hover)];
+    }
+
+    .btn-primary {
+        @apply text-[color:var(--btn-primary-fg)]
+        bg-[color:var(--btn-primary-bg)]
+        border border-[color:var(--btn-primary-bd)]
+        hover:bg-[color:var(--btn-primary-bg-hover)]
+        hover:shadow-[inset_0_-2px_0_rgba(0,0,0,0.2)]
+        active:shadow-[inset_0_-1px_0_rgba(0,0,0,0.2)];
+    }
+
+    .btn-sm { @apply px-3 py-2 text-sm max-w-[120px]; }
+    .btn-lg { @apply px-5 py-3 text-lg max-w-[200px]; }
+}
