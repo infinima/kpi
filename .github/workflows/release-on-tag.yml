@@ -76,8 +76,7 @@ jobs:
           
           EXPOSE 3000
           CMD ["node","dist/server.js"]
-          DOCKER      
-      
+      DOCKER
 
       - name: Build & push image to GHCR
         env:
