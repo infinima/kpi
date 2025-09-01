@@ -67,16 +67,13 @@ jobs:
           FROM node:20-alpine
           ENV NODE_ENV=production
           WORKDIR /app
-          
           COPY package.json package-lock.json ./
           RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
-          
           COPY dist ./dist
           COPY public ./public
-          
           EXPOSE 3000
           CMD ["node","dist/server.js"]
-      DOCKER
+          DOCKER
 
       - name: Build & push image to GHCR
         env:
