@@ -1,9 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
+import { fileURLToPath } from "url";
 import { dirname, join } from 'path';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 app.use(cors());
