@@ -34,10 +34,11 @@ jobs:
       - name: Build backend
         run: npm run build -w backend
 
-      - name: Assemble release layout (no node_modules)
+      - name: Assemble release layout
         run: |
           rm -rf release && mkdir -p release/{public,dist}
           cp backend/package.json release/package.json
+          cp backend/package-lock.json release/package-lock.json   # 👈 добавили
           cp -r backend/dist/* release/dist/
           cp -r frontend/dist/* release/public/
           find release -name "*.map" -delete
@@ -66,13 +67,12 @@ jobs:
           FROM node:20-alpine
           ENV NODE_ENV=production
           WORKDIR /app
-          COPY package.json ./package.json
+          COPY package.json package-lock.json ./
+          RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev
           COPY dist ./dist
           COPY public ./public
-          RUN --mount=type=cache,target=/root/.npm npm ci --omit=dev || true
           EXPOSE 3000
           CMD ["node","dist/server.js"]
-          DOCKER
 
       - name: Build & push image to GHCR
         env:
