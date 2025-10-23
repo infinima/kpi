@@ -11,12 +11,13 @@ const __dirname = dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
+const staticDir = join(__dirname, "..", "public");
+app.use(express.static(staticDir));
+
 app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ ok: true, ts: Date.now() });
 });
 
-const staticDir = join(__dirname, "..", "public");
-app.use(express.static(staticDir));
 app.get('*', (_req, res) => res.sendFile(join(staticDir, 'index.html')));
 
 app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
