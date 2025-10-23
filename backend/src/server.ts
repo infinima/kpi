@@ -15,9 +15,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
     res.json({ ok: true, ts: Date.now() });
 });
 
-// раздача собранного фронта (после `npm run build`)
 const staticDir = join(__dirname, "..", "public");
 app.use(express.static(staticDir));
 app.get('*', (_req, res) => res.sendFile(join(staticDir, 'index.html')));
 
-app.listen(PORT, () => console.log(`http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
