@@ -64,7 +64,7 @@ registry.registerPath({
     },
     responses: {
         200: {
-            description: "Событие создано",
+            description: "OK",
             content: {
                 "application/json": { schema: EventSchema.pick({ id: true }) },
             },
