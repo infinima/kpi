@@ -89,14 +89,3 @@ jobs:
           docker build -t $IMAGE:$TAG -t $IMAGE:latest -f release/Dockerfile release
           docker push $IMAGE:$TAG
           docker push $IMAGE:latest
-
-      - name: Deploy to CapRover (by image)
-        env:
-          IMAGE: ghcr.io/${{ github.repository_owner }}/kpi
-          TAG: ${{ github.ref_name }}
-        run: |
-          npx caprover@2.x deploy \
-            --caproverUrl "${{ secrets.CAPROVER_URL }}" \
-            --appName "${{ secrets.CAPROVER_APP }}" \
-            --appToken "${{ secrets.CAPROVER_TOKEN }}" \
-            --imageName "$IMAGE:$TAG"
