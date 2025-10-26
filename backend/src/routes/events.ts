@@ -2,33 +2,62 @@ import express from "express";
 import { validate } from "../utils/validate.js";
 import { CreateEventInput, UpdateEventInput, GetOneEventInput } from "../schemas/events.js";
 import { query } from "../utils/database.js";
+import { resolveFilePath } from "../utils/resolve-file-path.js";
+import { savePhoto } from "../utils/save-photo.js";
 
 export const eventsRouter = express.Router();
 
 // GET /api/events
 eventsRouter.get("/", async (req, res) => {
-    const events = await query("SELECT * FROM events WHERE deleted_at IS NULL");
+    const events = await query("SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL");
     res.json(events);
 });
 
 // GET /api/events/:id
 eventsRouter.get("/:id", validate(GetOneEventInput, "params"), async (req, res) => {
     const { id } = (req as any).validated;
-    const [event] = await query("SELECT * FROM events WHERE id = ? AND deleted_at IS NULL", [id]);
+    const [event] = await query("SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE id = ? AND deleted_at IS NULL", [id]);
     if (!event) return res.status(404).json({ error: "Event not found" });
     res.json(event);
+});
+
+// GET /api/events/:id/photo
+eventsRouter.get("/:id/photo", validate(GetOneEventInput, "params"), async (req, res) => {
+    const { id } = (req as any).validated;
+
+    const [event] = await query("SELECT photo FROM events WHERE id = ? AND deleted_at IS NULL", [id]);
+    if (!event) return res.status(404).json({ error: "Event not found" });
+
+    try {
+        const absolutePath = resolveFilePath(event.photo);
+        res.sendFile(absolutePath, (err) => {
+            if (err) {
+                console.error(err);
+                res.status(500).json({ error: "Failed to send file" });
+            }
+        });
+    } catch (e: any) {
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // POST /api/events
 eventsRouter.post("/", validate(CreateEventInput), async (req, res) => {
     const data = (req as any).validated;
 
-    const result = await query(
-        "INSERT INTO events (name, date, photo, is_public) VALUES (?, ?, ?, ?)",
-        [data.name, data.date, data.photo, data.is_public ?? 0]
-    );
+    try {
+        const photoPath = await savePhoto(data.photo);
 
-    res.json({ id: result.insertId });
+        const result = await query(
+            "INSERT INTO events (name, date, photo) VALUES (?, ?, ?)",
+            [data.name, data.date, photoPath]
+        );
+
+        res.json({ id: result.insertId });
+    } catch (e: any) {
+        console.error(e);
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // PUT /api/events/:id
@@ -46,8 +75,17 @@ eventsRouter.put("/:id", validate(UpdateEventInput), async (req, res) => {
         return res.status(404).json({ error: "Event not found" });
     }
 
-    await query("UPDATE events SET ? WHERE id = ?", [fields, id]);
-    res.json({ success: true });
+    try {
+        if (fields.photo) {
+            fields.photo = await savePhoto(String(fields.photo));
+        }
+
+        await query("UPDATE events SET ? WHERE id = ?", [fields, id]);
+        res.json({ success: true });
+    } catch (e: any) {
+        console.error(e);
+        res.status(400).json({ error: e.message });
+    }
 });
 
 // DELETE /api/events/:id

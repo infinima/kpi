@@ -7,17 +7,27 @@ export const EventSchema = z.object({
     name: z.string().min(1),
     date: z.iso.date(),
     photo: z.string().min(1),
-    is_public: z.coerce.boolean(),
 });
 registry.register("Event", EventSchema);
 
 export const CreateEventInput = EventSchema.omit({ id: true }).extend({
-    is_public: z.coerce.boolean().default(false),
+    photo: z.string().regex(
+        /^data:image\/(png|jpe?g|webp);base64,/i,
+        "Must be base64 image string"
+    ),
 });
-export const UpdateEventInput = EventSchema.partial().required({ id: true });
+export const UpdateEventInput = EventSchema.partial()
+    .required({ id: true })
+    .extend({
+        photo: z
+            .string()
+            .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 image string")
+            .optional(),
+    });
 export const GetOneEventInput = EventSchema.pick({ id: true });
 
-// ===== Swagger =====
+
+// ===== Документация =====
 
 // GET /api/events
 registry.registerPath({
@@ -28,7 +38,7 @@ registry.registerPath({
     responses: {
         200: {
             description: "OK",
-            content: { "application/json": { schema: z.array(EventSchema) } },
+            content: { "application/json": { schema: z.array(EventSchema.omit({"photo": true})) } },
         },
     },
 });
@@ -45,9 +55,38 @@ registry.registerPath({
     responses: {
         200: {
             description: "OK",
-            content: { "application/json": { schema: EventSchema } },
+            content: { "application/json": { schema: EventSchema.omit({"photo": true}) } },
         },
         404: { description: "Event not found" },
+    },
+});
+
+// GET /api/events/{id}/photo
+registry.registerPath({
+    method: "get",
+    path: "/api/events/{id}/photo",
+    summary: "Получить фото события",
+    tags: ["Events"],
+    request: {
+        params: GetOneEventInput,
+    },
+    responses: {
+        200: {
+            description: "OK (изображение события)",
+            content: {
+                "image/webp": {
+                    schema: { type: "string", format: "binary" },
+                },
+                "image/jpeg": {
+                    schema: { type: "string", format: "binary" },
+                },
+                "image/png": {
+                    schema: { type: "string", format: "binary" },
+                },
+            },
+        },
+        404: { description: "Event not found" },
+        500: { description: "Failed to send file" },
     },
 });
 

@@ -3,18 +3,19 @@ import express from "express";
 import cors from "cors";
 import swaggerUi from "swagger-ui-express";
 import { fileURLToPath } from "url";
-import {dirname, join} from 'path';
+import { dirname, join } from 'path';
 
-import {generateOpenApiSpec} from "./utils/openapi.js";
+import { generateOpenApiSpec } from "./utils/openapi.js";
 import "./schemas/events.js";
 
-import {eventsRouter} from "./routes/events.js";
+import { eventsRouter } from "./routes/events.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-app.use(express.json());
+app.use(express.urlencoded({extended: true, limit: '10mb'}));
+app.use(express.json({limit: '10mb'}));
 
 if (process.env.NODE_ENV === "development") {
     app.use(cors({ origin: "http://localhost:5173", credentials: true }));
