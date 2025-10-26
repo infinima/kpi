@@ -6,7 +6,6 @@ export const EventSchema = z.object({
     id: z.coerce.number().int().positive(),
     name: z.string().min(1),
     date: z.iso.date(),
-    photo: z.string().min(1),
 });
 registry.register("Event", EventSchema);
 
@@ -38,7 +37,7 @@ registry.registerPath({
     responses: {
         200: {
             description: "OK",
-            content: { "application/json": { schema: z.array(EventSchema.omit({"photo": true})) } },
+            content: { "application/json": { schema: z.array(EventSchema) } },
         },
     },
 });
@@ -55,7 +54,7 @@ registry.registerPath({
     responses: {
         200: {
             description: "OK",
-            content: { "application/json": { schema: EventSchema.omit({"photo": true}) } },
+            content: { "application/json": { schema: EventSchema } },
         },
         404: { description: "Event not found" },
     },
