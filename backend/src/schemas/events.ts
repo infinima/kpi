@@ -93,6 +93,7 @@ registry.registerPath({
     path: "/api/events",
     summary: "Создать событие",
     tags: ["Events"],
+    security: [{ BearerAuth: [] }],
     request: {
         body: {
             content: { "application/json": { schema: CreateEventInput } },
@@ -115,6 +116,7 @@ registry.registerPath({
     path: "/api/events/{id}",
     summary: "Обновить событие",
     tags: ["Events"],
+    security: [{ BearerAuth: [] }],
     request: {
         params: GetOneEventInput,
         body: {
@@ -134,6 +136,7 @@ registry.registerPath({
     path: "/api/events/{id}",
     summary: "Удалить событие",
     tags: ["Events"],
+    security: [{ BearerAuth: [] }],
     request: {
         params: GetOneEventInput,
         query: DeleteEventQuery
@@ -153,6 +156,7 @@ registry.registerPath({
     path: "/api/events/{id}/restore",
     summary: "Восстановить удалённое событие",
     tags: ["Events"],
+    security: [{ BearerAuth: [] }],
     request: {
         params: GetOneEventInput,
     },

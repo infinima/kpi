@@ -9,6 +9,7 @@ import { generateOpenApiSpec } from "./utils/openapi.js";
 import "./schemas/errors.js";
 import "./schemas/events.js";
 
+import { authRouter } from "./routes/auth.js";
 import { eventsRouter } from "./routes/events.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -25,6 +26,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 
+app.use("/api/auth", authRouter);
 app.use("/api/events", eventsRouter);
 
 

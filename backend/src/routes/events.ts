@@ -5,6 +5,7 @@ import { query } from "../utils/database.js";
 import { resolveFilePath } from "../utils/resolve-file-path.js";
 import { savePhoto } from "../utils/save-photo.js";
 import { checkNotDeleted } from "../utils/check-not-deleted.js";
+import { checkPermission } from "../middlewares/permission-check.js";
 
 export const eventsRouter = express.Router();
 
@@ -73,6 +74,7 @@ eventsRouter.get(
 // POST /api/events
 eventsRouter.post(
     "/",
+    checkPermission("events", "create"),
     validate(CreateEventInput),
     async (req, res) => {
         const data = (req as any).validated;
@@ -101,6 +103,7 @@ eventsRouter.post(
 // PUT /api/events/:id
 eventsRouter.put(
     "/:id",
+    checkPermission("events", "update"),
     validate(UpdateEventInput),
     checkNotDeleted("event"),
     async (req, res) => {
@@ -142,6 +145,7 @@ eventsRouter.put(
 // DELETE /api/events/:id
 eventsRouter.delete(
     "/:id",
+    checkPermission("events", "delete"),
     validate(GetOneEventInput, "params"),
     validate(DeleteEventQuery, "query"),
     checkNotDeleted("event"),
@@ -207,6 +211,7 @@ eventsRouter.delete(
 // POST /api/events/:id/restore
 eventsRouter.post(
     "/:id/restore",
+    checkPermission("events", "restore"),
     validate(GetOneEventInput, "params"),
     async (req, res) => {
         const { id } = (req as any).validated;
