@@ -25,7 +25,7 @@ export const UpdateEventInput = EventSchema.partial()
             .optional(),
     });
 export const DeleteEventQuery = z.object({
-    force: z.coerce.boolean().optional().default(false)
+    force: z.preprocess(v => v === "true", z.boolean())
 });
 
 

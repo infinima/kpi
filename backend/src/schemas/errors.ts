@@ -25,6 +25,13 @@ registry.registerComponent(
             "EVENT_HAS_RELATED_OBJECTS",
             "EVENT_NOT_DELETED",
 
+            "NO_TOKEN",
+            "INVALID_TOKEN",
+            "INVALID_CREDENTIALS",
+            "SESSION_NOT_FOUND",
+
+            "FORBIDDEN",
+
             "INTERNAL_ERROR"
         ]
     }

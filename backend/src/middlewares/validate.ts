@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 
 export function validate<T>(
     schema: ZodSchema<T>,
-    source: "body" | "query" | "params" = "body"
+    source: "body" | "query" | "params"
 ) {
     return (req: Request, res: Response, next: NextFunction) => {
         const parse = schema.safeParse(req[source]);
@@ -14,7 +14,9 @@ export function validate<T>(
             });
         }
 
-        (req as any).validated = parse.data;
+        const r: any = req;
+        if (!r.validated) r.validated = {};
+        r.validated[source] = parse.data;
         next();
     };
 }

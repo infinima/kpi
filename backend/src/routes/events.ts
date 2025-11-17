@@ -1,10 +1,10 @@
 import express from "express";
-import { validate } from "../utils/validate.js";
+import { validate } from "../middlewares/validate.js";
 import { GetOneEventInput, CreateEventInput, UpdateEventInput, DeleteEventQuery } from "../schemas/events.js";
 import { query } from "../utils/database.js";
 import { resolveFilePath } from "../utils/resolve-file-path.js";
 import { savePhoto } from "../utils/save-photo.js";
-import { checkNotDeleted } from "../utils/check-not-deleted.js";
+import { checkNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/permission-check.js";
 
 export const eventsRouter = express.Router();
@@ -23,7 +23,7 @@ eventsRouter.get(
     validate(GetOneEventInput, "params"),
     checkNotDeleted("event"),
     async (req, res) => {
-        const { id } = (req as any).validated;
+        const { id } = (req as any).validated.params;
 
         const [event] = await query(
             "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE id = ?",
@@ -40,7 +40,7 @@ eventsRouter.get(
     validate(GetOneEventInput, "params"),
     checkNotDeleted("event"),
     async (req, res) => {
-        const { id } = (req as any).validated;
+        const { id } = (req as any).validated.params;
 
         const [event] = await query(
             "SELECT photo FROM events WHERE id = ?",
@@ -74,10 +74,10 @@ eventsRouter.get(
 // POST /api/events
 eventsRouter.post(
     "/",
+    validate(CreateEventInput, "body"),
     checkPermission("events", "create"),
-    validate(CreateEventInput),
     async (req, res) => {
-        const data = (req as any).validated;
+        const data = (req as any).validated.body;
 
         try {
             const photoPath = await savePhoto(data.photo);
@@ -103,11 +103,11 @@ eventsRouter.post(
 // PUT /api/events/:id
 eventsRouter.put(
     "/:id",
+    validate(UpdateEventInput, "body"),
     checkPermission("events", "update"),
-    validate(UpdateEventInput),
     checkNotDeleted("event"),
     async (req, res) => {
-        const data = (req as any).validated;
+        const data = (req as any).validated.body;
         const { id, ...rest } = data;
 
         const fields = Object.fromEntries(
@@ -145,13 +145,15 @@ eventsRouter.put(
 // DELETE /api/events/:id
 eventsRouter.delete(
     "/:id",
-    checkPermission("events", "delete"),
     validate(GetOneEventInput, "params"),
     validate(DeleteEventQuery, "query"),
+    checkPermission("events", "delete"),
     checkNotDeleted("event"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { force } = (req as any).validated.query;
+        console.log(force);
+        return;
 
         if (!force) {
             const [locRow] = await query(
@@ -211,10 +213,10 @@ eventsRouter.delete(
 // POST /api/events/:id/restore
 eventsRouter.post(
     "/:id/restore",
-    checkPermission("events", "restore"),
     validate(GetOneEventInput, "params"),
+    checkPermission("events", "restore"),
     async (req, res) => {
-        const { id } = (req as any).validated;
+        const { id } = (req as any).validated.params;
 
         const [row] = await query(
             "SELECT deleted_at FROM events WHERE id = ?",
