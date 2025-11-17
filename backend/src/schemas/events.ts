@@ -9,6 +9,7 @@ export const EventSchema = z.object({
 });
 registry.register("Event", EventSchema);
 
+export const GetOneEventInput = EventSchema.pick({id: true});
 export const CreateEventInput = EventSchema.omit({ id: true }).extend({
     photo: z.string().regex(
         /^data:image\/(png|jpe?g|webp);base64,/i,
@@ -23,7 +24,10 @@ export const UpdateEventInput = EventSchema.partial()
             .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 image string")
             .optional(),
     });
-export const GetOneEventInput = EventSchema.pick({ id: true });
+export const DeleteEventQuery = z.object({
+    force: z.coerce.boolean().optional().default(false)
+});
+
 
 
 // ===== Документация =====
@@ -56,7 +60,8 @@ registry.registerPath({
             description: "OK",
             content: { "application/json": { schema: EventSchema } },
         },
-        404: { description: "Event not found" },
+        400: { description: "The event is deleted" },
+        404: { description: "The event does not exist" },
     },
 });
 
@@ -71,20 +76,13 @@ registry.registerPath({
     },
     responses: {
         200: {
-            description: "OK (изображение события)",
+            description: "OK (image)",
             content: {
-                "image/webp": {
-                    schema: { type: "string", format: "binary" },
-                },
-                "image/jpeg": {
-                    schema: { type: "string", format: "binary" },
-                },
-                "image/png": {
-                    schema: { type: "string", format: "binary" },
-                },
+                "image/webp": { schema: { type: "string", format: "binary" } },
             },
         },
-        404: { description: "Event not found" },
+        400: { description: "The event is deleted" },
+        404: { description: "The event does not exist" },
         500: { description: "Failed to send file" },
     },
 });
@@ -125,8 +123,8 @@ registry.registerPath({
     },
     responses: {
         200: { description: "OK" },
-        400: { description: "No fields provided for update or validation failed" },
-        404: { description: "Event not found" },
+        400: { description: "The event is deleted or validation failed" },
+        404: { description: "The event does not exist" },
     },
 });
 
@@ -136,10 +134,32 @@ registry.registerPath({
     path: "/api/events/{id}",
     summary: "Удалить событие",
     tags: ["Events"],
-    request: { params: GetOneEventInput },
+    request: {
+        params: GetOneEventInput,
+        query: DeleteEventQuery
+    },
     responses: {
         200: { description: "OK" },
-        404: { description: "Event not found" },
+        400: {
+            description: "The event is deleted or has related objects (pass force=true to delete anyway)."
+        },
+        404: { description: "The event does not exist" }
+    }
+});
+
+// POST /api/events/{id}/restore
+registry.registerPath({
+    method: "post",
+    path: "/api/events/{id}/restore",
+    summary: "Восстановить удалённое событие",
+    tags: ["Events"],
+    request: {
+        params: GetOneEventInput,
+    },
+    responses: {
+        200: { description: "OK" },
+        400: { description: "The event is not deleted" },
+        404: { description: "The event does not exist" },
     },
 });
 

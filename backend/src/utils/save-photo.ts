@@ -9,15 +9,21 @@ export async function savePhoto(base64: string): Promise<string> {
         throw new Error("Invalid photo data");
     }
 
-    // Проверяем формат
     const match = base64.match(/^data:image\/(png|jpe?g|webp);base64,(.+)$/i);
     if (!match) {
         throw new Error("Unsupported image format (allowed: png, jpg, jpeg, webp)");
     }
 
-    const format = match[1].toLowerCase();
     const data = match[2];
     const buffer = Buffer.from(data, "base64");
+
+    const meta = await sharp(buffer).metadata();
+    if (!meta.width || !meta.height) {
+        throw new Error("Failed to read image metadata");
+    }
+    if (meta.width !== meta.height) {
+        throw new Error("Image must be square");
+    }
 
     const filename = `${uuidv4()}.webp`;
     const relativePath = path.join("files", filename);
