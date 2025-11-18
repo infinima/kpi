@@ -85,3 +85,27 @@ authRouter.post(
         res.json({ success: true });
     }
 );
+
+// GET /api/auth/me
+authRouter.get(
+    "/me",
+    authRequired,
+    async (req, res) => {
+        // @ts-ignore
+        const token = req.token;
+
+        const [session] = await query(
+            `SELECT user_id, expires_at
+             FROM sessions
+             WHERE token = ?
+               AND is_deactivated = 0
+               AND expires_at > NOW()`,
+            [token]
+        );
+
+        res.json({
+            user_id: session.user_id,
+            expires_at: session.expires_at
+        });
+    }
+);

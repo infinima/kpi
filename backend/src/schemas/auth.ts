@@ -12,6 +12,10 @@ export const LoginResponse = z.object({
 export const LogoutResponse = z.object({
     success: z.boolean()
 });
+export const MeResponse = z.object({
+    user_id: z.number().int(),
+    expires_at: z.string()
+});
 
 
 // ===== Документация =====
@@ -67,5 +71,23 @@ registry.registerPath({
             }
         },
         400: { description: "Session already deactivated" }
+    }
+});
+
+// GET /api/auth/me
+registry.registerPath({
+    method: "get",
+    path: "/api/auth/me",
+    summary: "Получить информацию о текущей сессии",
+    tags: ["Auth"],
+    security: [{ BearerAuth: [] }],
+    responses: {
+        200: {
+            description: "Current session information",
+            content: {
+                "application/json": { schema: MeResponse }
+            }
+        },
+        401: { description: "Invalid or expired token" }
     }
 });
