@@ -7,7 +7,6 @@ import { dirname, join } from 'path';
 
 import { generateOpenApiSpec } from "./utils/openapi.js";
 import "./schemas/errors.js";
-import "./schemas/events.js";
 
 import { authRouter } from "./routes/auth.js";
 import { eventsRouter } from "./routes/events.js";
