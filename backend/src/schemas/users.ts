@@ -36,7 +36,13 @@ export const CreateUserInput = UserSchema.omit({
     ),
 });
 
-export const UpdateUserInput = UserSchema.partial()
+export const UpdateUserInput = UserSchema
+    .omit({
+        created_at: true,
+        updated_at: true,
+        deleted_at: true,
+    })
+    .partial()
     .required({ id: true })
     .extend({
         password_hash: z.string().min(10).optional(),
