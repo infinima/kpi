@@ -46,7 +46,7 @@ registry.registerPath({
     },
     responses: {
         200: {
-            description: "Successful login: returns Bearer token",
+            description: "OK",
             content: {
                 "application/json": { schema: LoginResponse }
             }
@@ -65,7 +65,7 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     responses: {
         200: {
-            description: "Current session information",
+            description: "OK",
             content: {
                 "application/json": { schema: MeResponse }
             }
@@ -83,7 +83,7 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     responses: {
         200: {
-            description: "Session deactivated",
+            description: "OK",
             content: {
                 "application/json": { schema: LogoutResponse }
             }

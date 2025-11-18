@@ -95,7 +95,7 @@ registry.registerPath({
     request: { params: GetOneUserInput },
     responses: {
         200: {
-            description: "OK (image)",
+            description: "OK",
             content: {
                 "image/webp": { schema: { type: "string", format: "binary" } },
             },

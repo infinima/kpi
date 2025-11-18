@@ -81,7 +81,7 @@ registry.registerPath({
     },
     responses: {
         200: {
-            description: "OK (image)",
+            description: "OK",
             content: {
                 "image/webp": { schema: { type: "string", format: "binary" } },
             },
