@@ -6,24 +6,29 @@ export const EventSchema = z.object({
     id: z.coerce.number().int().positive(),
     name: z.string().min(1),
     date: z.iso.date(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    deleted_at: z.string().nullable(),
 });
 registry.register("Event", EventSchema);
 
-export const GetOneEventInput = EventSchema.pick({id: true});
-export const CreateEventInput = EventSchema.omit({ id: true }).extend({
+export const GetOneEventInput = EventSchema.pick({ id: true });
+export const CreateEventInput = z.object({
+    name: z.string().min(1),
+    date: z.iso.date(),
     photo: z.string().regex(
         /^data:image\/(png|jpe?g|webp);base64,/i,
         "Must be base64 image string"
     ),
 });
-export const UpdateEventInput = EventSchema.partial()
-    .required({ id: true })
-    .extend({
-        photo: z
-            .string()
-            .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 image string")
-            .optional(),
-    });
+export const UpdateEventInput = z.object({
+    id: z.coerce.number().int().positive(),
+    name: z.string().min(1).optional(),
+    date: z.iso.date().optional(),
+    photo: z.string()
+        .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 image string")
+        .optional(),
+});
 export const DeleteEventQuery = z.object({
     force: z.preprocess(v => v === "true", z.boolean())
 });
