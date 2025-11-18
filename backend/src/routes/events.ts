@@ -152,8 +152,6 @@ eventsRouter.delete(
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { force } = (req as any).validated.query;
-        console.log(force);
-        return;
 
         if (!force) {
             const [locRow] = await query(
