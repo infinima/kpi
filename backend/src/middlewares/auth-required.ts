@@ -13,7 +13,13 @@ export async function authRequired(req, res, next) {
     const token = auth.substring(7);
 
     const [session] = await query(
-        "SELECT * FROM sessions WHERE token = ? AND is_deactivated = 0 AND expires_at > NOW()",
+        `SELECT s.*
+         FROM sessions s
+         JOIN users u ON u.id = s.user_id
+         WHERE s.token = ?
+           AND s.is_deactivated = 0
+           AND s.expires_at > NOW()
+           AND u.deleted_at IS NULL`,
         [token]
     );
 
