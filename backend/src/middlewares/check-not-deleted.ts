@@ -1,23 +1,25 @@
 import { Request, Response, NextFunction } from "express";
 import { query } from "../utils/database.js";
 
-export type ObjectType = "event" | "location" | "league" | "team";
+export type ObjectType = "event" | "location" | "league" | "team" | "user";
 
 const CHAIN: Record<ObjectType, ObjectType | null> = {
     event: null,
     location: "event",
     league: "location",
-    team: "league"
+    team: "league",
+    user: null,
 };
 
 const TABLE: Record<ObjectType, string> = {
     event: "events",
     location: "locations",
     league: "leagues",
-    team: "teams"
+    team: "teams",
+    user: "users",
 };
 
-const PARENT_FIELD: Record<Exclude<ObjectType, "event">, string> = {
+const PARENT_FIELD: Record<"location" | "league" | "team", string> = {
     location: "event_id",
     league: "location_id",
     team: "league_id"
@@ -40,12 +42,10 @@ export function checkNotDeleted(type: ObjectType) {
                     ? `deleted_at, ${parentField}`
                     : `deleted_at`;
 
-                const rows = await query(
+                const [row] = await query(
                     `SELECT ${columns} FROM ${table} WHERE id = ?`,
                     [currentId]
                 );
-
-                const row = rows[0];
 
                 if (!row) {
                     return res.status(404).json({

@@ -2,37 +2,54 @@ import { registry } from "../utils/openapi.js";
 
 registry.registerComponent(
     "schemas",
-    "EventErrorCodes",
+    "ErrorCodes",
     {
         type: "string",
         enum: [
-            "EVENT_NOT_FOUND",
-            "EVENT_DELETED",
-            "LOCATION_NOT_FOUND",
-            "LOCATION_DELETED",
-            "LEAGUE_NOT_FOUND",
-            "LEAGUE_DELETED",
-            "TEAM_NOT_FOUND",
-            "TEAM_DELETED",
+            // ===== GENERAL =====
+            "INTERNAL_ERROR",
 
-            "FAILED_TO_SEND_FILE",
-            "INVALID_FILE_PATH",
-
-            "CREATE_EVENT_FAILED",
-            "NO_FIELDS_FOR_UPDATE",
-            "UPDATE_EVENT_FAILED",
-
-            "EVENT_HAS_RELATED_OBJECTS",
-            "EVENT_NOT_DELETED",
-
+            // ===== AUTH =====
             "NO_TOKEN",
             "INVALID_TOKEN",
             "INVALID_CREDENTIALS",
             "SESSION_NOT_FOUND",
 
+            // ===== PERMISSIONS =====
             "FORBIDDEN",
 
-            "INTERNAL_ERROR"
+            // ===== USERS =====
+            "USER_NOT_FOUND",
+            "USER_DELETED",
+            "USER_NOT_DELETED",
+            "CREATE_USER_FAILED",
+            "UPDATE_USER_FAILED",
+            "NO_FIELDS_FOR_UPDATE",
+
+            // ===== EVENTS =====
+            "EVENT_NOT_FOUND",
+            "EVENT_DELETED",
+            "EVENT_NOT_DELETED",
+            "CREATE_EVENT_FAILED",
+            "UPDATE_EVENT_FAILED",
+            "NO_FIELDS_FOR_UPDATE",
+            "EVENT_HAS_RELATED_OBJECTS",
+
+            // ===== LOCATIONS =====
+            "LOCATION_NOT_FOUND",
+            "LOCATION_DELETED",
+
+            // ===== LEAGUES =====
+            "LEAGUE_NOT_FOUND",
+            "LEAGUE_DELETED",
+
+            // ===== TEAMS =====
+            "TEAM_NOT_FOUND",
+            "TEAM_DELETED",
+
+            // ===== FILES =====
+            "FAILED_TO_SEND_FILE",
+            "INVALID_FILE_PATH"
         ]
     }
 );
