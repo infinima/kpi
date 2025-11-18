@@ -63,7 +63,7 @@ registry.registerComponent(
             error: {
                 type: "object",
                 properties: {
-                    code: { $ref: "#/components/schemas/EventErrorCodes" },
+                    code: { $ref: "#/components/schemas/ErrorCodes" },
                     message: { type: "string" },
                     details: { type: "object", nullable: true },
                 },
