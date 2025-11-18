@@ -115,9 +115,9 @@ registry.registerPath({
     },
 });
 
-// PUT /api/events/{id}
+// PATCH /api/events/{id}
 registry.registerPath({
-    method: "put",
+    method: "patch",
     path: "/api/events/{id}",
     summary: "Обновить событие",
     tags: ["Events"],

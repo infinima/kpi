@@ -100,8 +100,8 @@ eventsRouter.post(
     }
 );
 
-// PUT /api/events/:id
-eventsRouter.put(
+// PATCH /api/events/:id
+eventsRouter.patch(
     "/:id",
     validate(UpdateEventInput, "body"),
     checkPermission("events", "update"),

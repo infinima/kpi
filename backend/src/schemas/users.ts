@@ -129,9 +129,9 @@ registry.registerPath({
     },
 });
 
-// PUT /api/users/{id}
+// PATCH /api/users/{id}
 registry.registerPath({
-    method: "put",
+    method: "patch",
     path: "/api/users/{id}",
     summary: "Обновить пользователя",
     tags: ["Users"],

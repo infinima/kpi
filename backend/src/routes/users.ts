@@ -131,8 +131,8 @@ usersRouter.post(
     }
 );
 
-// PUT /api/users/:id
-usersRouter.put(
+// PATCH /api/users/:id
+usersRouter.patch(
     "/:id",
     validate(UpdateUserInput, "body"),
     checkPermission("users", "update"),
