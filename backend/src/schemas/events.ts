@@ -18,7 +18,7 @@ export const CreateEventInput = z.object({
     date: z.iso.date(),
     photo: z.string().regex(
         /^data:image\/(png|jpe?g|webp);base64,/i,
-        "Must be base64 image string"
+        "Must be base64 square image string"
     ),
 });
 export const UpdateEventInput = z.object({
@@ -26,7 +26,7 @@ export const UpdateEventInput = z.object({
     name: z.string().min(1).optional(),
     date: z.iso.date().optional(),
     photo: z.string()
-        .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 image string")
+        .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 square image string")
         .optional(),
 });
 export const DeleteEventQuery = z.object({

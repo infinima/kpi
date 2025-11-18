@@ -32,7 +32,7 @@ export const CreateUserInput = UserSchema.omit({
     password: z.string().min(6, "Password must be at least 6 chars"),
     photo: z.string().regex(
         /^data:image\/(png|jpe?g|webp);base64,/i,
-        "Must be base64 image string"
+        "Must be base64 square image string"
     ),
 });
 
@@ -48,7 +48,7 @@ export const UpdateUserInput = UserSchema
         password_hash: z.string().min(10).optional(),
         photo: z
             .string()
-            .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 image string")
+            .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 square image string")
             .optional(),
     });
 
