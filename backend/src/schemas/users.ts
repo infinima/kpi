@@ -19,7 +19,6 @@ export const UserSchema = z.object({
 registry.register("User", UserSchema);
 
 export const GetOneUserInput = UserSchema.pick({ id: true });
-
 export const CreateUserInput = UserSchema.omit({
     id: true,
     created_at: true,
@@ -35,21 +34,13 @@ export const CreateUserInput = UserSchema.omit({
         "Must be base64 square image string"
     ),
 });
-
-export const UpdateUserInput = UserSchema
-    .omit({
-        created_at: true,
-        updated_at: true,
-        deleted_at: true,
-    })
+export const UpdateUserInput = CreateUserInput
     .partial()
-    .required({ id: true })
+    .omit({
+        password: true,
+    })
     .extend({
-        password_hash: z.string().min(10).optional(),
-        photo: z
-            .string()
-            .regex(/^data:image\/(png|jpe?g|webp);base64,/i, "Must be base64 square image string")
-            .optional(),
+        id: z.coerce.number().int().positive(),
     });
 
 
