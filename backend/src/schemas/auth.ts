@@ -56,24 +56,6 @@ registry.registerPath({
     }
 });
 
-// POST /api/auth/logout
-registry.registerPath({
-    method: "post",
-    path: "/api/auth/logout",
-    summary: "Выход пользователя",
-    tags: ["Auth"],
-    security: [{ BearerAuth: [] }],
-    responses: {
-        200: {
-            description: "Session deactivated",
-            content: {
-                "application/json": { schema: LogoutResponse }
-            }
-        },
-        400: { description: "Session already deactivated" }
-    }
-});
-
 // GET /api/auth/me
 registry.registerPath({
     method: "get",
@@ -89,5 +71,23 @@ registry.registerPath({
             }
         },
         401: { description: "Invalid or expired token" }
+    }
+});
+
+// POST /api/auth/logout
+registry.registerPath({
+    method: "post",
+    path: "/api/auth/logout",
+    summary: "Выход пользователя",
+    tags: ["Auth"],
+    security: [{ BearerAuth: [] }],
+    responses: {
+        200: {
+            description: "Session deactivated",
+            content: {
+                "application/json": { schema: LogoutResponse }
+            }
+        },
+        400: { description: "Session already deactivated" }
     }
 });
