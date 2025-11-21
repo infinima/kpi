@@ -55,7 +55,7 @@ locationsRouter.post(
     "/",
     validate(CreateLocationInput, "body"),
     checkPermission("locations", "create"),
-    checkParentNotDeleted("location", "event_id"),
+    checkParentNotDeleted("location", "event_id", true),
     async (req, res) => {
         const data = (req as any).validated.body;
 
