@@ -13,12 +13,10 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
         doc.on("end", () => resolve(Buffer.concat(chunks)));
         doc.on("error", reject);
 
-        // твой шрифт
         const fontPath = "./src/static/Kreadon-Bold.ttf";
         doc.registerFont("Main", fontPath);
         doc.font("Main");
 
-        // --- копия твоего кода ---
         function drawDashedLine(doc: PDFKit.PDFDocument, y: number) {
             const margin = 0;
             doc.save();
@@ -85,7 +83,6 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
 
             return { fontSize: bestFontSize, lines: bestLines, textHeight: bestHeight };
         }
-        // --- конец вставки ---
 
         commands.forEach((name, index) => {
             if (index > 0) doc.addPage();
@@ -96,24 +93,53 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
             const sectionHeight = pageHeight / 4;
             for (let i = 1; i <= 3; i++) drawDashedLine(doc, sectionHeight * i);
 
-            const sectionIndex = 2;
-            const sectionTop = sectionIndex * sectionHeight;
-
             const padding = 20;
             const boxHeight = sectionHeight - 2 * padding;
             const boxWidth = pageWidth - 2 * padding;
 
-            const { fontSize, lines, textHeight } = fitFontSize(doc, name, boxWidth, boxHeight);
-            doc.fontSize(fontSize);
+            {
+                const sectionIndex = 2;
+                const sectionTop = sectionIndex * sectionHeight;
 
-            let currentY = sectionTop + (sectionHeight - textHeight) / 2;
+                const { fontSize, lines, textHeight } =
+                    fitFontSize(doc, name, boxWidth, boxHeight);
+                doc.fontSize(fontSize);
 
-            for (const line of lines) {
-                const w = doc.widthOfString(line);
-                const x = (pageWidth - w) / 2;
+                let currentY = sectionTop + (sectionHeight - textHeight) / 2;
 
-                doc.text(line, x, currentY);
-                currentY += doc.currentLineHeight(true);
+                for (const line of lines) {
+                    const w = doc.widthOfString(line);
+                    const x = (pageWidth - w) / 2;
+                    doc.text(line, x, currentY);
+                    currentY += doc.currentLineHeight(true);
+                }
+            }
+
+            {
+                const sectionTop = sectionHeight;
+                const sectionBottom = sectionHeight * 2;
+                const sectionMidY = (sectionTop + sectionBottom) / 2;
+
+                const { fontSize, lines, textHeight } =
+                    fitFontSize(doc, name, boxWidth, boxHeight);
+                doc.fontSize(fontSize);
+
+                doc.save();
+
+                doc.rotate(180, {
+                    origin: [pageWidth / 2, sectionMidY]
+                });
+
+                let currentY = sectionMidY - textHeight / 2;
+
+                for (const line of lines) {
+                    const w = doc.widthOfString(line);
+                    const x = (pageWidth - w) / 2;
+                    doc.text(line, x, currentY);
+                    currentY += doc.currentLineHeight(true);
+                }
+
+                doc.restore();
             }
         });
 
