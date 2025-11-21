@@ -81,13 +81,14 @@ locationsRouter.post(
 // PATCH /api/locations/:id
 locationsRouter.patch(
     "/:id",
+    validate(GetOneLocationInput, "params"),
     validate(UpdateLocationInput, "body"),
     checkPermission("locations", "update"),
     checkNotDeleted("location"),
     checkParentNotDeleted("location", "event_id"),
     async (req, res) => {
-        const data = (req as any).validated.body;
-        const { id, ...rest } = data;
+        const { id } = (req as any).validated.params;
+        const { ...rest } = (req as any).validated.body;
 
         const fields = Object.fromEntries(
             Object.entries(rest).filter(([, v]) => v !== undefined)

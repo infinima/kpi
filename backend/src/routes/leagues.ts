@@ -175,9 +175,8 @@ leaguesRouter.patch(
     checkPermission("leagues", "update"),
     checkNotDeleted("league"),
     async (req, res) => {
-        const data = (req as any).validated.body;
-        const { ...rest } = data;
         const { id } = (req as any).validated.params;
+        const { ...rest } = (req as any).validated.body;
 
         const fields = Object.fromEntries(
             Object.entries(rest).filter(([, v]) => v !== undefined)

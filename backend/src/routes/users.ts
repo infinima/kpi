@@ -139,8 +139,9 @@ usersRouter.patch(
     checkPermission("users", "update"),
     checkNotDeleted("user"),
     async (req, res) => {
+        const { id } = (req as any).validated.params;
         const data = (req as any).validated.body;
-        const { id, ...rest } = data;
+        const { ...rest } = data;
 
         const fields = Object.fromEntries(
             Object.entries(rest).filter(([_, v]) => v !== undefined)
