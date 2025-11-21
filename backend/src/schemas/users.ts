@@ -39,10 +39,6 @@ export const UpdateUserInput = CreateUserInput
     .omit({
         password: true,
     })
-    .extend({
-        id: z.coerce.number().int().positive(),
-    });
-
 
 
 // ===== Документация =====
@@ -136,7 +132,7 @@ registry.registerPath({
     request: {
         params: GetOneUserInput,
         body: {
-            content: { "application/json": { schema: UpdateUserInput.omit({ id: true }) } },
+            content: { "application/json": { schema: UpdateUserInput } },
         },
     },
     responses: {

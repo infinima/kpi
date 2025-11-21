@@ -134,6 +134,7 @@ usersRouter.post(
 // PATCH /api/users/:id
 usersRouter.patch(
     "/:id",
+    validate(GetOneUserInput, "params"),
     validate(UpdateUserInput, "body"),
     checkPermission("users", "update"),
     checkNotDeleted("user"),
