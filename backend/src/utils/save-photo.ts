@@ -1,8 +1,5 @@
-import fs from "fs";
-import path from "path";
 import sharp from "sharp";
-import { v4 as uuidv4 } from "uuid";
-import { resolveFilePath } from "./resolve-file-path.js";
+import { saveFile } from "./save-file.js";
 
 export async function savePhoto(base64: string): Promise<string> {
     if (!base64) {
@@ -25,15 +22,9 @@ export async function savePhoto(base64: string): Promise<string> {
         throw new Error("Image must be square");
     }
 
-    const filename = `${uuidv4()}.webp`;
-    const relativePath = path.join("files", filename);
-    const absolutePath = resolveFilePath(relativePath);
-
-    await fs.promises.mkdir(path.dirname(absolutePath), { recursive: true });
-
-    await sharp(buffer)
+    const processed = await sharp(buffer)
         .webp({ quality: 90 })
-        .toFile(absolutePath);
+        .toBuffer();
 
-    return relativePath;
+    return await saveFile(processed, "webp");
 }
