@@ -1,5 +1,6 @@
 import { z } from "../utils/zod-openapi-init.js";
 import { registry } from "../utils/openapi.js";
+import {UserSchema} from "./users.js";
 
 // ===== Схемы =====
 export const LoginInput = z.object({
@@ -12,9 +13,17 @@ export const LoginResponse = z.object({
 export const LogoutResponse = z.object({
     success: z.boolean()
 });
+export const MeQuery = z.object({
+    include: z
+        .string()
+        .transform(v => v.split(","))
+        .pipe(z.array(z.enum(["user"])))
+        .optional()
+});
 export const MeResponse = z.object({
     user_id: z.number().int(),
-    expires_at: z.string()
+    expires_at: z.string(),
+    user: UserSchema.optional()
 });
 
 
@@ -63,6 +72,21 @@ registry.registerPath({
     summary: "Получить информацию о текущей сессии",
     tags: ["Auth"],
     security: [{ BearerAuth: [] }],
+    parameters: [
+        {
+            name: "include",
+            in: "query",
+            required: false,
+            schema: {
+                type: "array",
+                items: {
+                    type: "string",
+                    enum: ["user"]
+                },
+            },
+            description: "Список полей для включения в ответ."
+        }
+    ],
     responses: {
         200: {
             description: "OK",

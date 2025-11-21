@@ -3,7 +3,7 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../utils/database.js";
-import { LoginInput } from "../schemas/auth.js";
+import { LoginInput, MeQuery } from "../schemas/auth.js";
 import { authRequired } from "../middlewares/auth-required.js";
 
 export const authRouter = express.Router();
@@ -56,9 +56,10 @@ authRouter.post(
 authRouter.get(
     "/me",
     authRequired,
+    validate(MeQuery, "query"),
     async (req, res) => {
-        // @ts-ignore
-        const token = req.token;
+        const token = (req as any).token;
+        const { include } = (req as any).validated.query ?? {};
 
         const [session] = await query(
             `SELECT user_id, expires_at
@@ -69,9 +70,30 @@ authRouter.get(
             [token]
         );
 
+        if (!session) {
+            return res.status(401).json({
+                error: { code: "INVALID_SESSION" }
+            });
+        }
+
+        let user = null;
+
+        if (include?.includes("user")) {
+            [user] = await query(
+                `SELECT
+                     id, email, last_name, first_name, patronymic,
+                     tg_id, tg_username, tg_full_name,
+                     created_at, updated_at, deleted_at
+                 FROM users
+                 WHERE id = ?`,
+                [session.user_id]
+            );
+        }
+
         res.json({
             user_id: session.user_id,
-            expires_at: session.expires_at
+            expires_at: session.expires_at,
+            ...(user ? { user } : {})
         });
     }
 );
@@ -81,10 +103,8 @@ authRouter.post(
     "/logout",
     authRequired,
     async (req, res) => {
-        // @ts-ignore
-        const token = req.token;
-        // @ts-ignore
-        const userId = req.user_id;
+        const token = (req as any).token;
+        const userId = (req as any).user_id;
 
         const result = await query(
             `
