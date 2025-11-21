@@ -2,7 +2,6 @@ import { z } from "../utils/zod-openapi-init.js";
 import { registry } from "../utils/openapi.js";
 
 // ===== Схемы =====
-
 export const UserSchema = z.object({
     id: z.coerce.number().int().positive(),
     email: z.email(),
