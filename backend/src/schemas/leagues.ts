@@ -110,6 +110,31 @@ registry.registerPath({
     },
 });
 
+// GET /api/leagues/{id}/print_teams_names
+registry.registerPath({
+    method: "get",
+    path: "/api/leagues/{id}/print_teams_names",
+    summary: "Скачать PDF с табличками на столы команд",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/pdf": {
+                    schema: { type: "string", format: "binary" },
+                },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist or has no teams" },
+        500: { description: "PDF generation failed" },
+    },
+});
+
 // POST /api/leagues
 registry.registerPath({
     method: "post",
@@ -152,9 +177,7 @@ registry.registerPath({
     },
     responses: {
         200: { description: "OK" },
-        400: {
-            description: "The league is deleted or validation failed",
-        },
+        400: { description: "The league is deleted or validation failed" },
         404: { description: "The league does not exist" },
     },
 });

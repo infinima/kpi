@@ -110,6 +110,79 @@ leaguesRouter.get(
     }
 );
 
+// GET /api/leagues/:id/print_teams_names
+leaguesRouter.get(
+    "/:id/print_teams_names",
+    validate(GetOneLeagueInput, "params"),
+    checkPermission("leagues", "print_documents"),
+    checkNotDeleted("league"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [league] = await query(
+            "SELECT name FROM leagues WHERE id = ? AND deleted_at IS NULL",
+            [id]
+        );
+
+        if (!league) {
+            return res.status(404).json({
+                error: {
+                    code: "LEAGUE_NOT_FOUND",
+                    message: "League does not exist"
+                }
+            });
+        }
+
+        const safeName = league.name
+            .trim()
+            .replace(/\s+/g, "_")
+            .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+
+        const rows = await query(
+            `SELECT name 
+             FROM teams
+             WHERE league_id = ? AND deleted_at IS NULL
+             ORDER BY id`,
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                error: {
+                    code: "NO_TEAMS",
+                    message: "League has no teams"
+                }
+            });
+        }
+
+        // @ts-ignore
+        const teamNames = rows.map(r => r.name);
+
+        try {
+            const buffer = await generatePDFBuffer(teamNames);
+
+            const name = `${safeName}_команды.pdf`;
+            const encoded = encodeURIComponent(name);
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(buffer);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "PDF_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+    }
+);
+
 // POST /api/leagues
 leaguesRouter.post(
     "/",
@@ -306,78 +379,5 @@ leaguesRouter.post(
         );
 
         res.json({ success: true });
-    }
-);
-
-// GET /api/leagues/:id/print_teams_names
-leaguesRouter.get(
-    "/:id/print_teams_names",
-    validate(GetOneLeagueInput, "params"),
-    checkPermission("leagues", "print_documents"),
-    checkNotDeleted("league"),
-    async (req, res) => {
-        const { id } = (req as any).validated.params;
-
-        const [league] = await query(
-            "SELECT name FROM leagues WHERE id = ? AND deleted_at IS NULL",
-            [id]
-        );
-
-        if (!league) {
-            return res.status(404).json({
-                error: {
-                    code: "LEAGUE_NOT_FOUND",
-                    message: "League does not exist"
-                }
-            });
-        }
-
-        const safeName = league.name
-            .trim()
-            .replace(/\s+/g, "_")
-            .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
-
-        const rows = await query(
-            `SELECT name 
-             FROM teams
-             WHERE league_id = ? AND deleted_at IS NULL
-             ORDER BY id`,
-            [id]
-        );
-
-        if (rows.length === 0) {
-            return res.status(404).json({
-                error: {
-                    code: "NO_TEAMS",
-                    message: "League has no teams"
-                }
-            });
-        }
-
-        // @ts-ignore
-        const teamNames = rows.map(r => r.name);
-
-        try {
-            const buffer = await generatePDFBuffer(teamNames);
-
-            const name = `${safeName}_команды.pdf`;
-            const encoded = encodeURIComponent(name);
-
-            res.setHeader("Content-Type", "application/pdf");
-            res.setHeader(
-                "Content-Disposition",
-                `inline; filename="${encoded}"; filename*=UTF-8''${encoded}`
-            );
-
-            res.send(buffer);
-        } catch (e) {
-            console.error(e);
-            res.status(500).json({
-                error: {
-                    code: "PDF_GENERATION_FAILED",
-                    message: String(e)
-                }
-            });
-        }
     }
 );
