@@ -57,6 +57,21 @@ registry.registerPath({
     },
 });
 
+// GET /api/users/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/users/deleted",
+    summary: "Получить список удаленных пользователей",
+    tags: ["Users"],
+    security: [{ BearerAuth: [] }],
+    responses: {
+        200: {
+            description: "OK",
+            content: { "application/json": { schema: z.array(UserSchema) } },
+        },
+    },
+});
+
 
 // GET /api/users/{id}
 registry.registerPath({

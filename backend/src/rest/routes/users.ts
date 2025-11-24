@@ -30,6 +30,23 @@ usersRouter.get(
     }
 );
 
+// GET /api/users/deleted
+usersRouter.get(
+    "/deleted",
+    checkPermission("users", "restore"),
+    async (req, res) => {
+        const users = await query(
+            `SELECT id, email, last_name, first_name, patronymic,
+                    tg_id, tg_username, tg_full_name,
+                    created_at, updated_at, deleted_at
+             FROM users
+             WHERE deleted_at IS NOT NULL`
+        );
+        res.json(users);
+    }
+);
+
+
 // GET /api/users/:id
 usersRouter.get(
     "/:id",
