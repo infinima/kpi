@@ -117,8 +117,21 @@ usersRouter.post(
         const data = (req as any).validated.body;
 
         try {
-            const photoPath = await savePhoto(data.photo);
+            const [exists] = await query(
+                "SELECT id FROM users WHERE email = ? LIMIT 1",
+                [data.email]
+            );
 
+            if (exists) {
+                return res.status(400).json({
+                    error: {
+                        code: "EMAIL_ALREADY_EXISTS",
+                        message: "User with this email already exists"
+                    }
+                });
+            }
+
+            const photoPath = await savePhoto(data.photo);
             const passwordHash = await bcrypt.hash(data.password, 10);
 
             const result = await query(
@@ -174,6 +187,22 @@ usersRouter.patch(
         }
 
         try {
+            if (fields.email) {
+                const [exists] = await query(
+                    "SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1",
+                    [fields.email, id]
+                );
+
+                if (exists) {
+                    return res.status(400).json({
+                        error: {
+                            code: "EMAIL_ALREADY_EXISTS",
+                            message: "User with this email already exists"
+                        }
+                    });
+                }
+            }
+
             if (fields.photo) {
                 fields.photo = await savePhoto(String(fields.photo));
             }
