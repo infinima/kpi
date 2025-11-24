@@ -1,4 +1,4 @@
-import { useUser } from "@/store";
+import { useUser, useNotifications } from "@/store";
 import { showApiError } from "./errorHelper";
 
 const BASE_URL = window.location.origin + "/api/";
@@ -11,9 +11,10 @@ async function parseResponse(res: Response) {
     }
 }
 
-export async function apiDelete<T = any>(path: string): Promise<T> {
+export async function apiDelete(path: string, restoreId?: number): Promise<void> {
     try {
         const token = useUser.getState().token;
+        const notify = useNotifications.getState().addMessage;
 
         const res = await fetch(BASE_URL + path, {
             method: "DELETE",
@@ -32,7 +33,40 @@ export async function apiDelete<T = any>(path: string): Promise<T> {
             throw json || { error: { code: "INTERNAL_ERROR" } };
         }
 
-        return parseResponse(res);
+        // -------------------------------
+        // SUCCESS → показать уведомление
+        // -------------------------------
+        notify({
+            type: "success",
+            text: "Пользователь удалён",
+            actionText: "Восстановить",
+            action: async () => {
+                try {
+                    const restoreRes = await fetch(
+                        `${BASE_URL}users/${restoreId}/restore`,
+                        {
+                            method: "POST",
+                            headers: {
+                                Authorization: token ? `Bearer ${token}` : "",
+                            },
+                        }
+                    );
+
+                    if (!restoreRes.ok) {
+                        const json = await parseResponse(restoreRes);
+                        throw json || { error: { code: "INTERNAL_ERROR" } };
+                    }
+
+                    notify({
+                        type: "success",
+                        text: "Пользователь восстановлен",
+                    });
+                } catch (e) {
+                    showApiError(e);
+                }
+            }
+        });
+
     } catch (err) {
         showApiError(err);
         throw err;

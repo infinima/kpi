@@ -11,6 +11,11 @@ interface UIState {
 
     theme: "light" | "dark";
     toggleTheme: () => void;
+
+    editUser: any | null;
+    openEditUserModal: (user: any) => void;
+    closeEditUserModal: () => void;
+
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -40,4 +45,8 @@ export const useUI = create<UIState>((set, get) => ({
             document.documentElement.classList.remove("dark");
         }
     },
+
+    editUser: null,
+    openEditUserModal: (user) => set({ editUser: user }),
+    closeEditUserModal: () => set({ editUser: null }),
 }));

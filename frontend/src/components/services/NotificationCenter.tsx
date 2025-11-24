@@ -15,7 +15,7 @@ export function NotificationCenter() {
     };
 
     return (
-        <div className="fixed top-0 left-0 w-full z-50 flex flex-col items-center gap-2 p-2 sm:p-4 pointer-events-none">            {messages.map((msg) => {
+        <div className="fixed top-0 left-0 w-full z-9999 flex flex-col items-center gap-2 p-2 sm:p-4 pointer-events-none" >            {messages.map((msg) => {
                 const animClass = leaving[msg.id] ? "toast-exit" : "toast-enter";
 
                 return (

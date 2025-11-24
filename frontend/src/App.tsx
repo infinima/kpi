@@ -17,7 +17,7 @@ export function App() {
         events: <EventsPage />,
         tables: <TablesPage />,
         logs: <LogsPage />,
-        users: <UsersPage />,
+        users: <UsersPage/>,
     };
 
     if (useUI.getState().theme === "dark") {
