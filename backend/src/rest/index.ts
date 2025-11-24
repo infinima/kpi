@@ -6,6 +6,7 @@ import { generateOpenApiSpec } from "../utils/openapi.js";
 
 import "./schemas/errors.js";
 import { authRouter } from "./routes/auth.js";
+import { permissionsRouter } from "./routes/permissions.js";
 import { eventsRouter } from "./routes/events.js";
 import { locationsRouter } from "./routes/locations.js";
 import { leaguesRouter } from "./routes/leagues.js";
@@ -30,6 +31,7 @@ export function createApp() {
     }
 
     app.use("/api/auth", authRouter);
+    app.use("/api/auth/permissions", permissionsRouter);
     app.use("/api/events", eventsRouter);
     app.use("/api/locations", locationsRouter);
     app.use("/api/leagues", leaguesRouter);
