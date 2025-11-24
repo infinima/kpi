@@ -1,55 +1,28 @@
 import "./utils/validate-env.js";
-import express from "express";
-import cors from "cors";
-import swaggerUi from "swagger-ui-express";
-import { fileURLToPath } from "url";
-import { dirname, join } from 'path';
+import http from "http";
+import { Server as SocketIOServer } from "socket.io";
 
-import { generateOpenApiSpec } from "./utils/openapi.js";
-import "./schemas/errors.js";
+import { createApp } from "./rest/index.js";
+import { initSocket } from "./socket/index.js";
 
-import { authRouter } from "./routes/auth.js";
-import { eventsRouter } from "./routes/events.js";
-import { locationsRouter } from "./routes/locations.js";
-import { leaguesRouter } from "./routes/leagues.js";
-import { teamsRouter } from "./routes/teams.js";
-import { usersRouter } from "./routes/users.js";
+(async () => {
+    const app = createApp();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+    const server = http.createServer(app);
+    const io = new SocketIOServer(server, {
+        cors: process.env.NODE_ENV === "development"
+            ? { origin: "http://localhost:5173", credentials: true }
+            : {}
+    });
+    await initSocket(io);
 
-const app = express();
-app.use(express.urlencoded({extended: true, limit: '10mb'}));
-app.use(express.json({limit: '10mb'}));
-const staticDir = join(__dirname, "..", "public");
-app.use(express.static(staticDir));
-
-if (process.env.NODE_ENV === "development") {
-    app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-}
-
-
-app.use("/api/auth", authRouter);
-app.use("/api/events", eventsRouter);
-app.use("/api/locations", locationsRouter);
-app.use("/api/leagues", leaguesRouter);
-app.use("/api/teams", teamsRouter);
-app.use("/api/users", usersRouter);
-
-
-const openApiSpec = generateOpenApiSpec();
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
-
-app.get("/api/health", (_req, res) => res.json({ok: true, ts: Date.now()}));
-
-app.get('*', (_req, res) => res.sendFile(join(staticDir, 'index.html')));
-
-const PORT = process.env.PORT ?? 3000;
-app.listen(PORT, () => {
-    if (process.env.NODE_ENV === "development") {
-        console.log(`✅  Server is running on http://localhost:${PORT}`);
-        console.log(`📘 Swagger docs: http://localhost:${PORT}/api/docs`);
-    } else {
-        console.log(`Server is running on port ${PORT}`)
-    }
-});
+    const PORT = process.env.PORT ?? 3000;
+    server.listen(PORT, () => {
+        if (process.env.NODE_ENV === "development") {
+            console.log(`✅  Server is running on http://localhost:${PORT}`);
+            console.log(`📘 Swagger docs: http://localhost:${PORT}/api/docs`);
+        } else {
+            console.log(`Server is running on port ${PORT}`);
+        }
+    });
+})();

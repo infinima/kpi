@@ -1,4 +1,4 @@
-import { query } from "../utils/database.js";
+import { query } from "../../utils/database.js";
 
 // @ts-ignore
 export async function authRequired(req, res, next) {

@@ -1,4 +1,4 @@
-import { query } from "../utils/database.js";
+import { query } from "../../utils/database.js";
 import { authRequired } from "./auth-required.js";
 
 async function getScopeChain(object: string, objectId: number) {

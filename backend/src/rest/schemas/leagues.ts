@@ -1,5 +1,5 @@
-import { z } from "../utils/zod-openapi-init.js";
-import { registry } from "../utils/openapi.js";
+import { z } from "../../utils/zod-openapi-init.js";
+import { registry } from "../../utils/openapi.js";
 
 // ===== Схемы =====
 export const LeagueSchema = z.object({

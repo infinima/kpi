@@ -1,11 +1,11 @@
 import express from "express";
 import { validate } from "../middlewares/validate.js";
-import { query } from "../utils/database.js";
+import { query } from "../../utils/database.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/permission-check.js";
-import { saveFile } from "../utils/save-file.js";
-import { resolveFilePath } from "../utils/resolve-file-path.js";
-import { generatePDFBuffer } from "../utils/generate-teams-names.js";
+import { saveFile } from "../../utils/save-file.js";
+import { resolveFilePath } from "../../utils/resolve-file-path.js";
+import { generatePDFBuffer } from "../../utils/generate-teams-names.js";
 
 import {
     GetOneLeagueInput,

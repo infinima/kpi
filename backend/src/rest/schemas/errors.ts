@@ -1,4 +1,4 @@
-import { registry } from "../utils/openapi.js";
+import { registry } from "../../utils/openapi.js";
 
 registry.registerComponent(
     "schemas",
