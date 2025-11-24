@@ -1,0 +1,104 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+/* Sources (аналог content[]): */
+@source "./index.html";
+@source "./src/**/*.{js,ts,jsx,tsx}";
+
+/* Dark mode variant */
+@custom-variant dark (&:where(.dark *));
+
+@theme {
+    --font-family-nunito: "Nunito", sans-serif;
+
+    /* Colors */
+    --color-primary: #3b82f6;
+    --color-primary-dark: #1d4ed8;
+    --color-primary-light: #93c5fd;
+
+    --color-background: #f8fafc;
+    --color-surface: #ffffff;
+    --color-hover: #f1f5f9;
+    --color-border: #e2e8f0;
+
+    --color-text-main: #0f172a;
+    --color-text-secondary: #475569;
+    --color-text-muted: #94a3b8;
+
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+
+    /* Dark mode colors */
+    --color-dark-bg: #0f172a;
+    --color-dark-surface: #1e293b;
+    --color-dark-border: #334155;
+    --color-dark-hover: #1e293b;
+
+    --color-dark-text-main: #f8fafc;
+    --color-dark-text-secondary: #cbd5e1;
+    --color-dark-text-muted: #94a3b8;
+
+    /* Rounded */
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+    /* Typography */
+    --text-h1: 28px;
+    --leading-h1: 36px;
+
+    --text-h2: 22px;
+    --leading-h2: 30px;
+
+    --text-h3: 18px;
+    --leading-h3: 26px;
+
+    --text-body: 15px;
+    --leading-body: 22px;
+
+    --text-small: 13px;
+    --leading-small: 18px;
+}
+
+/* Global resets */
+html, body, #root {
+    height: 100%;
+}
+
+body {
+    font-family: var(--font-family-nunito);
+}
+
+@keyframes toastIn {
+    0% {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes toastOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-15px);
+    }
+}
+
+.toast-enter {
+    animation: toastIn 0.25s ease-out forwards;
+}
+
+.toast-exit {
+    animation: toastOut 0.25s ease-in forwards;
+}
