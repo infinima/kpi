@@ -1,10 +1,12 @@
-import React from "react";
-import { useUI, useNavigation, type Page } from "@/store";
-import { Menu, X } from "lucide-react";
+import {Page, useNavigation, useUser} from "@/store";
+import { useUI } from "@/store";
+import { Menu, X, Sun, Moon } from "lucide-react";
 
-export function MenuBar({ isLoggedIn = false }) {
+export function MenuBar() {
     const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUI();
     const { currentPage, setPage } = useNavigation();
+    const { user, logout } = useUser();
+    const { theme, toggleTheme } = useUI();
 
     const menuItems: { id: Page; title: string }[] = [
         { id: "home", title: "Главная" },
@@ -43,21 +45,52 @@ export function MenuBar({ isLoggedIn = false }) {
                     ))}
                 </nav>
 
+                {/* RIGHT SIDE */}
+                <div className="flex items-center space-x-4">
+
+                    {/* THEME SWITCH */}
+                    <button
+                        onClick={toggleTheme}
+                        className="p-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface hover:bg-hover dark:hover:bg-dark-hover transition"
+                    >
+                        {theme === "dark" ? (
+                            <Sun size={20} />
+                        ) : (
+                            <Moon size={20} />
+                        )}
+                    </button>
+
+                    {/* AUTH BUTTON / USER NAME */}
+                    {!user ? (
+                        <button
+                            onClick={() => useUI.getState().openLoginModal()}
+                            className="px-4 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark"
+                        >
+                            Войти
+                        </button>
+                    ) : (
+                        <button
+                            onClick={logout}
+                            className="
+                                px-4 py-2 rounded-lg
+                                bg-surface dark:bg-dark-surface
+                                border border-border dark:border-dark-border
+                                hover:bg-hover dark:hover:bg-dark-hover
+                                text-text-main dark:text-dark-text-main
+                                font-medium
+                            "
+                        >
+                            {user.first_name}
+                        </button>
+                    )}
+                </div>
+
                 {/* MOBILE BURGER */}
                 <button
                     className="sm:hidden text-text-main dark:text-dark-text-main"
                     onClick={toggleMobileMenu}
                 >
                     {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
-                </button>
-
-                {/* LOGIN BUTTON */}
-                <button className="
-                    px-4 py-2 rounded-lg
-                    bg-primary hover:bg-primary-dark
-                    text-white text-sm sm:text-base
-                ">
-                    {isLoggedIn ? "Выйти" : "Войти"}
                 </button>
             </div>
 
