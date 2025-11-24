@@ -14,6 +14,7 @@ registry.registerComponent(
             "INVALID_TOKEN",
             "INVALID_CREDENTIALS",
             "SESSION_NOT_FOUND",
+            "INVALID_SESSION",
 
             // ===== PERMISSIONS =====
             "FORBIDDEN",
@@ -25,6 +26,7 @@ registry.registerComponent(
             "CREATE_USER_FAILED",
             "UPDATE_USER_FAILED",
             "NO_FIELDS_FOR_UPDATE",
+            "EMAIL_ALREADY_EXISTS",
 
             // ===== EVENTS =====
             "EVENT_NOT_FOUND",
@@ -38,10 +40,17 @@ registry.registerComponent(
             // ===== LOCATIONS =====
             "LOCATION_NOT_FOUND",
             "LOCATION_DELETED",
+            "LOCATION_HAS_RELATED_OBJECTS",
 
             // ===== LEAGUES =====
             "LEAGUE_NOT_FOUND",
             "LEAGUE_DELETED",
+            "INVALID_PRESENTATION_FORMAT",
+            "INVALID_PDF_SIGNATURE",
+            "NO_FUDZI_PRESENTATION",
+            "PDF_GENERATION_FAILED",
+            "LEAGUE_HAS_RELATED_OBJECTS",
+            "NO_TEAMS",
 
             // ===== TEAMS =====
             "TEAM_NOT_FOUND",
