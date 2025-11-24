@@ -25,9 +25,6 @@ export const CreateLocationInput = LocationSchema.omit({
 });
 export const UpdateLocationInput = CreateLocationInput
     .partial()
-    .extend({
-        id: z.coerce.number().int().positive(),
-    });
 export const DeleteLocationQuery = z.object({
     force: z.preprocess(v => v === "true", z.boolean()),
 });
@@ -108,7 +105,7 @@ registry.registerPath({
     request: {
         params: GetOneLocationInput,
         body: {
-            content: { "application/json": { schema: UpdateLocationInput.omit({ id: true }) } },
+            content: { "application/json": { schema: UpdateLocationInput } },
         },
     },
     responses: {

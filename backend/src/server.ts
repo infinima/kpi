@@ -11,6 +11,8 @@ import "./schemas/errors.js";
 import { authRouter } from "./routes/auth.js";
 import { eventsRouter } from "./routes/events.js";
 import { locationsRouter } from "./routes/locations.js";
+import { leaguesRouter } from "./routes/leagues.js";
+import { teamsRouter } from "./routes/teams.js";
 import { usersRouter } from "./routes/users.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -30,6 +32,8 @@ if (process.env.NODE_ENV === "development") {
 app.use("/api/auth", authRouter);
 app.use("/api/events", eventsRouter);
 app.use("/api/locations", locationsRouter);
+app.use("/api/leagues", leaguesRouter);
+app.use("/api/teams", teamsRouter);
 app.use("/api/users", usersRouter);
 
 

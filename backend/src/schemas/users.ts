@@ -2,7 +2,6 @@ import { z } from "../utils/zod-openapi-init.js";
 import { registry } from "../utils/openapi.js";
 
 // ===== Схемы =====
-
 export const UserSchema = z.object({
     id: z.coerce.number().int().positive(),
     email: z.email(),
@@ -39,10 +38,6 @@ export const UpdateUserInput = CreateUserInput
     .omit({
         password: true,
     })
-    .extend({
-        id: z.coerce.number().int().positive(),
-    });
-
 
 
 // ===== Документация =====
@@ -136,7 +131,7 @@ registry.registerPath({
     request: {
         params: GetOneUserInput,
         body: {
-            content: { "application/json": { schema: UpdateUserInput.omit({ id: true }) } },
+            content: { "application/json": { schema: UpdateUserInput } },
         },
     },
     responses: {

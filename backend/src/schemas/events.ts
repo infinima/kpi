@@ -28,9 +28,6 @@ export const CreateEventInput = EventSchema
     });
 export const UpdateEventInput = CreateEventInput
     .partial()
-    .extend({
-        id: z.coerce.number().int().positive(),
-    });
 export const DeleteEventQuery = z.object({
     force: z.preprocess(v => v === "true", z.boolean()),
 });
@@ -127,7 +124,7 @@ registry.registerPath({
     request: {
         params: GetOneEventInput,
         body: {
-            content: { "application/json": { schema: UpdateEventInput.omit({ id: true }) } },
+            content: { "application/json": { schema: UpdateEventInput } },
         },
     },
     responses: {

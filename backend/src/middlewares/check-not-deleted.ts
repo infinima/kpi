@@ -106,7 +106,8 @@ function extractParam(req: any, name: string) {
 
 export function checkParentNotDeleted(
     childType: ObjectType,
-    parentIdParam: string
+    parentIdParam: string,
+    optional: boolean = false
 ) {
     return async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -115,7 +116,9 @@ export function checkParentNotDeleted(
 
             const parentId = extractParam(req, parentIdParam);
 
-            if (!parentId) {
+            if (parentId === null) {
+                if (optional) return next();
+
                 return res.status(400).json({
                     error: {
                         code: "BAD_PARENT_ID",
@@ -156,8 +159,10 @@ export function checkParentNotDeleted(
 
                 if (row.deleted_at !== null) {
                     return res.status(400).json({
-                        code: `${currentType.toUpperCase()}_DELETED`,
-                        message: `The ${currentType} is deleted`
+                        error: {
+                            code: `${currentType.toUpperCase()}_DELETED`,
+                            message: `The ${currentType} is deleted`
+                        }
                     });
                 }
 

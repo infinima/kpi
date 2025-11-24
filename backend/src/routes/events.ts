@@ -103,12 +103,13 @@ eventsRouter.post(
 // PATCH /api/events/:id
 eventsRouter.patch(
     "/:id",
+    validate(GetOneEventInput, "params"),
     validate(UpdateEventInput, "body"),
     checkPermission("events", "update"),
     checkNotDeleted("event"),
     async (req, res) => {
-        const data = (req as any).validated.body;
-        const { id, ...rest } = data;
+        const { id } = (req as any).validated.params;
+        const { ...rest } = (req as any).validated.body;
 
         const fields = Object.fromEntries(
             Object.entries(rest).filter(([_, v]) => v !== undefined)
