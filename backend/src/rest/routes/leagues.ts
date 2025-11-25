@@ -208,7 +208,7 @@ leaguesRouter.post(
     "/",
     validate(CreateLeagueInput, "body"),
     checkPermission("leagues", "create"),
-    checkParentNotDeleted("league", "location_id", true),
+    checkParentNotDeleted("league", "location_id"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -267,6 +267,7 @@ leaguesRouter.patch(
     validate(UpdateLeagueInput, "body"),
     checkPermission("leagues", "update"),
     checkNotDeleted("league"),
+    checkParentNotDeleted("league", "location_id", true),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;

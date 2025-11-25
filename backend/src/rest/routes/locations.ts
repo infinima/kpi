@@ -75,7 +75,7 @@ locationsRouter.post(
     "/",
     validate(CreateLocationInput, "body"),
     checkPermission("locations", "create"),
-    checkParentNotDeleted("location", "event_id", true),
+    checkParentNotDeleted("location", "event_id"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -105,7 +105,7 @@ locationsRouter.patch(
     validate(UpdateLocationInput, "body"),
     checkPermission("locations", "update"),
     checkNotDeleted("location"),
-    checkParentNotDeleted("location", "event_id"),
+    checkParentNotDeleted("location", "event_id", true),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;
