@@ -31,7 +31,7 @@ export const useNotifications = create<NotificationState>((set, get) => ({
         setTimeout(() => {
             console.log("[Notify] auto-remove:", id);
             get().removeMessage(id);
-        }, 5000);
+        }, 2000);
     },
 
     removeMessage: (id) => {

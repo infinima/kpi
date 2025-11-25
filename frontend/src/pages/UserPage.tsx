@@ -4,30 +4,29 @@ import { useUI } from "@/store";
 import { Search, Plus } from "lucide-react";
 
 import { UserCard } from "@/components/user/UserCard";
-import { UserEditModal } from "@/components/user/UserEditModal";
+import { FormModal } from "@/components/layout/FormModal";
+import { userForm } from "@/config/userForm";
 
 export function UsersPage() {
     const [users, setUsers] = useState<any[]>([]);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState<"name" | "email" | "date">("name");
-
-    // 🔥 новый фильтр
     const [mode, setMode] = useState<"active" | "deleted">("active");
-
     const [loading, setLoading] = useState(true);
 
-    const openEdit = useUI((s) => s.openEditUserModal);
+    const openForm = useUI((s) => s.openFormModal);
+    const formOpen = useUI((s) => s.formModalOpen);
+    const closeForm = useUI((s) => s.closeFormModal);
+    const formData = useUI((s) => s.formData);
+    const formConfig = useUI((s) => s.formConfig);
 
     async function loadUsers() {
         try {
             setLoading(true);
 
-            let url =
-                mode === "active"
-                    ? "users"
-                    : "users/deleted"; // 👈 или users/deleted если так надо
-
+            const url = mode === "active" ? "users" : "users/deleted";
             const list = await apiGet(url);
+
             setUsers(list);
         } finally {
             setLoading(false);
@@ -36,12 +35,12 @@ export function UsersPage() {
 
     useEffect(() => {
         loadUsers();
-    }, [mode]); // ⬅ обновлять при переключении фильтра
+    }, [mode]);
 
     const filtered = useMemo(() => {
         if (!search.trim()) return users;
-        const s = search.toLowerCase();
 
+        const s = search.toLowerCase();
         return users.filter((u) =>
             Object.values(u).some((v) =>
                 String(v || "").toLowerCase().includes(s)
@@ -81,13 +80,11 @@ export function UsersPage() {
             {/* SEARCH + SORT + MODE */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-4">
 
-                {/* Search */}
                 <div className="relative w-full sm:w-80">
                     <Search
                         className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
                         size={18}
                     />
-
                     <input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
@@ -100,7 +97,6 @@ export function UsersPage() {
                     />
                 </div>
 
-                {/* Sort */}
                 <select
                     value={sort}
                     onChange={(e) => setSort(e.target.value as any)}
@@ -108,7 +104,6 @@ export function UsersPage() {
                         px-3 py-2 rounded-lg
                         bg-surface dark:bg-dark-surface
                         border border-border dark:border-dark-border
-                        w-full sm:w-auto
                     "
                 >
                     <option value="name">По ФИО</option>
@@ -116,7 +111,7 @@ export function UsersPage() {
                     <option value="date">По дате создания</option>
                 </select>
 
-                {/* 🔥 MODE SWITCH */}
+                {/* ACTIVE / DELETED */}
                 <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value as any)}
@@ -124,26 +119,17 @@ export function UsersPage() {
                         px-3 py-2 rounded-lg
                         bg-surface dark:bg-dark-surface
                         border border-border dark:border-dark-border
-                        w-full sm:w-auto
                     "
                 >
                     <option value="active">Активные</option>
                     <option value="deleted">Удалённые</option>
                 </select>
 
-                {/* Add user */}
+                {/* ADD */}
                 {mode === "active" && (
                     <button
                         onClick={() =>
-                            openEdit({
-                                id: null,
-                                email: "",
-                                first_name: "",
-                                last_name: "",
-                                patronymic: "",
-                                tg_username: "",
-                                tg_full_name: "",
-                            })
+                            openForm(userForm, null)
                         }
                         className="
                             flex items-center gap-2 px-4 py-2
@@ -157,20 +143,33 @@ export function UsersPage() {
                 )}
             </div>
 
-            {/* GRID */}
+            {/* LIST */}
             {loading ? (
-                <p className="text-text-secondary">Загрузка...</p>
+                <p>Загрузка...</p>
             ) : sorted.length === 0 ? (
-                <p className="text-text-secondary">Ничего не найдено</p>
+                <p>Ничего не найдено</p>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {sorted.map((user) => (
-                        <UserCard user={user} onRefresh={loadUsers} isDeleted={mode==="deleted"} />
+                        <UserCard
+                            key={user.id}
+                            user={user}
+                            onRefresh={loadUsers}
+                            isDeleted={mode === "deleted"}
+                        />
                     ))}
                 </div>
             )}
 
-            <UserEditModal onUpdated={loadUsers} />
+            {/* FORM MODAL */}
+            {formOpen && (
+                <FormModal
+                    config={formConfig}
+                    initialData={formData}
+                    onClose={closeForm}
+                    onUpdated={loadUsers}
+                />
+            )}
         </div>
     );
 }
