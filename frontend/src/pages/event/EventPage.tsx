@@ -44,6 +44,7 @@ export function EventsPage() {
         loadEvents();
     }, [mode]);
 
+
     // 🔍 Фильтр по тексту
     const filteredBySearch = useMemo(() => {
         const s = search.toLowerCase();
@@ -78,7 +79,6 @@ export function EventsPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-h1 font-bold">Мероприятия</h1>
 
             {/* ➤ Фильтры и поиск */}
             <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
@@ -155,7 +155,7 @@ export function EventsPage() {
                             key={ev.id}
                             event={ev}
                             onRefresh={loadEvents}
-                            // isDeleted={mode === "deleted"}
+                            isDeleted={mode === "deleted"}
                         />
                     ))}
                 </div>

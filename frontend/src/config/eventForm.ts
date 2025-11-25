@@ -9,21 +9,21 @@ export const eventForm: FormConfig = {
             name: "photo",
             label: "Фото",
             type: "image",
-            required: true
+            required: false
         },
         {
             name: "name",
             label: "Название мероприятия",
             type: "text",
             required: true,
-            placeholder: "Введите название"
+            placeholder: "Название"
         },
         {
             name: "date",
             label: "Дата",
             type: "date",
             required: true,
-            placeholder: "Выберите дату"
+            placeholder: "Дата"
         }
     ]
 };

@@ -29,14 +29,35 @@ export function FormModal({
 
     /** ▌ Инициализация данных */
     useEffect(() => {
-        const base = initialData || {};
-        setForm(base);
-        setOriginal(base);
-    }, [initialData]);
+        if (!initialData) {
+            setForm({});
+            setOriginal({});
+            return;
+        }
+
+        const fixed: Record<string, any> = {};
+
+        for (const f of config.fields) {
+            const key = f.name;
+            const val = initialData[key];
+
+            if (f.type === "date" && val) {
+                // ✂️ обрезаем время
+                fixed[key] = val.substring(0, 10);
+            } else {
+                fixed[key] = val ?? "";
+            }
+        }
+
+        setForm(fixed);
+        setOriginal(fixed);
+    }, [initialData, config.fields]);
 
     function updateField(name: string, value: any) {
         setForm((prev) => ({ ...prev, [name]: value }));
     }
+
+
 
     /** ▌ Определим изменённые поля */
     function getChangedFields() {
@@ -145,7 +166,7 @@ export function FormModal({
                             <BaseImage
                                 path={`${config.endpoint}/${initialData?.id}/photo`}
                                 alt="photo"
-                                className="w-24 h-24 rounded-lg object-cover border"
+                                className="w-24 h-24 rounded-lg object-cover border border-border dark:border-dark-border"
                                 fallbackLetter="?"
                             />
                         ) : (

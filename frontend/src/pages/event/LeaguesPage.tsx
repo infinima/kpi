@@ -47,7 +47,6 @@ export function LeaguesPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-h1 font-bold">Лиги локации #{locationId}</h1>
 
             {/* SEARCH + ADD */}
             <div className="flex flex-col sm:flex-row gap-4">
@@ -58,14 +57,14 @@ export function LeaguesPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по лигам…"
-                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface border border-border dark:border-dark-border"
+                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
                     />
                 </div>
 
                 <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg bg-surface border border-border dark:border-dark-border"
+                    className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
                 >
                     <option value="active">Активные</option>
                     <option value="deleted">Удалённые</option>

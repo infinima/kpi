@@ -8,24 +8,32 @@ export type EventsPage =
 interface EventsNavState {
     page: EventsPage;
 
-    // выбранные элементы
+    // выбранное мероприятие
     eventId: number | null;
+    eventName: string | null;
+
+    // выбранная локация
     locationId: number | null;
+    locationName: string | null;
 
-    // переходы вперёд
+    // переходы
     goEvents: () => void;
-    goLocations: (eventId: number) => void;
-    goLeagues: (locationId: number) => void;
+    goLocations: (eventId: number, eventName: string) => void;
+    goLeagues: (locationId: number, locationName: string) => void;
 
-    // переход назад (автоматически по дереву)
+    // назад
     goBack: () => void;
 }
 
 export const useEventsNav = create<EventsNavState>((set, get) => ({
 
     page: "events",
+
     eventId: null,
+    eventName: null,
+
     locationId: null,
+    locationName: null,
 
     /** ---------------------
      * ПЕРЕХОД НА СПИСОК МЕРОПРИЯТИЙ
@@ -34,26 +42,31 @@ export const useEventsNav = create<EventsNavState>((set, get) => ({
         set({
             page: "events",
             eventId: null,
+            eventName: null,
             locationId: null,
+            locationName: null,
         }),
 
     /** ---------------------
-     * ПЕРЕХОД К ЛОКАЦИЯМ МЕРОПРИЯТИЯ
+     * ПЕРЕХОД К ЛОКАЦИЯМ КОНКРЕТНОГО МЕРОПРИЯТИЯ
      * ---------------------- */
-    goLocations: (eventId) =>
+    goLocations: (eventId, eventName) =>
         set({
             page: "locations",
             eventId,
+            eventName,
             locationId: null,
+            locationName: null,
         }),
 
     /** ---------------------
-     * ПЕРЕХОД К ЛИГАМ ЛОКАЦИИ
+     * ПЕРЕХОД К ЛИГАМ КОНКРЕТНОЙ ЛОКАЦИИ
      * ---------------------- */
-    goLeagues: (locationId) =>
+    goLeagues: (locationId, locationName) =>
         set({
             page: "leagues",
             locationId,
+            locationName,
         }),
 
     /** ---------------------
@@ -61,26 +74,26 @@ export const useEventsNav = create<EventsNavState>((set, get) => ({
      * leagues → locations → events
      * ---------------------- */
     goBack: () => {
-        const { page, eventId } = get();
+        const { page } = get();
 
         if (page === "leagues") {
-            // возвращаемся к локациям текущего мероприятия
+            // назад к локациям текущего мероприятия
             return set({
                 page: "locations",
-                // eventId остаётся тем же!
+                locationId: null,
+                locationName: null,
             });
         }
 
         if (page === "locations") {
-            // возвращаемся в список мероприятий
+            // назад к списку мероприятий
             return set({
                 page: "events",
                 eventId: null,
+                eventName: null,
                 locationId: null,
+                locationName: null,
             });
         }
-
-        // если мы уже на events — ничего не делаем
     },
-
 }));

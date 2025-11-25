@@ -61,7 +61,6 @@ export function LocationsPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-h1 font-bold">Локации пло #{eventId}</h1>
 
             {/* SEARCH + MODE + ADD */}
             <div className="flex flex-col sm:flex-row gap-4 sm:items-center ">
@@ -72,7 +71,7 @@ export function LocationsPage() {
 
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Поиск по локациям…"
+                        placeholder="Поиск по площадкам…"
                         className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
                     />
                 </div>
@@ -92,7 +91,7 @@ export function LocationsPage() {
                         className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
                     >
                         <Plus size={18} />
-                        Добавить локацию
+                        Добавить площадку
                     </button>
                 )}
             </div>

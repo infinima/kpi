@@ -25,28 +25,28 @@ export const userForm: FormConfig = {
             type: "password",
             required: true,              // обязательно только при создании
             hiddenWhenEditing: true,
-            placeholder: "Введите пароль"
+            placeholder: "Пароль"
         },
         {
             name: "last_name",
             label: "Фамилия",
             type: "text",
             required: true,
-            placeholder: "Введите фамилию"
+            placeholder: "Фамилию"
         },
         {
             name: "first_name",
             label: "Имя",
             type: "text",
             required: true,
-            placeholder: "Введите имя"
+            placeholder: "Имя"
         },
         {
             name: "patronymic",
             label: "Отчество",
             type: "text",
             required: false,             // отчество необязательно
-            placeholder: "Введите отчество"
+            placeholder: "Отчество"
         }
     ]
 };
