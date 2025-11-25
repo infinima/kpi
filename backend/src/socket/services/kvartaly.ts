@@ -30,10 +30,7 @@ export async function getKvartalyTable(league_id: number) {
 
     const teamCount = teams.length;
 
-    // ============================
-    // 1. Считаем solvedCount для КАЖДОГО из 4х*4 вопросов
-    // solvedCount[quarterIndex][questionIndex]
-    // ============================
+    // ---------- 1. Подсчёт solvedCount по каждому вопросу ----------
     const solvedCount: number[][] = [
         [0,0,0,0],
         [0,0,0,0],
@@ -52,72 +49,64 @@ export async function getKvartalyTable(league_id: number) {
         }
     }
 
-    // ============================
-    // 2. Считаем bonusReceivers для каждого квартала
-    // ============================
+    // ---------- 2. Подсчёт bonusReceivers ----------
     const bonusReceivers = [0, 0, 0, 0];
 
     for (let qi = 0; qi < 4; qi++) {
         for (const t of teams) {
             const q = t.answers_kvartaly[qi];
-            const allSolved = q.questions.every(
-                x => x.correct > 0
-            );
+            const allSolved = q.questions.every(x => x.correct > 0);
             if (allSolved) bonusReceivers[qi]++;
         }
     }
 
-    // bonus = 5 + N - bonusReceivers
     const bonuses = bonusReceivers.map(br => 5 + teamCount - br);
 
-    // ============================
-    // 3. Собираем таблицу
-    // ============================
+    // ---------- 3. Формируем ответ ----------
     const result: any[] = [];
 
     for (const t of teams) {
         let total = 0;
-
         const quarters = [];
 
         for (let qi = 0; qi < 4; qi++) {
             const quarter = t.answers_kvartaly[qi];
 
-            const answers = quarter.questions.map((q, qi2) => {
-                const correct = q.correct;
-                const incorrect = q.incorrect;
+            let quarter_total = 0;
 
+            const answers = quarter.questions.map((q, qi2) => {
                 let score = 0;
 
-                if (correct > 0) {
-                    score = 5 + teamCount - solvedCount[qi][qi2] - incorrect;
-                } else if (incorrect > 0) {
-                    score = -incorrect;
+                if (q.correct > 0) {
+                    score = 5 + teamCount - solvedCount[qi][qi2] - q.incorrect;
+                } else if (q.incorrect > 0) {
+                    score = -q.incorrect;
                 } else {
-                    score = 0; // не сдан
+                    score = 0;
                 }
 
-                total += score;
-
+                quarter_total += score;
                 return {
-                    correct,
-                    incorrect,
+                    correct: q.correct,
+                    incorrect: q.incorrect,
                     score
                 };
             });
 
-            // бонус
             let bonus = 0;
             const allSolved = quarter.questions.every(x => x.correct > 0);
 
             if (allSolved) {
                 bonus = bonuses[qi];
-                total += bonus;
+                quarter_total += bonus;
             }
+
+            total += quarter_total;
 
             quarters.push({
                 finished: quarter.finished === 1,
                 bonus,
+                total: quarter_total,      // ← ДОБАВЛЕНО
                 answers
             });
         }
