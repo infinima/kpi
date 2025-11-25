@@ -72,7 +72,10 @@ authRouter.get(
 
         if (!session) {
             return res.status(401).json({
-                error: { code: "INVALID_SESSION" }
+                error: {
+                    code: "INVALID_SESSION",
+                    message: "Invalid session"
+                }
             });
         }
 
