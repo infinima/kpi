@@ -99,7 +99,7 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
                     <p><b>Имя:</b> {user.first_name}</p>
                     <p><b>Отчество:</b> {user.patronymic}</p>
                     <p><b>Создан:</b> {formatDate(user.created_at)}</p>
-                    <p><b>Последнее изменение:</b> {formatDate(user.updated_at)}</p>
+                    <p><b>Обновлен:</b> {formatDate(user.updated_at)}</p>
                     {isDeleted && <p><b>Удален:</b> {formatDate(user.deleted_at)}</p>}
 
                     <div className="pt-3 flex gap-3">
