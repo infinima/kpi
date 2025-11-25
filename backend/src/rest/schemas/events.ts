@@ -56,6 +56,7 @@ registry.registerPath({
     path: "/api/events/deleted",
     summary: "Получить список удаленных событий",
     tags: ["Events"],
+    security: [{ BearerAuth: [] }],
     responses: {
         200: {
             description: "OK",

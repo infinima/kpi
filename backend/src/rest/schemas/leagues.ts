@@ -70,6 +70,7 @@ registry.registerPath({
     path: "/api/leagues/location/{location_id}/deleted",
     summary: "Получить удаленные лиги по location_id",
     tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
     request: {
         params: GetLeaguesByLocationInput,
     },

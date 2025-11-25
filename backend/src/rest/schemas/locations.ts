@@ -60,6 +60,7 @@ registry.registerPath({
     path: "/api/locations/event/{event_id}/deleted",
     summary: "Получить удаленные площадки по event_id",
     tags: ["Locations"],
+    security: [{ BearerAuth: [] }],
     request: { params: GetLocationsByEventInput },
     responses: {
         200: {
