@@ -12,6 +12,7 @@ import {
     GetLeaguesByLocationInput,
     CreateLeagueInput,
     UpdateLeagueInput,
+    UpdateLeagueStatusInput,
     DeleteLeagueQuery
 } from "../schemas/leagues.js";
 
@@ -323,6 +324,77 @@ leaguesRouter.patch(
                 },
             });
         }
+    }
+);
+
+// POST /api/leagues/:id/status
+leaguesRouter.post(
+    "/:id/status",
+    validate(GetOneLeagueInput, "params"),
+    validate(UpdateLeagueStatusInput, "body"),
+    checkPermission("leagues", "update"),
+    checkNotDeleted("league"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+        const { new_status } = (req as any).validated.body;
+
+        const statuses = [
+            "NOT_STARTED",
+            "REGISTRATION_IN_PROGRESS",
+            "REGISTRATION_ENDED",
+            "KVARTALY_GAME",
+            "LUNCH",
+            "FUDZI_GAME",
+            "FUDZI_GAME_BREAK",
+            "GAMES_ENDED",
+            "AWARDING_IN_PROGRESS",
+            "ENDED"
+        ];
+
+        const [league] = await query(
+            "SELECT status FROM leagues WHERE id = ? AND deleted_at IS NULL",
+            [id]
+        );
+
+        const currentIndex = statuses.indexOf(league.status);
+        const nextIndex = statuses.indexOf(new_status);
+
+        if (Math.abs(nextIndex - currentIndex) !== 1) {
+            return res.status(400).json({
+                error: {
+                    code: "ILLEGAL_STATUS_TRANSITION",
+                    message: "Allowed to move only to adjacent status"
+                }
+            });
+        }
+
+        try {
+            switch (new_status) {
+                case "REGISTRATION_ENDED":
+                    break;
+                case "KVARTALY_GAME":
+                    break;
+                case "FUDZI_GAME":
+                    break;
+                case "GAMES_ENDED":
+                    break;
+            }
+        } catch (e: any) {
+            console.error(e);
+            return res.status(500).json({
+                error: {
+                    code: "STATUS_SIDE_EFFECT_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+
+        await query(
+            "UPDATE leagues SET status = ? WHERE id = ?",
+            [new_status, id]
+        );
+
+        res.json({ success: true, new_status });
     }
 );
 
