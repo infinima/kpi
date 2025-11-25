@@ -36,6 +36,29 @@ teamsRouter.get(
     }
 );
 
+// GET /api/teams/league/:league_id/deleted
+teamsRouter.get(
+    "/league/:league_id/deleted",
+    validate(GetTeamsByLeagueInput, "params"),
+    checkPermission("teams", "restore"),
+    checkParentNotDeleted("team", "league_id"),
+    async (req, res) => {
+        const { league_id } = (req as any).validated.params;
+
+        const rows = await query(
+            `SELECT id, league_id, name, members,
+                    answers_kvartaly, answers_fudzi,
+                    diploma, special_nominations,
+                    created_at, updated_at, deleted_at
+             FROM teams
+             WHERE league_id = ? AND deleted_at IS NOT NULL`,
+            [league_id]
+        );
+
+        res.json(rows);
+    }
+);
+
 // GET /api/teams/:id
 teamsRouter.get(
     "/:id",

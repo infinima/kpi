@@ -1,7 +1,6 @@
 import { z } from "../../utils/zod-openapi-init.js";
 import { registry } from "../../utils/openapi.js";
 
-// ===== Схемы =====
 const CoachSchema = z.object({
     full_name: z.string().min(1),
     email: z.email(),
@@ -26,22 +25,31 @@ const KvartalSchema = z.object({
 export const AnswersKvartalySchema = z.array(KvartalSchema).length(4);
 
 const FudziQuestionSchema = z.object({
-    score: z.number().int().min(0),
+    status: z.enum(["correct", "incorrect", "not_submitted"]),
 });
 export const AnswersFudziSchema = z.object({
-    card: z.boolean(),
+    has_card: z.boolean(),
     questions: z.array(FudziQuestionSchema).length(16),
 });
-
 export const TeamSchema = z.object({
     id: z.coerce.number().int().positive(),
     league_id: z.coerce.number().int().positive(),
     name: z.string().min(1),
     members: MembersSchema,
+
     answers_kvartaly: AnswersKvartalySchema,
+    penalty_kvartaly: z.number().int(),
+    place_kvartaly: z.number().int().nullable(),
+
     answers_fudzi: AnswersFudziSchema,
+    penalty_fudzi: z.number().int(),
+    place_fudzi: z.number().int().nullable(),
+
+    place_final: z.number().int().nullable(),
+
     diploma: z.enum(["FIRST_DEGREE","SECOND_DEGREE","THIRD_DEGREE","PARTICIPANT"]).nullable(),
     special_nominations: z.array(z.string()),
+
     created_at: z.string(),
     updated_at: z.string(),
     deleted_at: z.string().nullable(),
@@ -59,14 +67,18 @@ export const CreateTeamInput = TeamSchema
         updated_at: true,
         deleted_at: true,
         answers_kvartaly: true,
+        penalty_kvartaly: true,
+        place_kvartaly: true,
         answers_fudzi: true,
+        penalty_fudzi: true,
+        place_fudzi: true,
+        place_final: true,
         special_nominations: true,
         diploma: true,
     })
     .extend({
         members: MembersSchema,
     });
-
 export const UpdateTeamInput = CreateTeamInput.partial();
 
 
@@ -78,6 +90,27 @@ registry.registerPath({
     method: "get",
     path: "/api/teams/league/{league_id}",
     summary: "Получить команды по league_id",
+    tags: ["Teams"],
+    request: {
+        params: GetTeamsByLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: z.array(TeamSchema) },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist" },
+    },
+});
+
+// GET /api/teams/league/:event_id/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/teams/league/{league_id}/deleted",
+    summary: "Получить удаленные команды по league_id",
     tags: ["Teams"],
     request: {
         params: GetTeamsByLeagueInput,

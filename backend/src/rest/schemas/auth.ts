@@ -26,6 +26,31 @@ export const MeResponse = z.object({
     user: UserSchema.optional()
 });
 
+export const KPIPermissionEnum = z.enum([
+    "get",
+    "create",
+    "update",
+    "delete",
+    "restore",
+    "access_history",
+    "print_documents"
+]);
+export const KPIObjectEnum = z.enum([
+    "events",
+    "locations",
+    "leagues",
+    "teams",
+    "users"
+]);
+export const PermissionOutput = z.record(
+    KPIObjectEnum,
+    z.record(
+        z.string(), // "global" или id
+        z.array(KPIPermissionEnum).optional()
+    )
+);
+
+
 
 // ===== Документация =====
 
@@ -92,6 +117,24 @@ registry.registerPath({
             description: "OK",
             content: {
                 "application/json": { schema: MeResponse }
+            }
+        },
+        401: { description: "Invalid or expired token" }
+    }
+});
+
+// GET /api/auth/permissions
+registry.registerPath({
+    method: "get",
+    path: "/api/auth/permissions",
+    summary: "Получить все права текущего пользователя",
+    tags: ["Auth"],
+    security: [{ BearerAuth: [] }],
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: PermissionOutput }
             }
         },
         401: { description: "Invalid or expired token" }

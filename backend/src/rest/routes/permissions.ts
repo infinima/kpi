@@ -36,6 +36,7 @@ export interface PermissionOutput {
 
 // правила глобальных
 const STRICT_GLOBAL: KPIPermission[] = ["create"];
+const EXTRA_GLOBAL: KPIPermission[] = ["restore"];
 const USERS_EXTRA_GLOBAL: KPIPermission[] = ["get"];
 
 // -----------------------------------------------------
@@ -165,8 +166,8 @@ permissionsRouter.get(
             if (!row.object_id && !row.scope_object) {
                 const allowedGlobal =
                     obj === "users"
-                        ? [...STRICT_GLOBAL, ...USERS_EXTRA_GLOBAL]
-                        : [...STRICT_GLOBAL];
+                        ? [...STRICT_GLOBAL, ...USERS_EXTRA_GLOBAL, ...EXTRA_GLOBAL]
+                        : [...STRICT_GLOBAL, ...EXTRA_GLOBAL];
 
                 if (!out[obj].global) out[obj].global = [];
 

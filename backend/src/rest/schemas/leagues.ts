@@ -32,9 +32,20 @@ export const CreateLeagueInput = LeagueSchema
     });
 export const UpdateLeagueInput = CreateLeagueInput
     .partial()
-    .extend({
-        status: z.string().min(1).optional(),
-    });
+export const UpdateLeagueStatusInput = z.object({
+    new_status: z.enum([
+        "NOT_STARTED",
+        "REGISTRATION_IN_PROGRESS",
+        "REGISTRATION_ENDED",
+        "KVARTALY_GAME",
+        "LUNCH",
+        "FUDZI_GAME",
+        "FUDZI_GAME_BREAK",
+        "GAMES_ENDED",
+        "AWARDING_IN_PROGRESS",
+        "ENDED"
+    ])
+});
 export const DeleteLeagueQuery = z.object({
     force: z.preprocess(v => v === "true", z.boolean()),
 });
@@ -202,6 +213,31 @@ registry.registerPath({
         400: { description: "The league is deleted or validation failed" },
         404: { description: "The league does not exist" },
     },
+});
+
+// POST /api/leagues/:id/status
+registry.registerPath({
+    method: "post",
+    path: "/api/leagues/{id}/status",
+    summary: "Изменить статус лиги",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+        body: {
+            content: {
+                "application/json": {
+                    schema: UpdateLeagueStatusInput
+                }
+            }
+        }
+    },
+    responses: {
+        200: { description: "OK" },
+        400: { description: "Invalid transition or validation error" },
+        404: { description: "League does not exist" },
+        500: { description: "Side-effect logic failed" }
+    }
 });
 
 // DELETE /api/leagues/{id}
