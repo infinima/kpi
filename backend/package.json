@@ -5,8 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc && npm run copy-static",
-    "copy-static": "xcopy src\\static dist\\static /E /I /Y",
+    "build": "tsc",
     "start": "node dist/server.js",
     "typecheck": "tsc --noEmit"
   },
