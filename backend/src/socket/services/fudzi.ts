@@ -1,116 +1,104 @@
 import { query } from "../../utils/database.js";
 
+type FudziStatus = "correct" | "incorrect" | "not_submitted";
+
 interface FudziQuestion {
-    score: number;
+    status: FudziStatus;
 }
 
-interface FudziData {
-    card: boolean;
+interface FudziRaw {
+    has_card: boolean;
     questions: FudziQuestion[];
 }
 
 interface TeamRow {
     id: number;
     name: string;
-    answers_fudzi: FudziData | null;
+    answers_fudzi: FudziRaw | null;
+    penalty_fudzi: number;
 }
 
 export async function getFudziTable(league_id: number) {
-    // const teams: TeamRow[] = await query(
-    //     `
-    //         SELECT id, name, answers_fudzi
-    //         FROM teams
-    //         WHERE league_id = ?
-    //         ORDER BY id
-    //     `,
-    //     [league_id]
-    // );
-    //
-    // // --- нормализация ---
-    // const normalized = teams.map(t => {
-    //     const ans: FudziData =
-    //         t.answers_fudzi && typeof t.answers_fudzi === "object"
-    //             ? t.answers_fudzi
-    //             : { card: false, questions: [] };
-    //
-    //     // гарантируем 16 вопросов
-    //     const qs = Array.isArray(ans.questions) ? ans.questions : [];
-    //     while (qs.length < 16) qs.push({ score: 0 });
-    //
-    //     return {
-    //         id: t.id,
-    //         name: t.name,
-    //         questions: qs
-    //     };
-    // });
-    //
-    // const teamCount = normalized.length;
-    //
-    // // ===== 1. Считаем wrong_count для каждой задачи =====
-    // const wrongCount: number[] = Array(16).fill(0);
-    //
-    // for (let i = 0; i < 16; i++) {
-    //     let wrong = 0;
-    //     for (const t of normalized) {
-    //         const s = t.questions[i].score;
-    //         if (s === 0) wrong++;
-    //     }
-    //     wrongCount[i] = wrong;
-    // }
-    //
-    // // ===== 2. Формируем вывод =====
-    // const result: any[] = [];
-    //
-    // for (const t of normalized) {
-    //     const row = [];
-    //
-    //     // team name
-    //     row.push({
-    //         color: "team_name",
-    //         text: t.name,
-    //         id: t.id
-    //     });
-    //
-    //     // participation flag
-    //     const participated = t.questions.some(q => q.score > 0) ? 1 : 0;
-    //
-    //     row.push({
-    //         color: participated ? "green" : "red",
-    //         text: participated
-    //     });
-    //
-    //     // total
-    //     let total = 0;
-    //
-    //     // 16 задач
-    //     for (let i = 0; i < 16; i++) {
-    //         const rawScore = t.questions[i].score;
-    //
-    //         let color = "empty";
-    //         let text = 0;
-    //
-    //         if (rawScore > 0) {
-    //             // получает онлайн-балл
-    //             text = 5 + wrongCount[i];
-    //             color = "green";
-    //             total += text;
-    //         } else {
-    //             // неправильный ответ
-    //             color = participated ? "red" : "empty";
-    //             text = 0;
-    //         }
-    //
-    //         row.push({ color, text });
-    //     }
-    //
-    //     // total
-    //     row.splice(3, 0, {
-    //         color: "total",
-    //         text: total
-    //     });
-    //
-    //     result.push(row);
-    // }
+    const teams: TeamRow[] = await query(
+        `
+            SELECT id, name, answers_fudzi, penalty_fudzi
+            FROM teams
+            WHERE league_id = ?
+            ORDER BY id
+        `,
+        [league_id]
+    );
 
-    return { "error": "not implemented"};
+    const normalized = teams.map(t => {
+        const raw = t.answers_fudzi;
+
+        let has_card = false;
+        let questions: FudziQuestion[] = [];
+
+        if (raw && typeof raw === "object") {
+            has_card = Boolean(raw.has_card);
+            questions = Array.isArray(raw.questions) ? raw.questions : [];
+        }
+
+        // Guarantee 16 tasks
+        while (questions.length < 16) {
+            questions.push({ status: "not_submitted" });
+        }
+
+        return {
+            id: t.id,
+            name: t.name,
+            has_card,
+            penalty: t.penalty_fudzi ?? 0,
+            questions
+        };
+    });
+
+    const teamCount = normalized.length;
+
+    // Count incorrect answers per task
+    const wrongCount: number[] = Array(16).fill(0);
+
+    for (let qi = 0; qi < 16; qi++) {
+        let wrong = 0;
+        for (const t of normalized) {
+            if (t.questions[qi].status === "incorrect") wrong++;
+        }
+        wrongCount[qi] = wrong;
+    }
+
+    // Build result format
+    const result = [];
+
+    for (const t of normalized) {
+        const answers = [];
+        let total = 0;
+
+        for (let qi = 0; qi < 16; qi++) {
+            const q = t.questions[qi];
+            const status = q.status;
+
+            let score = 0;
+
+            if (status === "correct") {
+                score = 5 + wrongCount[qi];
+                total += score;
+            }
+
+            answers.push({ score, status });
+        }
+
+        total += t.penalty;
+
+        result.push({
+            name: t.name,
+            id: t.id,
+            has_card: t.has_card,
+            penalty: t.penalty,
+            total,
+            answers
+        });
+    }
+
+    return result;
 }
