@@ -76,14 +76,16 @@ teamsRouter.post(
                     finished: 0,
                     questions: Array.from({ length: 4 }, () => ({
                         correct: 0,
-                        incorrect: 0,
-                    })),
+                        incorrect: 0
+                    }))
                 }))
             );
 
             const answers_fudzi = JSON.stringify({
-                card: false,
-                questions: Array.from({ length: 16 }, () => ({ score: 0 })),
+                has_card: false,
+                questions: Array.from({ length: 16 }, () => ({
+                    status: "not_submitted"
+                }))
             });
 
             const special_nominations = JSON.stringify([]);
