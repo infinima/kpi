@@ -1,4 +1,4 @@
-// /src/components/user/UserImage.tsx
+// /src/components/user/image.tsx
 
 import { useEffect, useState } from "react";
 import { getImage } from "@/api";
@@ -11,7 +11,7 @@ interface UserImageProps {
     fallbackLetter?: string;
 }
 
-export function UserImage({
+export function Image({
                               path,
                               alt = "",
                               className = "",

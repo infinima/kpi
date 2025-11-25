@@ -11,3 +11,15 @@ export function formatDate(dateString: string): string {
         minute: "2-digit",
     });
 }
+
+export function formatDateOnly(dateString: string): string {
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) return dateString;
+
+    return date.toLocaleDateString("ru-RU", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+    });
+}

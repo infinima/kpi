@@ -3,3 +3,4 @@ export * from "./useGlobalStore";
 export * from "./useNotificationStore";
 export * from "./useUI";
 export * from "./useNavigation";
+export * from "./useEventsNavigation"

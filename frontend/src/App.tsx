@@ -2,19 +2,19 @@ import { MenuBar } from "@/components/layout/MenuBar";
 import {useNavigation, useUI, useUser} from "@/store";
 
 import { HomePage } from "@/pages/HomePage";
-import { EventsPage } from "@/pages/EventPage";
 import { TablesPage } from "@/pages/TablePage";
 import { LogsPage } from "@/pages/LogsPage";
 import { UsersPage } from "@/pages/UserPage";
 import {NotificationCenter} from "@/components/services/NotificationCenter";
 import {LoginModal} from "@/components/services/Login";
+import { EventsPageRoot } from "@/pages/event/EventsPageRoot";
 
 export function App() {
     const { currentPage } = useNavigation();
 
     const pages = {
         home: <HomePage />,
-        events: <EventsPage />,
+        events: <EventsPageRoot />,
         tables: <TablesPage />,
         logs: <LogsPage />,
         users: <UsersPage/>,

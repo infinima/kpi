@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import { apiPost, apiPatch } from "@/api";
 import { useNotifications } from "@/store";
 import { CropModal } from "@/components/services/CropModal";
-import { UserImage } from "@/components/user/UserImage";
+import { Image } from "@/components/image";
 
 import type { FormConfig, FormField } from "@/config/forms";
 
@@ -142,7 +142,7 @@ export function FormModal({
                                 className="w-24 h-24 rounded-lg object-cover border border-border dark:border-dark-border"
                             />
                         ) : imageSrc ? (
-                            <UserImage
+                            <Image
                                 path={`${config.endpoint}/${initialData?.id}/photo`}
                                 alt="photo"
                                 className="w-24 h-24 rounded-lg object-cover border"

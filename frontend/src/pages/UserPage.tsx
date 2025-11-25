@@ -3,7 +3,7 @@ import { apiGet } from "@/api";
 import { useUI } from "@/store";
 import { Search, Plus } from "lucide-react";
 
-import { UserCard } from "@/components/user/UserCard";
+import { UserCard } from "@/components/UserCard";
 import { FormModal } from "@/components/layout/FormModal";
 import { userForm } from "@/config/userForm";
 

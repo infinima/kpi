@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, Pencil, Trash, RotateCcw } from "lucide-react";
 import { useNotifications, useUI } from "@/store";
 import { apiDelete, apiPost } from "@/api";
-import { UserImage } from "@/components/user/UserImage";
+import { Image } from "@/components/image";
 import { formatDate } from "@/helpers/formatDate";
 import { userForm } from "@/config/userForm";
 
@@ -60,7 +60,7 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
 
-                    <UserImage
+                    <Image
                         path={`users/${user.id}/photo`}
                         alt="avatar"
                         className="
