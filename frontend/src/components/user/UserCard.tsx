@@ -4,6 +4,8 @@ import { useNotifications, useUI } from "@/store";
 import { apiDelete, apiPost } from "@/api";
 import { UserImage } from "@/components/user/UserImage";
 import { formatDate } from "@/helpers/formatDate";
+import { userForm } from "@/config/userForm";
+
 
 export interface User {
     id: number;
@@ -14,6 +16,8 @@ export interface User {
     tg_username: string;
     tg_full_name: string;
     created_at: string;
+    updated_at: string;
+    deleted_at: string;
 }
 
 interface UserCardProps {
@@ -24,7 +28,7 @@ interface UserCardProps {
 
 export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) {
     const [open, setOpen] = useState(false);
-    const openEdit = useUI((s) => s.openEditUserModal);
+    const openEdit = useUI((s) => s.openFormModal);
     const notify = useNotifications((s) => s.addMessage);
 
     async function handleDelete() {
@@ -91,17 +95,18 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
                     "
                 >
                     <p><b>ID:</b> {user.id}</p>
-                    <p><b>Имя:</b> {user.first_name}</p>
                     <p><b>Фамилия:</b> {user.last_name}</p>
+                    <p><b>Имя:</b> {user.first_name}</p>
                     <p><b>Отчество:</b> {user.patronymic}</p>
-                    <p><b>Telegram:</b> @{user.tg_username}</p>
-                    <p><b>Полное имя TG:</b> {user.tg_full_name}</p>
                     <p><b>Создан:</b> {formatDate(user.created_at)}</p>
+                    <p><b>Последнее изменение:</b> {formatDate(user.updated_at)}</p>
+                    {isDeleted && <p><b>Удален:</b> {formatDate(user.deleted_at)}</p>}
 
                     <div className="pt-3 flex gap-3">
 
                         {isDeleted ? (
-                            // 🔥 КНОПКА ВОССТАНОВИТЬ
+
+
                             <button
                                 onClick={handleRestore}
                                 className="
@@ -115,11 +120,11 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
                             <>
                                 {/* РЕДАКТИРОВАТЬ */}
                                 <button
-                                    onClick={() => openEdit(user)}
+                                    onClick={() => openEdit(userForm, user)}
                                     className="
-                                        px-3 py-2 flex items-center gap-2 rounded-lg
-                                        bg-primary text-white hover:bg-primary-dark
-                                    "
+        px-3 py-2 flex items-center gap-2 rounded-lg
+        bg-primary text-white hover:bg-primary-dark
+    "
                                 >
                                     <Pencil size={16} /> Редактировать
                                 </button>

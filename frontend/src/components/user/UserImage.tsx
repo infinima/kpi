@@ -1,73 +1,60 @@
+// /src/components/user/UserImage.tsx
+
 import { useEffect, useState } from "react";
 import { getImage } from "@/api";
+import { imageCache } from "@/helpers/imageCache";   // ⭐ добавлено
 
-interface RemoteImageProps {
+interface UserImageProps {
     path: string;
     alt?: string;
     className?: string;
-    fallbackLetter: string; // буква
+    fallbackLetter?: string;
 }
 
 export function UserImage({
-                                path,
-                                alt = "",
-                                className = "",
-                                fallbackLetter,
-                            }: RemoteImageProps) {
-    const [url, setUrl] = useState<string | null>(null);
-    const [loaded, setLoaded] = useState(false);
+                              path,
+                              alt = "",
+                              className = "",
+                              fallbackLetter = "?",
+                          }: UserImageProps) {
+    const [src, setSrc] = useState<string | null>(() => imageCache.get(path) ?? null);
 
     useEffect(() => {
-        let alive = true;
-        let temp: string | null = null;
+        let mounted = true;
 
         async function load() {
-            const u = await getImage(path);
+            // 1) пробуем достать из кеша
+            const cached = imageCache.get(path);
+            if (cached) {
+                if (mounted) setSrc(cached);
+                return;
+            }
 
-            if (alive) {
-                temp = u;
-                setUrl(u);       // если null → фото нет
-                setLoaded(true);
+            // 2) грузим с сервера
+            const url = await getImage(path);
+
+            if (mounted && url) {
+                imageCache.set(path, url); // 🔥 кладём в кеш
+                setSrc(url);
             }
         }
 
         load();
 
         return () => {
-            alive = false;
-            if (temp) URL.revokeObjectURL(temp);
+            mounted = false;
         };
     }, [path]);
 
-    if (!loaded) {
-        return (
-            <div
-                className={`
-                    ${className}
-                    rounded-full bg-hover dark:bg-dark-hover 
-                    flex items-center justify-center
-                    text-lg font-semibold text-text-muted
-                `}
-            >
-                {fallbackLetter}
-            </div>
-        );
+    if (src) {
+        return <img src={src} alt={alt} className={className} />;
     }
 
-    if (!url) {
-        return (
-            <div
-                className={`
-                    ${className}
-                    rounded-full bg-hover dark:bg-dark-hover 
-                    flex items-center justify-center
-                    text-lg font-semibold text-text-muted
-                `}
-            >
-                {fallbackLetter}
-            </div>
-        );
-    }
-
-    return <img src={url} alt={alt} className={className} />;
+    return (
+        <div
+            className={`flex items-center justify-center bg-hover dark:bg-dark-hover text-xl rounded-full ${className}`}
+        >
+            {fallbackLetter}
+        </div>
+    );
 }
