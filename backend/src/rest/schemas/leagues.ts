@@ -32,9 +32,6 @@ export const CreateLeagueInput = LeagueSchema
     });
 export const UpdateLeagueInput = CreateLeagueInput
     .partial()
-    .extend({
-        status: z.string().min(1).optional(),
-    });
 export const DeleteLeagueQuery = z.object({
     force: z.preprocess(v => v === "true", z.boolean()),
 });
