@@ -36,6 +36,26 @@ leaguesRouter.get(
     }
 );
 
+// GET /api/leagues/location/:location_id/deleted
+leaguesRouter.get(
+    "/location/:location_id/deleted",
+    validate(GetLeaguesByLocationInput, "params"),
+    checkPermission("leagues", "restore"),
+    checkParentNotDeleted("league", "location_id"),
+    async (req, res) => {
+        const { location_id } = (req as any).validated.params;
+
+        const rows = await query(
+            `SELECT id, location_id, name, status, created_at, updated_at, deleted_at
+             FROM leagues
+             WHERE location_id = ? AND deleted_at IS NOT NULL`,
+            [location_id]
+        );
+
+        res.json(rows);
+    }
+);
+
 // GET /api/leagues/:id
 leaguesRouter.get(
     "/:id",
@@ -188,7 +208,7 @@ leaguesRouter.post(
     "/",
     validate(CreateLeagueInput, "body"),
     checkPermission("leagues", "create"),
-    checkParentNotDeleted("league", "location_id", true),
+    checkParentNotDeleted("league", "location_id"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -247,6 +267,7 @@ leaguesRouter.patch(
     validate(UpdateLeagueInput, "body"),
     checkPermission("leagues", "update"),
     checkNotDeleted("league"),
+    checkParentNotDeleted("league", "location_id", true),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;

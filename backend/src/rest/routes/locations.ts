@@ -14,23 +14,6 @@ import {
 
 export const locationsRouter = express.Router();
 
-// GET /api/locations/:id
-locationsRouter.get(
-    "/:id",
-    validate(GetOneLocationInput, "params"),
-    checkNotDeleted("location"),
-    async (req, res) => {
-        const { id } = (req as any).validated.params;
-
-        const [row] = await query(
-            "SELECT id, event_id, name, address, created_at, updated_at, deleted_at FROM locations WHERE id = ?",
-            [id]
-        );
-
-        res.json(row);
-    }
-);
-
 // GET /api/locations/event/:event_id
 locationsRouter.get(
     "/event/:event_id",
@@ -50,12 +33,49 @@ locationsRouter.get(
     }
 );
 
+// GET /api/locations/event/:event_id/deleted
+locationsRouter.get(
+    "/event/:event_id/deleted",
+    validate(GetLocationsByEventInput, "params"),
+    checkPermission("locations", "restore"),
+    checkParentNotDeleted("location", "event_id"),
+    async (req, res) => {
+        const { event_id } = (req as any).validated.params;
+
+        const rows = await query(
+            `SELECT id, event_id, name, address, created_at, updated_at, deleted_at
+             FROM locations
+             WHERE event_id = ? AND deleted_at IS NOT NULL`,
+            [event_id]
+        );
+
+        res.json(rows);
+    }
+);
+
+// GET /api/locations/:id
+locationsRouter.get(
+    "/:id",
+    validate(GetOneLocationInput, "params"),
+    checkNotDeleted("location"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [row] = await query(
+            "SELECT id, event_id, name, address, created_at, updated_at, deleted_at FROM locations WHERE id = ?",
+            [id]
+        );
+
+        res.json(row);
+    }
+);
+
 // POST /api/locations
 locationsRouter.post(
     "/",
     validate(CreateLocationInput, "body"),
     checkPermission("locations", "create"),
-    checkParentNotDeleted("location", "event_id", true),
+    checkParentNotDeleted("location", "event_id"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -85,7 +105,7 @@ locationsRouter.patch(
     validate(UpdateLocationInput, "body"),
     checkPermission("locations", "update"),
     checkNotDeleted("location"),
-    checkParentNotDeleted("location", "event_id"),
+    checkParentNotDeleted("location", "event_id", true),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;

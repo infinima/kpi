@@ -64,7 +64,7 @@ teamsRouter.post(
     "/",
     validate(CreateTeamInput, "body"),
     checkPermission("teams", "create"),
-    checkParentNotDeleted("team", "league_id", true),
+    checkParentNotDeleted("team", "league_id"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -124,6 +124,7 @@ teamsRouter.patch(
     validate(UpdateTeamInput, "body"),
     checkPermission("teams", "update"),
     checkNotDeleted("team"),
+    checkParentNotDeleted("team", "league_id", true),
     async (req, res) => {
         const { ...rest } = (req as any).validated.body;
         const { id } = (req as any).validated.params;
