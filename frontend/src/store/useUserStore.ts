@@ -1,8 +1,11 @@
 import { create } from "zustand";
 import {apiGet, apiPost} from "@/api";
 import {useNotifications} from "@/store/useNotificationStore";
+import {useNavigation, useUI} from "@/store";
 
 interface User {
+    photo: string;
+    patronymic: string;
     id: number;
     email: string;
     first_name: string;
@@ -36,7 +39,16 @@ export const useUser = create<UserState>((set, get) => ({
     logout: async () => {
         const token = get().token;
 
-        // если токена нет — просто выходим
+        // 🔹 закрыть модалку профиля, если она открыта
+        try {
+            useUI.getState().closeProfileModal();
+        } catch {}
+
+        // 🔹 перейти на главную страницу
+        try {
+            useNavigation.getState().setPage("home");
+        } catch {}
+
         if (!token) {
             useNotifications.getState().addMessage({
                 type: "success",

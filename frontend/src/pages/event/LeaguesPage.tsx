@@ -3,7 +3,7 @@ import { apiGet } from "@/api";
 import { Search, Plus } from "lucide-react";
 import { useEventsNav, useUI, useNotifications } from "@/store";
 
-import { LeagueCard } from "@/components/event/LeagueCard";
+import { LeagueCard } from "@/components/LeagueCard";
 import { FormModal } from "@/components/layout/FormModal";
 import { leagueForm } from "@/config/leagueForm";
 
@@ -58,14 +58,14 @@ export function LeaguesPage() {
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по лигам…"
-                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface border"
+                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface border border-border dark:border-dark-border"
                     />
                 </div>
 
                 <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg bg-surface border"
+                    className="px-3 py-2 rounded-lg bg-surface border border-border dark:border-dark-border"
                 >
                     <option value="active">Активные</option>
                     <option value="deleted">Удалённые</option>
@@ -89,7 +89,7 @@ export function LeaguesPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filtered.map((lg) => (
                         <LeagueCard
-                            key={lg.id}
+                            // key={lg.id}
                             league={lg}
                             onRefresh={loadLeagues}
                             isDeleted={mode === "deleted"}

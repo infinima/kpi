@@ -19,7 +19,7 @@ export async function savePhoto(base64: string): Promise<string> {
         throw new Error("Failed to read image metadata");
     }
     if (meta.width !== meta.height) {
-        throw new Error("Image must be square");
+        throw new Error("BaseImage must be square");
     }
 
     const processed = await sharp(buffer)

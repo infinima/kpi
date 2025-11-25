@@ -1,3 +1,5 @@
+import {FileText} from "lucide-react";
+
 export function HomePage() {
     return (
         <div className="space-y-12">
@@ -5,88 +7,62 @@ export function HomePage() {
             {/* HERO */}
             <section className="text-center space-y-4">
                 <h1 className="text-h1 font-bold text-primary">
-                    kπца • Турнир Математических Игр
+                    Турнир математических игр «kπца»
                 </h1>
 
-                <p className="text-body text-text-secondary dark:text-dark-text-secondary max-w-2xl mx-auto">
-                    Платформа для проведения математических турниров в реальном времени.
+                <p className="text-body text-text-secondary dark:text-dark-text-secondary max-w-3xl mx-auto">
+                    Ежегодно АНОО «Физтех-лицей» им. П.Л. Капицы проводит Турнир
+                    математических игр для учеников 4–7 классов.
                 </p>
 
-                <div className="inline-block px-6 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border shadow-card mt-4">
-                    <span className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary">
-                        Проект, созданный Фзтех-лицеем
-                    </span>
+                <p className="text-body text-text-secondary dark:text-dark-text-secondary max-w-3xl mx-auto">
+                    Принять участие в Турнире могут учащиеся Московской области и регионов России.
+                    Это командное соревнование, направленное на развитие интереса к математике,
+                    формирование мышления, готовности к саморазвитию и командной работе.
+                </p>
+
+                <p className="text-body text-text-secondary dark:text-dark-text-secondary max-w-3xl mx-auto">
+                    В Турнире могут участвовать команды школ, кружков, городов и регионов в составе
+                    четырёх учащихся 4–7 классов.
+                </p>
+            </section>
+
+            {/* LEAGUES */}
+            <section className="space-y-4 max-w-3xl mx-auto">
+
+                <h2 className="text-h2 font-semibold text-center">Возрастные лиги</h2>
+
+                <div className="bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-xl shadow-card p-6 space-y-2 text-body">
+                    <p><b>Лига 4</b> — команды, состоящие из учащихся не старше 4 класса</p>
+                    <p><b>Лига 5</b> — команды, состоящие из учащихся не старше 5 класса</p>
+                    <p><b>Лига 6</b> — команды, состоящие из учащихся не старше 6 класса</p>
+                    <p><b>Лига 7</b> — команды, состоящие из учащихся не старше 7 класса</p>
                 </div>
             </section>
 
-            {/* FEATURES / CARDS */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* DOWNLOAD SECTION */}
+            <section className="max-w-3xl mx-auto space-y-4">
 
-                {/* Мероприятия */}
-                <div className="
-                    bg-surface dark:bg-dark-surface
-                    border border-border dark:border-dark-border
-                    rounded-xl shadow-card p-6 cursor-pointer hover:shadow-lg transition
-                ">
-                    <h2 className="text-h2 font-semibold mb-2">Мероприятия</h2>
-                    <p className="text-text-secondary dark:text-dark-text-secondary text-body">
-                        Просматривайте расписание, добавляйте события, управляйте турами и матчами.
-                    </p>
-                </div>
-
-                {/* Таблицы */}
-                <div className="
-                    bg-surface dark:bg-dark-surface
-                    border border-border dark:border-dark-border
-                    rounded-xl shadow-card p-6 cursor-pointer hover:shadow-lg transition
-                ">
-                    <h2 className="text-h2 font-semibold mb-2">Рейтинги и Таблицы</h2>
-                    <p className="text-text-secondary dark:text-dark-text-secondary text-body">
-                        Текущие результаты, динамика команд, турнирные таблицы и статистика.
-                    </p>
-                </div>
-
-                {/* Пользователи */}
-                <div className="
-                    bg-surface dark:bg-dark-surface
-                    border border-border dark:border-dark-border
-                    rounded-xl shadow-card p-6 cursor-pointer hover:shadow-lg transition
-                ">
-                    <h2 className="text-h2 font-semibold mb-2">Участники</h2>
-                    <p className="text-text-secondary dark:text-dark-text-secondary text-body">
-                        Команды, капитаны, учащиеся, кураторы и их активности в турнире.
-                    </p>
-                </div>
-            </section>
-
-            {/* ADMIN SECTION */}
-            <section className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-
-                {/* Логи */}
-                <div className="
-                    bg-surface dark:bg-dark-surface
-                    border border-border dark:border-dark-border
-                    rounded-xl shadow-card p-6 cursor-pointer hover:shadow-lg transition
-                ">
-                    <h2 className="text-h2 font-semibold mb-2">Логи и Активность</h2>
-                    <p className="text-text-secondary dark:text-dark-text-secondary text-body">
-                        Просмотр действий администраторов, судей, ботов и изменений в системе.
-                    </p>
-                </div>
-
-                {/* Админские настройки */}
-                <div className="
-                    bg-surface dark:bg-dark-surface
-                    border border-border dark:border-dark-border
-                    rounded-xl shadow-card p-6 cursor-pointer hover:shadow-lg transition
-                ">
-                    <h2 className="text-h2 font-semibold mb-2">Управление Турниром</h2>
-                    <p className="text-text-secondary dark:text-dark-text-secondary text-body">
-                        Настройки сезона, публикация результатов, контроль состояния мероприятия.
-                    </p>
+                <div className="flex justify-center">
+                    <a
+                        href="../assets/rules.pdf"
+                        download
+                        className="
+                inline-flex items-center gap-2
+                px-5 py-3 rounded-lg
+                bg-primary text-white
+                hover:bg-primary-dark
+                shadow-card transition
+                text-body
+            "
+                    >
+                        <FileText size={20} />
+                        Скачать правила турнира
+                    </a>
                 </div>
 
             </section>
+
         </div>
     );
 }

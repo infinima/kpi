@@ -43,7 +43,12 @@ export function NotificationCenter() {
                     >
                         <div className="flex-1">
                             <div className="font-bold capitalize mb-1">
-                                {msg.type}
+                                {{
+                                    success: "Успешно",
+                                    error: "Ошибка",
+                                    warning: "Предупреждение",
+                                    info: "Информация"
+                                }[msg.type]}
                             </div>
 
                             <div className="text-sm">

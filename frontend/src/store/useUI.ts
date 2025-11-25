@@ -18,6 +18,10 @@ interface UIState {
     formData: any | null;
     openFormModal: (config: any, data: any | null) => void;
     closeFormModal: () => void;
+
+    profileModalOpen: boolean;
+    openProfileModal: () => void;
+    closeProfileModal: () => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -59,4 +63,8 @@ export const useUI = create<UIState>((set, get) => ({
             formConfig: null,
             formData: null,
         }),
+
+    profileModalOpen: false,
+    openProfileModal: () => set({ profileModalOpen: true }),
+    closeProfileModal: () => set({ profileModalOpen: false }),
 }));

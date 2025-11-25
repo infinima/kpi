@@ -40,7 +40,7 @@ export function LoginModal() {
             closeLoginModal();
             notify({
                 type: "success",
-                text: "Вы успешно зарегистрировались",
+                text: "Вы успешно вошли",
             });
             setPassword("");
             setEmail("");

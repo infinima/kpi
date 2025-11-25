@@ -3,7 +3,7 @@ import { apiGet } from "@/api";
 import { Search, Plus } from "lucide-react";
 import { useEventsNav, useUI, useNotifications } from "@/store";
 
-import { LocationCard } from "@/components/event/LocationCard";
+import { LocationCard } from "@/components/LocationCard";
 import { FormModal } from "@/components/layout/FormModal";
 import { locationForm } from "@/config/locationForm";
 
@@ -64,22 +64,23 @@ export function LocationsPage() {
             <h1 className="text-h1 font-bold">Локации пло #{eventId}</h1>
 
             {/* SEARCH + MODE + ADD */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center ">
 
                 <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60" size={18} />
                     <input
+
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по локациям…"
-                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border"
+                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
                     />
                 </div>
 
                 <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border"
+                    className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
                 >
                     <option value="active">Активные</option>
                     <option value="deleted">Удалённые</option>

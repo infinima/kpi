@@ -3,7 +3,7 @@ import { apiGet } from "@/api";
 import { Search, Plus } from "lucide-react";
 import { useEventsNav, useUI, useNotifications } from "@/store";
 
-import { EventCard } from "@/components/event/EventCard";
+import { EventCard } from "@/components/EventCard";
 import { FormModal } from "@/components/layout/FormModal";
 import { eventForm } from "@/config/eventForm";
 
@@ -155,7 +155,7 @@ export function EventsPage() {
                             key={ev.id}
                             event={ev}
                             onRefresh={loadEvents}
-                            isDeleted={mode === "deleted"}
+                            // isDeleted={mode === "deleted"}
                         />
                     ))}
                 </div>

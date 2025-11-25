@@ -8,6 +8,7 @@ import { UsersPage } from "@/pages/UserPage";
 import {NotificationCenter} from "@/components/services/NotificationCenter";
 import {LoginModal} from "@/components/services/Login";
 import { EventsPageRoot } from "@/pages/event/EventsPageRoot";
+import {ProfileModal} from "@/components/ProfileModal";
 
 export function App() {
     const { currentPage } = useNavigation();
@@ -35,6 +36,7 @@ export function App() {
             <LoginModal />
             <NotificationCenter />
             <MenuBar />
+            <ProfileModal />
 
             <main className="max-w-6xl mx-auto px-6 py-6">
                 {pages[currentPage]}

@@ -1,6 +1,7 @@
 import {Page, useNavigation, useUser} from "@/store";
 import { useUI } from "@/store";
 import { Menu, X, Sun, Moon } from "lucide-react";
+import {BaseImage} from "@/components/BaseImage";
 
 export function MenuBar() {
     const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUI();
@@ -70,16 +71,25 @@ export function MenuBar() {
                         </button>
                     ) : (
                         <button
-                            onClick={logout}
+                            onClick={() => useUI.getState().openProfileModal()}
                             className="
-                                px-4 py-2 rounded-lg
-                                bg-surface dark:bg-dark-surface
-                                border border-border dark:border-dark-border
-                                hover:bg-hover dark:hover:bg-dark-hover
-                                text-text-main dark:text-dark-text-main
-                                font-medium
-                            "
+        flex items-center gap-2
+        px-3 py-2
+        rounded-lg
+        bg-surface dark:bg-dark-surface
+        border border-border dark:border-dark-border
+        hover:bg-hover dark:hover:bg-dark-hover
+        font-medium
+    "
                         >
+                            {/* Аватарка */}
+                            <BaseImage
+                                path={`users/${user.id}/photo`}
+                                fallbackLetter={user.first_name[0]}
+                                className="w-7 h-7 rounded-full object-cover border border-border dark:border-dark-border"
+                            />
+
+                            {/* Имя пользователя */}
                             {user.first_name}
                         </button>
                     )}

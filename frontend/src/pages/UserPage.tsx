@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { apiGet } from "@/api";
 import { useUI } from "@/store";
-import { Search, Plus } from "lucide-react";
+import {Search, Plus, ArrowUpDown} from "lucide-react";
 
 import { UserCard } from "@/components/UserCard";
 import { FormModal } from "@/components/layout/FormModal";
@@ -97,19 +97,29 @@ export function UsersPage() {
                     />
                 </div>
 
-                <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as any)}
-                    className="
-                        px-3 py-2 rounded-lg
-                        bg-surface dark:bg-dark-surface
-                        border border-border dark:border-dark-border
-                    "
-                >
-                    <option value="name">По ФИО</option>
-                    <option value="email">По email</option>
-                    <option value="date">По дате создания</option>
-                </select>
+
+
+                <div className="relative inline-block">
+                    <ArrowUpDown
+                        size={16}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60 pointer-events-none"
+                    />
+
+                    <select
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value as any)}
+                        className="
+            pl-9 pr-3 py-2
+            rounded-lg
+            bg-surface dark:bg-dark-surface
+            border border-border dark:border-dark-border
+        "
+                    >
+                        <option value="name">По ФИО</option>
+                        <option value="email">По email</option>
+                        <option value="date">По дате создания</option>
+                    </select>
+                </div>
 
                 {/* ACTIVE / DELETED */}
                 <select
