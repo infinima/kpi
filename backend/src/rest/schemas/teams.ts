@@ -94,6 +94,27 @@ registry.registerPath({
     },
 });
 
+// GET /api/teams/league/:event_id/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/teams/league/{league_id}/deleted",
+    summary: "Получить удаленные команды по league_id",
+    tags: ["Teams"],
+    request: {
+        params: GetTeamsByLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: z.array(TeamSchema) },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist" },
+    },
+});
+
 // GET /api/teams/:id
 registry.registerPath({
     method: "get",
