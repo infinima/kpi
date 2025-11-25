@@ -64,6 +64,27 @@ registry.registerPath({
     },
 });
 
+// GET /api/leagues/location/{location_id}/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/leagues/location/{location_id}/deleted",
+    summary: "Получить удаленные лиги по location_id",
+    tags: ["Leagues"],
+    request: {
+        params: GetLeaguesByLocationInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: z.array(LeagueSchema) },
+            },
+        },
+        400: { description: "The location is deleted" },
+        404: { description: "The location does not exist" },
+    },
+});
+
 // GET /api/leagues/{id}
 registry.registerPath({
     method: "get",

@@ -17,6 +17,16 @@ eventsRouter.get("/", async (req, res) => {
     res.json(events);
 });
 
+// GET /api/events/deleted
+eventsRouter.get("/deleted",
+    checkPermission("events", "restore"),
+    async (req, res) => {
+    const events = await query(
+        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NOT NULL"
+    );
+    res.json(events);
+});
+
 // GET /api/events/:id
 eventsRouter.get(
     "/:id",

@@ -54,6 +54,27 @@ registry.registerPath({
     },
 });
 
+// GET /api/locations/event/:event_id/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/locations/event/{event_id}/deleted",
+    summary: "Получить удаленные площадки по event_id",
+    tags: ["Locations"],
+    request: { params: GetLocationsByEventInput },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": {
+                    schema: z.array(LocationSchema),
+                },
+            },
+        },
+        400: { description: "The event is deleted" },
+        404: { description: "The event does not exist" },
+    },
+});
+
 // GET /api/locations/:id
 registry.registerPath({
     method: "get",

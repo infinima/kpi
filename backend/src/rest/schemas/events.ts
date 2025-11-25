@@ -50,6 +50,20 @@ registry.registerPath({
     },
 });
 
+// GET /api/events/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/events/deleted",
+    summary: "Получить список удаленных событий",
+    tags: ["Events"],
+    responses: {
+        200: {
+            description: "OK",
+            content: { "application/json": { schema: z.array(EventSchema) } },
+        },
+    },
+});
+
 // GET /api/events/{id}
 registry.registerPath({
     method: "get",
