@@ -34,18 +34,43 @@ export const PermissionSchema = z.object({
 });
 registry.register("Permission", PermissionSchema);
 
-export const CreatePermissionInput = PermissionSchema.omit({
-    id: true
-});
-export const UpdatePermissionInput = CreatePermissionInput.partial();
 export const GetPermissionsTargetInput = z.object({
     object: PermissionObjectEnum,
     object_id: z.coerce.number().int().optional(),
 });
-
+export const GetPermissionsByUserInput = z.object({
+    user_id: z.coerce.number().int().positive(),
+});
+export const CreatePermissionInput = PermissionSchema.omit({
+    id: true
+});
+export const UpdatePermissionInput = CreatePermissionInput.partial();
 
 
 // ===== Документация =====
+
+// GET /api/permissions/user/{user_id}
+registry.registerPath({
+    method: "get",
+    path: "/api/permissions/user/{user_id}",
+    summary: "Получить permissions по user_id",
+    tags: ["Permissions"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetPermissionsByUserInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": {
+                    schema: z.array(PermissionSchema),
+                },
+            },
+        },
+        404: { description: "User does not exist" },
+    },
+});
 
 // GET /api/permissions/{object}/{object_id}
 registry.registerPath({

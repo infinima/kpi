@@ -10,6 +10,22 @@
 
     export const permissionsRouter = express.Router();
 
+    // GET /api/permissions/user/:user_id
+    permissionsRouter.get(
+        "/user/:user_id",
+        checkPermission("permissions", "get"),
+        async (req, res) => {
+            const { user_id } = req.params;
+
+            const rows = await query(
+                `SELECT * FROM permissions WHERE user_id = ?`,
+                [user_id]
+            );
+
+            res.json(rows);
+        }
+    );
+
     // GET /api/permissions/:object/:object_id?
     permissionsRouter.get(
         "/:object/:object_id?",
