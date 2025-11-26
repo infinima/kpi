@@ -1,16 +1,17 @@
-import { useUser } from "@/store";
+import { useUser, useNotifications } from "@/store";
 import { showApiError } from "./errorHelper";
 
 const BASE_URL = window.location.origin + "/api/";
 
-export async function apiGetFile(path: string, filename: string) {
-    try {
-        const token = useUser.getState().token;
+export async function apiGetFile(path: string, filename: string): Promise<void> {
+    const token = useUser.getState().token;
+    const notify = useNotifications.getState().addMessage;
 
+    try {
         const res = await fetch(BASE_URL + path, {
             method: "GET",
             headers: {
-                Authorization: token ? `Bearer ${token}` : "",
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
             },
         });
 
@@ -20,23 +21,19 @@ export async function apiGetFile(path: string, filename: string) {
         }
 
         if (!res.ok) {
-            // ❗ пытаемся считать ошибку как JSON
-            let errJson = null;
+            let json = null;
             try {
-                errJson = await res.json();
+                json = await res.json();
             } catch {
                 throw { error: { code: "INTERNAL_ERROR" } };
             }
-            throw errJson;
+            throw json || { error: { code: "INTERNAL_ERROR" } };
         }
 
-        // 🟦 blob для файлов
         const blob = await res.blob();
 
-        // создать временную ссылку
         const url = window.URL.createObjectURL(blob);
 
-        // скачать файл
         const a = document.createElement("a");
         a.href = url;
         a.download = filename;
@@ -44,8 +41,12 @@ export async function apiGetFile(path: string, filename: string) {
         a.click();
         a.remove();
 
-        // освободить URL
         window.URL.revokeObjectURL(url);
+
+        notify({
+            type: "success",
+            text: "Файл успешно скачан",
+        });
 
     } catch (err) {
         showApiError(err);
