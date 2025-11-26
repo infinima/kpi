@@ -1,7 +1,34 @@
 import { create } from "zustand";
-import {apiGet, apiPost} from "@/api";
-import {useNotifications} from "@/store/useNotificationStore";
-import {useNavigation, useUI} from "@/store";
+import { apiGet, apiPost } from "@/api";
+import { useNotifications } from "@/store/useNotificationStore";
+import { useNavigation, useUI } from "@/store";
+
+export type PermissionEntity =
+    "events" |
+    "locations" |
+    "leagues" |
+    "teams" |
+    "users" |
+    "permissions";
+
+export type PermissionAction =
+    "get" |
+    "create" |
+    "update" |
+    "delete" |
+    "restore" |
+    "access_history" |
+    "print_documents";
+
+export type EntityPermissions = {
+    global?: PermissionAction[];
+} & {
+    [id: string]: PermissionAction[];
+};
+
+export interface PermissionsResponse {
+    [entity: string]: EntityPermissions;
+}
 
 interface User {
     photo: string;
@@ -10,7 +37,7 @@ interface User {
     email: string;
     first_name: string;
     last_name: string;
-    rights: Record<string, boolean>;
+    rights: PermissionsResponse;
 }
 
 interface UserState {
@@ -18,11 +45,11 @@ interface UserState {
     token: string | null;
     guest: boolean;
 
-    login: (token: string) => void;
+    login: (token: string) => Promise<void>;
     logout: () => void;
     fetchUser: () => Promise<void>;
 
-    can: (right: string) => boolean;
+    can: (entity: PermissionEntity, action: PermissionAction, objectId?: number) => boolean;
 }
 
 export const useUser = create<UserState>((set, get) => ({
@@ -31,30 +58,37 @@ export const useUser = create<UserState>((set, get) => ({
     token: null,
     guest: true,
 
-    login: (token: string) => {
+    login: async (token: string) => {
         localStorage.setItem("auth_token", token);
         set({ token, guest: false });
+
+        const data = await apiGet("auth/me?include=user");
+        const rights = await apiGet("auth/permissions");
+
+        set({
+            user: {
+                ...data.user,
+                rights: rights ?? {},
+            },
+        });
+
+        useNotifications.getState().addMessage({
+            type: "success",
+            text: "Добро пожаловать!",
+        });
     },
 
     logout: async () => {
         const token = get().token;
 
-        // 🔹 закрыть модалку профиля, если она открыта
-        try {
-            useUI.getState().closeProfileModal();
-        } catch {}
-
-        // 🔹 перейти на главную страницу
-        try {
-            useNavigation.getState().setPage("home");
-        } catch {}
+        try { useUI.getState().closeProfileModal(); } catch {}
+        try { useNavigation.getState().setPage("home"); } catch {}
 
         if (!token) {
             useNotifications.getState().addMessage({
                 type: "success",
                 text: "Вы вышли",
             });
-
             set({ user: null, token: null, guest: true });
             localStorage.removeItem("auth_token");
             return;
@@ -62,7 +96,6 @@ export const useUser = create<UserState>((set, get) => ({
 
         try {
             await apiPost("auth/logout");
-
             useNotifications.getState().addMessage({
                 type: "success",
                 text: "Вы вышли",
@@ -75,12 +108,7 @@ export const useUser = create<UserState>((set, get) => ({
         }
 
         localStorage.removeItem("auth_token");
-
-        set({
-            user: null,
-            token: null,
-            guest: true,
-        });
+        set({ user: null, token: null, guest: true });
     },
 
     fetchUser: async () => {
@@ -88,12 +116,34 @@ export const useUser = create<UserState>((set, get) => ({
         if (!token) return;
 
         const data = await apiGet("auth/me?include=user");
-        set({ user: data.user });
+        const rights = await apiGet("auth/permissions");
+
+        set({
+            user: {
+                ...data.user,
+                rights: rights ?? {},
+            },
+        });
     },
 
-    can: (right) => {
+    can: (entity: PermissionEntity, action: PermissionAction, id?: number) => {
         const u = get().user;
         if (!u) return false;
-        return u.rights?.[right] === true;
+
+        const perms = u.rights[entity];
+        if (!perms) return false;
+
+        // 1) Если есть id → проверяем объект
+        if (id !== undefined) {
+            const objRights = perms[id];
+            if (objRights && objRights.includes(action)) return true;
+        }
+
+        // 2) Проверяем глобальные права
+        const globalRights = perms.global;
+        if (globalRights && globalRights.includes(action)) return true;
+
+        return false;
     },
+
 }));

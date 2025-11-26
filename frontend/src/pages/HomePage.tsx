@@ -45,7 +45,7 @@ export function HomePage() {
 
                 <div className="flex justify-center">
                     <a
-                        href="../assets/rules.pdf"
+                        href="../../public/rules.pdf"
                         download
                         className="
                 inline-flex items-center gap-2

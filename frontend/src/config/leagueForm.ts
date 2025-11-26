@@ -7,10 +7,10 @@ export const leagueForm: FormConfig = {
     fields: [
         {
             name: "location_id",
-            label: "ID локации",
+            label: "ID площадки",
             type: "number",
             required: true,
-            placeholder: "ID локации",
+            placeholder: "ID площадки",
             hiddenWhenEditing: true
         },
         {

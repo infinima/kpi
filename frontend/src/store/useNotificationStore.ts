@@ -25,22 +25,18 @@ export const useNotifications = create<NotificationState>((set, get) => ({
         const id = crypto.randomUUID();
         const newMsg: Notification = { id, ...msg };
 
-        console.log("[Notify] addMessage:", newMsg);
         set({ messages: [newMsg, ...get().messages] });
 
         setTimeout(() => {
-            console.log("[Notify] auto-remove:", id);
             get().removeMessage(id);
         }, 2000);
     },
 
     removeMessage: (id) => {
-        console.log("[Notify] removeMessage:", id);
         set({ messages: get().messages.filter((m) => m.id !== id) });
     },
 
     clearAll: () => {
-        console.log("[Notify] clearAll");
         set({ messages: [] });
     },
 }));

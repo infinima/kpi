@@ -1,12 +1,9 @@
-export const imageCache = new Map<string, string>();
+export const imageCache = new Map<string, Blob>();
 
-export function cacheSet(path: string, url: string) {
-    if (imageCache.has(path)) {
-        URL.revokeObjectURL(imageCache.get(path)!);
-    }
-    imageCache.set(path, url);
+export function cacheSet(path: string, blob: Blob) {
+    imageCache.set(path, blob);
 }
 
-export function cacheGet(path: string) {
+export function cacheGet(path: string): Blob | null {
     return imageCache.get(path) || null;
 }

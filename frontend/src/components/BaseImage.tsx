@@ -1,8 +1,6 @@
-// /src/components/user/BaseImage.tsx
-
 import { useEffect, useState } from "react";
 import { getImage } from "@/api";
-import { imageCache } from "@/helpers/imageCache";   // ⭐ добавлено
+import { cacheGet, cacheSet } from "@/helpers/imageCache";
 
 interface UserImageProps {
     path: string;
@@ -17,44 +15,49 @@ export function BaseImage({
                               className = "",
                               fallbackLetter = "?",
                           }: UserImageProps) {
-    const [src, setSrc] = useState<string | null>(() => imageCache.get(path) ?? null);
+    const [url, setUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        let mounted = true;
+        let revokedUrl: string | null = null;
+        let isMounted = true;
 
         async function load() {
-            // 1) пробуем достать из кеша
-            const cached = imageCache.get(path);
-            if (cached) {
-                if (mounted) setSrc(cached);
+            const cachedBlob = cacheGet(path);
+
+            if (cachedBlob) {
+                const objectUrl = URL.createObjectURL(cachedBlob);
+                revokedUrl = objectUrl;
+                if (isMounted) setUrl(objectUrl);
                 return;
             }
 
-            // 2) грузим с сервера
-            const url = await getImage(path);
+            const loadedUrl = await getImage(path);
 
-            if (mounted && url) {
-                imageCache.set(path, url); // 🔥 кладём в кеш
-                setSrc(url);
-            }
+            if (!loadedUrl || !isMounted) return;
+
+
+            setUrl(loadedUrl);
         }
 
         load();
 
         return () => {
-            mounted = false;
+            isMounted = false;
+            if (revokedUrl) {
+                URL.revokeObjectURL(revokedUrl);
+            }
         };
     }, [path]);
 
-    if (src) {
-        return <img src={src} alt={alt} className={className} />;
+    if (!url) {
+        return (
+            <div
+                className={`flex items-center justify-center bg-hover dark:bg-dark-hover text-xl rounded-full ${className}`}
+            >
+                {fallbackLetter}
+            </div>
+        );
     }
 
-    return (
-        <div
-            className={`flex items-center justify-center bg-hover dark:bg-dark-hover text-xl rounded-full ${className}`}
-        >
-            {fallbackLetter}
-        </div>
-    );
+    return <img src={url} alt={alt} className={className} />;
 }

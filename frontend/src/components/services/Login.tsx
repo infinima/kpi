@@ -34,9 +34,8 @@ export function LoginModal() {
                 password,
             });
 
-            loginUser(data.token);
+            await loginUser(data.token);
 
-            await useUser.getState().fetchUser();
             closeLoginModal();
             notify({
                 type: "success",
