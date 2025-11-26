@@ -47,7 +47,7 @@ async function getScopeChain(object: string, objectId: number) {
 }
 
 export function checkPermission(
-    object: "events" | "locations" | "leagues" | "teams" | "users",
+    object: "events" | "locations" | "leagues" | "teams" | "users" | "permissions",
     permission: "get" | "create" | "update" | "delete" | "access_history" | "restore" | "print_documents"
 ) {
     // @ts-ignore

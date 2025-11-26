@@ -1,237 +1,124 @@
-import express, { Request, Response } from "express";
-import { authRequired } from "../middlewares/auth-required.js";
-import { query } from "../../utils/database.js";
+    import express from "express";
+    import { query } from "../../utils/database.js";
+    import { validate } from "../middlewares/validate.js";
+    import {
+        CreatePermissionInput,
+        UpdatePermissionInput,
+        GetPermissionsTargetInput
+    } from "../schemas/permissions.js";
+    import { checkPermission } from "../middlewares/permission-check.js";
 
-export const permissionsRouter = express.Router();
+    export const permissionsRouter = express.Router();
 
-// -----------------------------------------------------
-// Типы
-// -----------------------------------------------------
+    // GET /api/permissions/:object/:object_id?
+    permissionsRouter.get(
+        "/:object/:object_id?",
+        validate(GetPermissionsTargetInput, "params"),
+        checkPermission("permissions", "get"),
+        async (req, res) => {
+            const { object, object_id } = (req as any).validated.params;
 
-export type KPIObject = "events" | "locations" | "leagues" | "teams" | "users";
+            let rows;
 
-export type KPIPermission =
-    | "get"
-    | "create"
-    | "update"
-    | "delete"
-    | "restore"
-    | "access_history"
-    | "print_documents";
-
-export interface PermissionRow {
-    object: KPIObject;
-    permission: string;
-    object_id: number | null;
-    scope_object: "events" | "locations" | "leagues" | null;
-    scope_object_id: number | null;
-}
-
-export interface PermissionOutput {
-    [key: string]: {
-        global?: KPIPermission[];
-        [id: string]: KPIPermission[] | undefined;
-    };
-}
-
-// правила глобальных
-const STRICT_GLOBAL: KPIPermission[] = ["create"];
-const EXTRA_GLOBAL: KPIPermission[] = ["restore"];
-const USERS_EXTRA_GLOBAL: KPIPermission[] = ["get"];
-
-// -----------------------------------------------------
-// Утилиты: получение дочерних объектов
-// -----------------------------------------------------
-
-async function getChildIds(
-    object: KPIObject,
-    parentId: number
-): Promise<number[]> {
-    switch (object) {
-        case "locations":
-            return (
-                await query("SELECT id FROM locations WHERE event_id = ?", [
-                    parentId,
-                ])
-            ).map((r: any) => r.id);
-
-        case "leagues":
-            return (
-                await query("SELECT id FROM leagues WHERE location_id = ?", [
-                    parentId,
-                ])
-            ).map((r: any) => r.id);
-
-        case "teams":
-            return (
-                await query("SELECT id FROM teams WHERE league_id = ?", [
-                    parentId,
-                ])
-            ).map((r: any) => r.id);
-
-        default:
-            return [];
-    }
-}
-
-// -----------------------------------------------------
-// Раскрытие scope
-// -----------------------------------------------------
-
-async function resolveScopedIds(
-    object: KPIObject,
-    scopeObj: "events" | "locations" | "leagues" | null,
-    scopeId: number | null
-): Promise<number[]> {
-    if (!scopeObj || !scopeId) return [];
-
-    if (scopeObj === "events") {
-        if (object === "events") return [scopeId];
-
-        const locs = await getChildIds("locations", scopeId);
-        if (object === "locations") return locs;
-
-        const leagues = (
-            await Promise.all(locs.map((l) => getChildIds("leagues", l)))
-        ).flat();
-        if (object === "leagues") return leagues;
-
-        const teams = (
-            await Promise.all(leagues.map((lg) => getChildIds("teams", lg)))
-        ).flat();
-        if (object === "teams") return teams;
-    }
-
-    if (scopeObj === "locations") {
-        if (object === "locations") return [scopeId];
-
-        const leagues = await getChildIds("leagues", scopeId);
-        if (object === "leagues") return leagues;
-
-        const teams = (
-            await Promise.all(leagues.map((lg) => getChildIds("teams", lg)))
-        ).flat();
-        if (object === "teams") return teams;
-    }
-
-    if (scopeObj === "leagues") {
-        if (object === "leagues") return [scopeId];
-
-        const teams = await getChildIds("teams", scopeId);
-        if (object === "teams") return teams;
-    }
-
-    return [];
-}
-
-// -----------------------------------------------------
-// ENDPOINT
-// -----------------------------------------------------
-
-permissionsRouter.get(
-    "/",
-    authRequired,
-    async (req: Request, res: Response) => {
-        const userId = (req as any).user_id;
-
-        const rows = (await query(
-            `
-                SELECT
-                    object,
-                    permission,
-                    object_id,
-                    scope_object,
-                    scope_object_id
-                FROM permissions
-                WHERE user_id = ?
-            `,
-            [userId]
-        )) as PermissionRow[];
-
-        const out: PermissionOutput = {
-            events: {},
-            locations: {},
-            leagues: {},
-            teams: {},
-            users: {},
-        };
-
-        for (const row of rows) {
-            const obj = row.object;
-            const perms = row.permission.split(",") as KPIPermission[];
-
-            // ------------------------------------------------
-            // ГЛОБАЛЬНЫЕ ПРАВА
-            // ------------------------------------------------
-            if (!row.object_id && !row.scope_object) {
-                const allowedGlobal =
-                    obj === "users"
-                        ? [...STRICT_GLOBAL, ...USERS_EXTRA_GLOBAL, ...EXTRA_GLOBAL]
-                        : [...STRICT_GLOBAL, ...EXTRA_GLOBAL];
-
-                if (!out[obj].global) out[obj].global = [];
-
-                // 1. Оставить только "разрешённые глобальные" в global[]
-                for (const p of perms) {
-                    if (allowedGlobal.includes(p)) {
-                        if (!out[obj].global!.includes(p)) {
-                            out[obj].global!.push(p);
-                        }
-                    }
-                }
-
-                // 2. ВСЕ ГЛОБАЛЬНЫЕ ПРАВА (и разрешённые, и нет) — раскрыть в каждый ID
-                // специальный случай: users:get — тоже должен раскрыться
-                const rowsIds = await query(`SELECT id FROM ${obj}`, []);
-                const ids = rowsIds.map((r: any) => r.id);
-
-                for (const id of ids) {
-                    if (!out[obj][id]) out[obj][id] = [];
-
-                    const tgt = out[obj][id] as KPIPermission[];
-
-                    for (const p of perms) {
-                        if (!tgt.includes(p)) tgt.push(p);
-                    }
-                }
-
-                continue;
-            }
-
-            // ------------------------------------------------
-            // ПРЯМЫЕ ПРАВА
-            // ------------------------------------------------
-            if (row.object_id) {
-                if (!out[obj][row.object_id]) out[obj][row.object_id] = [];
-
-                const tgt = out[obj][row.object_id] as KPIPermission[];
-
-                for (const p of perms) {
-                    if (!tgt.includes(p)) tgt.push(p);
-                }
-            }
-
-            // ------------------------------------------------
-            // SCOPE-ПРАВА
-            // ------------------------------------------------
-            if (row.scope_object && row.scope_object_id) {
-                const ids = await resolveScopedIds(
-                    obj,
-                    row.scope_object,
-                    row.scope_object_id
+            if (!object_id) {
+                rows = await query(
+                    `SELECT * FROM permissions WHERE object=? AND object_id IS NULL AND scope_object IS NULL`,
+                    [object]
                 );
-
-                for (const id of ids) {
-                    if (!out[obj][id]) out[obj][id] = [];
-                    const tgt = out[obj][id] as KPIPermission[];
-
-                    for (const p of perms) {
-                        if (!tgt.includes(p)) tgt.push(p);
-                    }
-                }
+                return res.json(rows);
             }
-        }
 
-        res.json(out);
-    }
-);
+            // поиск по object_id
+            rows = await query(
+                `SELECT * FROM permissions
+           WHERE object=? AND object_id=?`,
+                [object, object_id]
+            );
+
+            if (rows.length > 0) return res.json(rows);
+
+            // поиск по scope
+            rows = await query(
+                `SELECT * FROM permissions
+           WHERE scope_object=? AND scope_object_id=?`,
+                [object, object_id]
+            );
+
+            res.json(rows);
+        }
+    );
+
+
+    // POST /api/permissions
+    permissionsRouter.post(
+        "/",
+        validate(CreatePermissionInput, "body"),
+        checkPermission("permissions", "create"),
+        async (req, res) => {
+            const data = (req as any).validated.body;
+
+            const valid =
+                (data.object_id && !data.scope_object && !data.scope_object_id) ||
+                (!data.object_id && data.scope_object && data.scope_object_id) ||
+                (!data.object_id && !data.scope_object && !data.scope_object_id);
+
+            if (!valid) {
+                return res.status(400).json({
+                    error: "INVALID_SCOPE"
+                });
+            }
+
+            const result = await query(
+                `INSERT INTO permissions
+           (user_id, object, permission, object_id, scope_object, scope_object_id)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+                [
+                    data.user_id,
+                    data.object,
+                    data.permission.join(","),
+                    data.object_id ?? null,
+                    data.scope_object ?? null,
+                    data.scope_object_id ?? null
+                ]
+            );
+
+            res.json({ id: result.insertId });
+        }
+    );
+
+
+    // PATCH /api/permissions/:id
+    permissionsRouter.patch(
+        "/:id",
+        validate(UpdatePermissionInput, "body"),
+        checkPermission("permissions", "update"),
+        async (req, res) => {
+            const data = (req as any).validated.body;
+            const { id } = req.params;
+
+            const valid =
+                (data.object_id && !data.scope_object && !data.scope_object_id) ||
+                (!data.object_id && data.scope_object && data.scope_object_id) ||
+                (!data.object_id && !data.scope_object && !data.scope_object_id);
+
+            if (!valid) {
+                return res.status(400).json({
+                    error: "INVALID_SCOPE"
+                });
+            }
+
+            await query("UPDATE permissions SET ? WHERE id=?", [data, id]);
+            res.json({ success: true });
+        }
+    );
+
+
+    // DELETE /api/permissions/:id
+    permissionsRouter.delete(
+        "/:id",
+        checkPermission("permissions", "delete"),
+        async (req, res) => {
+            await query("DELETE FROM permissions WHERE id=?", [req.params.id]);
+            res.json({ success: true });
+        }
+    );
