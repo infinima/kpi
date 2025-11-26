@@ -40,12 +40,11 @@ export function HomePage() {
                 </div>
             </section>
 
-            {/* DOWNLOAD SECTION */}
             <section className="max-w-3xl mx-auto space-y-4">
 
                 <div className="flex justify-center">
                     <a
-                        href="../../public/rules.pdf"
+                        href="https://phtl.ru/storage/pages/444/pravila-igr-1.pdf"
                         download
                         className="
                 inline-flex items-center gap-2

@@ -21,6 +21,10 @@ export async function getImage(path: string): Promise<string | null> {
             throw { error: { code: "NO_TOKEN" } };
         }
 
+        if (res.status === 400) {
+          return null;
+        }
+
         if (!res.ok) {
             let json = null;
             try {

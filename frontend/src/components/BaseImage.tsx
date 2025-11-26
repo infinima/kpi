@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { getImage } from "@/api";
-import { cacheGet, cacheSet } from "@/helpers/imageCache";
 
 interface UserImageProps {
     path: string;
@@ -22,15 +21,6 @@ export function BaseImage({
         let isMounted = true;
 
         async function load() {
-            const cachedBlob = cacheGet(path);
-
-            if (cachedBlob) {
-                const objectUrl = URL.createObjectURL(cachedBlob);
-                revokedUrl = objectUrl;
-                if (isMounted) setUrl(objectUrl);
-                return;
-            }
-
             const loadedUrl = await getImage(path);
 
             if (!loadedUrl || !isMounted) return;
