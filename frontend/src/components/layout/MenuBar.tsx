@@ -6,16 +6,17 @@ import {BaseImage} from "@/components/BaseImage";
 export function MenuBar() {
     const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUI();
     const { currentPage, setPage } = useNavigation();
-    const { user, logout } = useUser();
+    const { user, can } = useUser();
     const { theme, toggleTheme } = useUI();
 
     const menuItems: { id: Page; title: string }[] = [
         { id: "home", title: "Главная" },
         { id: "events", title: "Мероприятия" },
-        { id: "tables", title: "Таблицы" },
-        { id: "logs", title: "Логи" },
-        { id: "users", title: "Пользователи" },
     ];
+
+    if (can("users", "get")) {
+        menuItems.push({ id: "users", title: "Пользователи" });
+    }
 
     const changePage = (id: Page) => {
         setPage(id);

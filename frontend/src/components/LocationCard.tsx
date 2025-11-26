@@ -1,14 +1,20 @@
 import { useState } from "react";
 import {
-    ChevronDown, ChevronUp, Pencil, Trash, ArrowRight, RotateCcw
+    ChevronDown,
+    ChevronUp,
+    Pencil,
+    Trash,
+    ArrowRight,
+    RotateCcw,
+    History,
+    ListTree
 } from "lucide-react";
 
 import { BaseImage } from "@/components/BaseImage";
-import { useUI, useEventsNav, useNotifications } from "@/store";
-import {apiDelete, apiPost} from "@/api";
+import { useUI, useEventsNav, useNotifications, useUser } from "@/store";
+import { apiDelete, apiPost } from "@/api";
 import { locationForm } from "@/config/locationForm";
 import { formatDate } from "@/helpers/formatDate";
-import {eventForm} from "@/config/eventForm";
 
 interface Props {
     location: any;
@@ -23,6 +29,16 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
     const goLeagues = useEventsNav((s) => s.goLeagues);
     const openForm = useUI((s) => s.openFormModal);
 
+    const { can, guest } = useUser();
+
+    // ---- ПРАВА ----
+    const canUpdate = can("locations", "update", location.id);
+    const canDelete = can("locations", "delete", location.id);
+    const canRestore = can("locations", "restore", location.id);
+    const canHistory = can("locations", "access_history", location.id);
+
+
+    // ---- API ----
     async function handleDelete() {
         try {
             await apiDelete(`locations/${location.id}`, location.id);
@@ -33,84 +49,138 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
     async function handleRestore() {
         try {
             await apiPost(`locations/${location.id}/restore`);
-            notify({ type: "success", text: "Площадка восстановлено" });
+            notify({ type: "success", text: "Площадка восстановлена" });
             onRefresh();
         } catch {}
     }
 
-    return (
-        <div className="bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-xl shadow-card p-4 space-y-3">
-
-
-    <h2 className="text-xl font-semibold">{location.name}</h2>
-        <p className="text-text -secondary">Адрес: <b>{location.address}</b></p>
-
-    {/* переход */}{!isDeleted &&
-            <button
-                className="w-full py-2 rounded-lg border border-border dark:border-dark-border flex items-center justify-center gap-2 hover:bg-hover dark:hover:bg-dark-hover"
-                onClick={() => goLeagues(location.id, location.name)}
-            >
-                Перейти к лигам
-                <ArrowRight size={16} />
-            </button>
+    function handleHistoryView() {
+        notify({
+            type: "info",
+            text: "История изменений пока не реализована"
+        });
     }
 
+    function handleChangesView() {
+        notify({
+            type: "info",
+            text: "Журнал действий пока не реализован"
+        });
+    }
 
-    {/* раскрытие */}
-    <button
-        onClick={() => setOpen((v) => !v)}
-    className="w-full py-2 rounded-lg bg-primary text-white flex items-center justify-center gap-2                             hover:bg-primary-dark
-"
-        >
-        {open ? "Скрыть детали" : "Показать детали"}
-    {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-    </button>
+    return (
+        <div className="
+            bg-surface dark:bg-dark-surface
+            border border-border dark:border-dark-border
+            rounded-xl shadow-card p-4 space-y-3
+        ">
+            <h2 className="text-xl font-semibold">{location.name}</h2>
+            <p className="text-text-secondary">
+                Адрес: <b>{location.address}</b>
+            </p>
 
-    {open && (
-        <div className="pt-3 border-t space-y-2 text-sm">
-            <p><b>ID:</b> {location.id}</p>
-            <p><b>ID мероприятия:</b> {location.event_id}</p>
-    <p><b>Создана:</b> {formatDate(location.created_at)}</p>
-            <p><b>Обновлена:</b> {formatDate(location.updated_at)}</p>
-            {isDeleted && <p><b>Удалена:</b> {formatDate(location.deleted_at)}</p>}
+            {/* Переход к лигам */}
+            {!isDeleted && (
+                <button
+                    onClick={() => goLeagues(location.id, location.name)}
+                    className="
+                        w-full py-2 rounded-lg flex items-center justify-center gap-2
+                        border border-border dark:border-dark-border
+                        hover:bg-hover dark:hover:bg-dark-hover
+                    "
+                >
+                    Перейти к лигам
+                    <ArrowRight size={16} />
+                </button>
+            )}
 
-            <div className="flex gap-2">
+            {/* кнопка раскрытия */}
+            {!guest && <button
+                onClick={() => setOpen((v) => !v)}
+                className="
+                    w-full py-2 rounded-lg bg-primary text-white
+                    flex items-center justify-center gap-2
+                    hover:bg-primary-dark
+                "
+            >
+                {open ? "Скрыть детали" : "Показать детали"}
+                {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+            </button>}
 
-            {!isDeleted ? (
-                <>
-                    {/* РЕДАКТИРОВАТЬ */}
-                    <button
-                        className="flex-1 py-2 rounded-lg bg-primary text-white flex items-center justify-center gap-2 hover:bg-primary-dark"
-                        onClick={() => openForm(locationForm, location)}
-                    >
-                        <Pencil size={16} /> Редактировать
-                    </button>
+            {open && (
+                <div className="pt-3 border-t border-border dark:border-dark-border space-y-3 text-sm">
 
-                    <button
-                        className="flex-1 py-2 rounded-lg bg-error text-white flex items-center justify-center gap-2 hover:bg-error/80"
-                        onClick={handleDelete}
-                    >
-                        <Trash size={16} /> Удалить
-                    </button>
-                </>
-            ) : (
-                <>
-                    {/* ВОССТАНОВИТЬ */}
-                    <button
-                        onClick={handleRestore}
-                        className="
-                                        flex-1 py-2 rounded-lg bg-success text-white hover:bg-success/80
+                    <p><b>ID:</b> {location.id}</p>
+                    <p><b>ID мероприятия:</b> {location.event_id}</p>
+                    <p><b>Создана:</b> {formatDate(location.created_at)}</p>
+                    <p><b>Обновлена:</b> {formatDate(location.updated_at)}</p>
+                    {isDeleted && (
+                        <p><b>Удалена:</b> {formatDate(location.deleted_at)}</p>
+                    )}
+
+                    {/* кнопки действий */}
+                    <div className="flex flex-col gap-2">
+
+                        {/* --- Активные --- */}
+                        {!isDeleted && (
+                            <div className="flex gap-2">
+
+                                {canUpdate && (
+                                    <button
+                                        onClick={() => openForm(locationForm, location)}
+                                        className="
+                                            flex-1 py-2 rounded-lg bg-primary text-white
+                                            hover:bg-primary-dark flex items-center justify-center gap-2
+                                        "
+                                    >
+                                        <Pencil size={16} /> Редактировать
+                                    </button>
+                                )}
+
+                                {canDelete && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="
+                                            flex-1 py-2 rounded-lg bg-error text-white
+                                            hover:bg-error/80 flex items-center justify-center gap-2
+                                        "
+                                    >
+                                        <Trash size={16} /> Удалить
+                                    </button>
+                                )}
+                            </div>
+                        )}
+
+                        {/* --- Удалённые --- */}
+                        {isDeleted && canRestore && (
+                            <button
+                                onClick={handleRestore}
+                                className="
+                                    w-full py-2 rounded-lg bg-success text-white
+                                    hover:bg-success/80 flex items-center justify-center gap-2
+                                "
+                            >
+                                <RotateCcw size={16} /> Восстановить
+                            </button>
+                        )}
+
+                        {/* --- История и журнал --- */}
+                        {canHistory && (
+                                <button
+                                    onClick={handleHistoryView}
+                                    className="
+                                        w-full py-2 rounded-lg bg-surface dark:bg-dark-surface
+                                        border border-border dark:border-dark-border
+                                        hover:bg-hover dark:hover:bg-dark-hover
                                         flex items-center justify-center gap-2
                                     "
-                    >
-                        <RotateCcw size={16} /> Восстановить
-                    </button>
-                </>
-            )}
+                                >
+                                    <History size={16} /> История изменений
+                                </button>
+                        )}
+                    </div>
                 </div>
-
-    </div>
-    )}
-    </div>
-);
+            )}
+        </div>
+    );
 }

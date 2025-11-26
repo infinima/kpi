@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { apiGet } from "@/api";
 import { Search, Plus } from "lucide-react";
-import { useEventsNav, useUI, useNotifications } from "@/store";
+import { useEventsNav, useUI, useNotifications, useUser } from "@/store";
 
 import { LocationCard } from "@/components/LocationCard";
 import { FormModal } from "@/components/layout/FormModal";
@@ -19,17 +19,26 @@ interface LocationItem {
 
 export function LocationsPage() {
     const eventId = useEventsNav((s) => s.eventId);
+
     const [locations, setLocations] = useState<LocationItem[]>([]);
     const [search, setSearch] = useState("");
     const [mode, setMode] = useState<"active" | "deleted">("active");
 
     const notify = useNotifications((s) => s.addMessage);
+    const { can, guest } = useUser();
 
     const formOpen = useUI((s) => s.formModalOpen);
     const closeForm = useUI((s) => s.closeFormModal);
     const openForm = useUI((s) => s.openFormModal);
     const formConfig = useUI((s) => s.formConfig);
     const formData = useUI((s) => s.formData);
+
+    // ---- ПРАВА ----
+    const canViewActive = can("locations", "get", eventId);
+    const canViewDeleted = can("locations", "access_history", eventId);
+    const canCreate = can("locations", "create", eventId);
+
+    // если гость — ничего нельзя
 
     async function loadLocations() {
         if (!eventId) return;
@@ -48,47 +57,76 @@ export function LocationsPage() {
     }
 
     useEffect(() => {
+        // если запрещено смотреть удалённые → автоматически режим active
+        if (mode === "deleted" && !canViewDeleted) {
+            setMode("active");
+            return;
+        }
+
         loadLocations();
     }, [mode, eventId]);
 
-    // Поиск
+
+    // ---- Поиск ----
     const filtered = useMemo(() => {
-        const s = search.toLowerCase();
-        return locations.filter((e) =>
-            e.name.toLowerCase().includes(s)
+        const q = search.toLowerCase();
+        return locations.filter((loc) =>
+            loc.name.toLowerCase().includes(q)
         );
     }, [search, locations]);
+
 
     return (
         <div className="space-y-6">
 
-            {/* SEARCH + MODE + ADD */}
-            <div className="flex flex-col sm:flex-row gap-4 sm:items-center ">
+            {/* ---- SEARCH + MODE + ADD ---- */}
+            <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
 
+                {/* поиск */}
                 <div className="relative w-full sm:w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60" size={18} />
+                    <Search
+                        className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
+                        size={18}
+                    />
                     <input
-
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         placeholder="Поиск по площадкам…"
-                        className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
+                        className="
+                            w-full pl-10 pr-3 py-2 rounded-lg
+                            bg-surface dark:bg-dark-surface
+                            border border-border dark:border-dark-border
+                        "
                     />
                 </div>
 
-                <select
+                {/* режим: активные / удалённые */}
+                {canViewDeleted && <select
                     value={mode}
                     onChange={(e) => setMode(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
+                    className="
+                        px-3 py-2 rounded-lg
+                        bg-surface dark:bg-dark-surface
+                        border border-border dark:border-dark-border
+                    "
                 >
                     <option value="active">Активные</option>
-                    <option value="deleted">Удалённые</option>
-                </select>
 
-                {mode === "active" && (
+                    {/* показываем "Удалённые" только если есть права */}
+                    {canViewDeleted && <option value="deleted">Удалённые</option>}
+                </select>}
+
+                {/* добавить площадку */}
+                {mode === "active" && canCreate && (
                     <button
-                        onClick={() => openForm(locationForm, { event_id: eventId })}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
+                        onClick={() =>
+                            openForm(locationForm, { event_id: eventId })
+                        }
+                        className="
+                            flex items-center gap-2 px-4 py-2
+                            bg-primary text-white rounded-lg
+                            hover:bg-primary-dark
+                        "
                     >
                         <Plus size={18} />
                         Добавить площадку
@@ -96,7 +134,7 @@ export function LocationsPage() {
                 )}
             </div>
 
-            {/* LIST */}
+            {/* ---- LIST ---- */}
             {filtered.length === 0 ? (
                 <p>Ничего не найдено</p>
             ) : (
@@ -112,6 +150,7 @@ export function LocationsPage() {
                 </div>
             )}
 
+            {/* ---- MODAL ---- */}
             {formOpen && (
                 <FormModal
                     config={formConfig}

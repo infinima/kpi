@@ -1,11 +1,19 @@
 import { useState } from "react";
-import { ChevronDown, ChevronUp, Pencil, Trash, RotateCcw } from "lucide-react";
-import { useNotifications, useUI } from "@/store";
+import {
+    ChevronDown,
+    ChevronUp,
+    Pencil,
+    Trash,
+    RotateCcw,
+    History,
+    ListTree
+} from "lucide-react";
+
+import { useNotifications, useUI, useUser } from "@/store";
 import { apiDelete, apiPost } from "@/api";
 import { BaseImage } from "@/components/BaseImage";
 import { formatDate } from "@/helpers/formatDate";
 import { userForm } from "@/config/userForm";
-
 
 export interface User {
     id: number;
@@ -30,8 +38,12 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
     const [open, setOpen] = useState(false);
     const openEdit = useUI((s) => s.openFormModal);
     const notify = useNotifications((s) => s.addMessage);
+    const { can } = useUser();
+
+
 
     async function handleDelete() {
+        if (!can("users", "delete", user.id)) return;
         try {
             await apiDelete(`users/${user.id}`, user.id);
             onRefresh();
@@ -39,6 +51,7 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
     }
 
     async function handleRestore() {
+        if (!can("users", "restore", user.id)) return;
         try {
             await apiPost(`users/${user.id}/restore`);
             notify({ type: "success", text: "Пользователь восстановлен" });
@@ -46,16 +59,43 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
         } catch {}
     }
 
+    function handleHistoryView() {
+        if (!can("users", "access_history", user.id)) return;
+
+        notify({
+            type: "info",
+            text: "История пользователя пока не реализована",
+        });
+    }
+
+    function handleChangesView() {
+        if (!can("users", "access_history", user.id)) return;
+
+        notify({
+            type: "info",
+            text: "Просмотр изменений пользователя пока не реализован",
+        });
+    }
+
+
+
+    const canUpdate = can("users", "update", user.id);
+    const canDelete = can("users", "delete", user.id);
+    const canRestore = can("users", "restore", user.id);
+    const canHistory = can("users", "access_history", user.id);
+
+    if (!can("users", "get", user.id)) return null;
+
+
+
     return (
         <div
             className="
                 bg-surface dark:bg-dark-surface
                 border border-border dark:border-dark-border
                 rounded-xl shadow-card p-4 space-y-3 transition
-                relative
             "
         >
-
             {/* HEADER */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -102,44 +142,70 @@ export function UserCard({ user, onRefresh, isDeleted = false }: UserCardProps) 
                     <p><b>Обновлен:</b> {formatDate(user.updated_at)}</p>
                     {isDeleted && <p><b>Удален:</b> {formatDate(user.deleted_at)}</p>}
 
-                    <div className="pt-3 flex gap-3">
+                    <div className="pt-3 flex flex-wrap gap-3 w-full">
 
-                        {isDeleted ? (
+                        {/* КНОПКИ ДЛЯ АКТИВНОГО ПОЛЬЗОВАТЕЛЯ */}
+                        {!isDeleted && (
+                            <>
+                                {canUpdate && (
+                                    <button
+                                        onClick={() => openEdit(userForm, user)}
+                                        className="px-3 py-2 flex items-center gap-2 rounded-lg bg-primary text-white hover:bg-primary-dark flex-1"
+                                    >
+                                        <Pencil size={16} /> Редактировать
+                                    </button>
+                                )}
 
+                                {canDelete && (
+                                    <button
+                                        onClick={handleDelete}
+                                        className="px-3 py-2 flex items-center gap-2 rounded-lg bg-error text-white hover:bg-error/80 flex-1"
+                                    >
+                                        <Trash size={16} /> Удалить
+                                    </button>
+                                )}
+                            </>
+                        )}
 
+                        {/* КНОПКИ ДЛЯ УДАЛЁННОГО ПОЛЬЗОВАТЕЛЯ */}
+                        {isDeleted && canRestore && (
                             <button
                                 onClick={handleRestore}
-                                className="
-                                    px-3 py-2 flex items-center gap-2 rounded-lg
-                                    bg-success text-white hover:bg-success/80
-                                "
+                                className="px-3 py-2 flex items-center gap-2 rounded-lg bg-success text-white hover:bg-success/80 flex-1"
                             >
                                 <RotateCcw size={16} /> Восстановить
                             </button>
-                        ) : (
-                            <>
-                                {/* РЕДАКТИРОВАТЬ */}
+                        )}
+
+                        {/* ИСТОРИЯ ИЗМЕНЕНИЙ */}
+                        {canHistory && (
+                            <div className="flex flex-col gap-3 w-full">
+
                                 <button
-                                    onClick={() => openEdit(userForm, user)}
+                                    onClick={handleHistoryView}
                                     className="
-        px-3 py-2 flex items-center gap-2 rounded-lg
-        bg-primary text-white hover:bg-primary-dark
-    "
+                w-full px-3 py-2 flex items-center gap-2 rounded-lg
+                bg-surface dark:bg-dark-surface
+                border border-border dark:border-dark-border
+                hover:bg-hover dark:hover:bg-dark-hover
+            "
                                 >
-                                    <Pencil size={16} /> Редактировать
+                                    <History size={16} /> История изменений
                                 </button>
 
-                                {/* УДАЛИТЬ */}
                                 <button
-                                    onClick={handleDelete}
+                                    onClick={handleChangesView}
                                     className="
-                                        px-3 py-2 flex items-center gap-2 rounded-lg
-                                        bg-error text-white hover:bg-error/80
-                                    "
+                w-full px-3 py-2 flex items-center gap-2 rounded-lg
+                bg-surface dark:bg-dark-surface
+                border border-border dark:border-dark-border
+                hover:bg-hover dark:hover:bg-dark-hover
+            "
                                 >
-                                    <Trash size={16} /> Удалить
+                                    <ListTree size={16} /> Журнал действий
                                 </button>
-                            </>
+
+                            </div>
                         )}
                     </div>
                 </div>

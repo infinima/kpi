@@ -63,12 +63,9 @@ export function ProfileModal() {
         try {
             await apiPatch(`users/${user?.id}`, changed);
 
-            notify({ type: "success", text: "Профиль обновлён" });
-
             await fetchUser();
             closeProfileModal();
         } catch {
-            notify({ type: "error", text: "Ошибка сохранения" });
         }
     }
 

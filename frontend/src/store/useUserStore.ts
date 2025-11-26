@@ -64,6 +64,7 @@ export const useUser = create<UserState>((set, get) => ({
 
         const data = await apiGet("auth/me?include=user");
         const rights = await apiGet("auth/permissions");
+        console.log(rights);
 
         set({
             user: {
@@ -117,6 +118,7 @@ export const useUser = create<UserState>((set, get) => ({
 
         const data = await apiGet("auth/me?include=user");
         const rights = await apiGet("auth/permissions");
+        console.log(rights);
 
         set({
             user: {
