@@ -8,7 +8,7 @@ export const authPermissionsRouter = express.Router();
 // Типы
 // -----------------------------------------------------
 
-export type KPIObject = "events" | "locations" | "leagues" | "teams" | "users";
+export type KPIObject = "events" | "locations" | "leagues" | "teams" | "users" | "permissions";
 
 export type KPIPermission =
     | "get"
@@ -154,10 +154,16 @@ authPermissionsRouter.get(
             leagues: {},
             teams: {},
             users: {},
+            permissions: {}
         };
 
         for (const row of rows) {
-            const obj = row.object;
+            const obj = row.object.trim() as KPIObject;
+
+            if (!out[obj]) {
+                console.warn("Unknown permissions object:", obj);
+                continue;
+            }
             const perms = row.permission.split(",") as KPIPermission[];
 
             // ------------------------------------------------
