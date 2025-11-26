@@ -37,6 +37,10 @@ export function showApiError(error: any) {
         const message =
             errorMessages[code] || error.error.message || "Неизвестная ошибка";
 
+        if (code === 'FAILED_TO_SEND_FILE') {
+            return;
+        }
+
         notify({
             type: "error",
             text: message,

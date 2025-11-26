@@ -12,6 +12,7 @@ async function parseResponse(res: Response) {
 }
 
 export async function apiGet<T = any>(path: string): Promise<T> {
+
     try {
         const token = useUser.getState().token;
 
@@ -29,12 +30,14 @@ export async function apiGet<T = any>(path: string): Promise<T> {
             };
         }
 
+        const data = await parseResponse(res);
+
         if (!res.ok) {
-            const json = await parseResponse(res);
-            throw json || { error: { code: "INTERNAL_ERROR" } };
+            throw data || { error: { code: "INTERNAL_ERROR" } };
         }
 
-        return parseResponse(res);
+        return data;
+
     } catch (err) {
         showApiError(err);
         throw err;

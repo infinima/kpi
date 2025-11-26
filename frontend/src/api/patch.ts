@@ -1,4 +1,4 @@
-import { useUser } from "@/store";
+import { useUser, useNotifications } from "@/store";
 import { showApiError } from "./errorHelper";
 
 const BASE_URL = window.location.origin + "/api/";
@@ -12,6 +12,8 @@ async function parseResponse(res: Response) {
 }
 
 export async function apiPatch<T = any>(path: string, body?: any): Promise<T> {
+    const notify = useNotifications.getState().addMessage;
+
     try {
         const token = useUser.getState().token;
 
@@ -29,12 +31,19 @@ export async function apiPatch<T = any>(path: string, body?: any): Promise<T> {
             throw { error: { code: "NO_TOKEN" } };
         }
 
+        const data = await parseResponse(res);
+
         if (!res.ok) {
-            const json = await parseResponse(res);
-            throw json || { error: { code: "INTERNAL_ERROR" } };
+            throw data || { error: { code: "INTERNAL_ERROR" } };
         }
 
-        return parseResponse(res);
+        notify({
+            type: "success",
+            text: "Изменения сохранены",
+        });
+
+        return data;
+
     } catch (err) {
         showApiError(err);
         throw err;

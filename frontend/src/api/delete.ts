@@ -1,5 +1,6 @@
 import { useUser, useNotifications } from "@/store";
 import { showApiError } from "./errorHelper";
+import { apiPost } from "@/api/post";
 
 const BASE_URL = window.location.origin + "/api/";
 
@@ -11,28 +12,30 @@ async function parseResponse(res: Response) {
     }
 }
 
-/**
- * Удаление объекта + возможность восстановления.
- * Поддерживает EVENT_HAS_RELATED_OBJECTS → force delete.
- */
+const RELATED_ERRORS = new Set([
+    "EVENT_HAS_RELATED_OBJECTS",
+    "LOCATION_HAS_RELATED_OBJECTS",
+    "LEAGUE_HAS_RELATED_OBJECTS",
+]);
+
 export async function apiDelete(path: string, restoreId?: number): Promise<void> {
     const token = useUser.getState().token;
     const notify = useNotifications.getState().addMessage;
 
     async function sendDelete(force: boolean = false) {
-        const url = force ? `${BASE_URL}${path}?force=true` : `${BASE_URL}${path}`;
+        const url = BASE_URL + path + (force ? "?force=true" : "");
 
         const res = await fetch(url, {
             method: "DELETE",
             headers: { Authorization: token ? `Bearer ${token}` : "" },
         });
 
+        const json = await parseResponse(res);
+
         if (res.status === 401) {
             useUser.getState().logout();
             throw { error: { code: "NO_TOKEN" } };
         }
-
-        const json = await parseResponse(res);
 
         if (!res.ok) {
             throw json || { error: { code: "INTERNAL_ERROR" } };
@@ -42,33 +45,28 @@ export async function apiDelete(path: string, restoreId?: number): Promise<void>
     }
 
     try {
-        // ПЕРВАЯ попытка удалить
+        // ▶ Первая попытка удалить
         await sendDelete(false);
 
-        // УСПЕХ
         notify({
             type: "success",
             text: "Объект удалён",
             actionText: restoreId ? "Восстановить" : undefined,
-            action: restoreId
-                ? async () => restoreDeletedObject(restoreId, notify, token,path)
-                : undefined
+            action: restoreId ? async () => apiPost(`${path}/restore`) : undefined,
         });
 
     } catch (err: any) {
         const code = err?.error?.code;
 
-        // -----------------------------------------
-        // ⛔ СЛУЧАЙ: Есть связанные объекты
-        // -----------------------------------------
-        if (code === "EVENT_HAS_RELATED_OBJECTS" || code === "LOCATION_HAS_RELATED_OBJECTS") {
+        if (RELATED_ERRORS.has(code)) {
+
             const details = err.error.details || {};
 
             let msg = "Нельзя удалить объект: есть связанные данные.";
-            msg += "\n\nЧто привязано:";
-            if (details.locations) msg += `\n• Локаций: ${details.locations}`;
-            if (details.leagues)   msg += `\n• Лиг: ${details.leagues}`;
-            if (details.teams)     msg += `\n• Команд: ${details.teams}`;
+            msg += "\n\nПривязано:";
+            if (details.locations) msg += ` • Площадки: ${details.locations}`;
+            if (details.leagues)   msg += ` • Лиги: ${details.leagues}`;
+            if (details.teams)     msg += ` • Команды: ${details.teams}`;
 
             notify({
                 type: "warning",
@@ -83,11 +81,12 @@ export async function apiDelete(path: string, restoreId?: number): Promise<void>
                             text: "Удалено принудительно",
                             actionText: restoreId ? "Восстановить" : undefined,
                             action: restoreId
-                                ? async () => restoreDeletedObject(restoreId, notify, token,path)
-                                : undefined
+                                ? async () => apiPost(`${path}/restore`)
+                                : undefined,
                         });
-                    } catch (e) {
-                        showApiError(e);
+
+                    } catch (forceErr) {
+                        showApiError(forceErr);
                     }
                 },
             });
@@ -95,38 +94,7 @@ export async function apiDelete(path: string, restoreId?: number): Promise<void>
             return;
         }
 
-        // Остальные ошибки
         showApiError(err);
         throw err;
-    }
-}
-
-
-// ------------------------------------------------------------
-// Восстановление объекта
-// ------------------------------------------------------------
-async function restoreDeletedObject(
-    id: number,
-    notify: any,
-    token: string | null,
-path: string
-) {
-    try {
-        const res = await fetch(`${BASE_URL}${path}/restore`, {
-            method: "POST",
-            headers: { Authorization: token ? `Bearer ${token}` : "" }
-        });
-
-        if (!res.ok) {
-            const json = await res.json().catch(() => null);
-            throw json || { error: { code: "INTERNAL_ERROR" } };
-        }
-
-        notify({
-            type: "success",
-            text: "Объект восстановлен"
-        });
-    } catch (err) {
-        showApiError(err);
     }
 }
