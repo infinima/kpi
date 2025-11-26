@@ -37,10 +37,6 @@ export function LoginModal() {
             await loginUser(data.token);
 
             closeLoginModal();
-            notify({
-                type: "success",
-                text: "Вы успешно вошли",
-            });
             setPassword("");
             setEmail("");
         } catch (err) {

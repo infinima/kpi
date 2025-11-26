@@ -1,12 +1,9 @@
 import { useUser } from "@/store";
 import { showApiError } from "@/api/errorHelper";
-import { cacheSet, cacheGet } from "@/helpers/imageCache";
 
 const BASE_URL = window.location.origin + "/api/";
 
 export async function getImage(path: string): Promise<string | null> {
-    const cached = cacheGet(path);
-    if (cached) return cached;
 
     const token = useUser.getState().token;
 
@@ -15,7 +12,7 @@ export async function getImage(path: string): Promise<string | null> {
             method: "GET",
             headers: {
                 ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                Accept: "image/*",
+                Accept: "image/webp",
             },
         });
 
@@ -34,8 +31,6 @@ export async function getImage(path: string): Promise<string | null> {
 
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
-
-        cacheSet(path, url);
 
 
         return url;

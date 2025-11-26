@@ -12,7 +12,6 @@ async function parseResponse(res: Response) {
 }
 
 export async function apiPost<T = any>(path: string, body?: any): Promise<T> {
-    const notify = useNotifications.getState().addMessage;
 
     try {
         const token = useUser.getState().token;
@@ -37,10 +36,6 @@ export async function apiPost<T = any>(path: string, body?: any): Promise<T> {
             throw data || { error: { code: "INTERNAL_ERROR" } };
         }
 
-        notify({
-            type: "success",
-            text: "Успешно выполнено",
-        });
 
         return data;
 
