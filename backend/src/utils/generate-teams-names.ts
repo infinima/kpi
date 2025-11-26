@@ -1,6 +1,11 @@
 import PDFDocument from "pdfkit";
+import { fileURLToPath } from "url";
+import path from "path";
 
 export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
     return new Promise((resolve, reject) => {
         const doc = new PDFDocument({
             size: "A4",
@@ -13,7 +18,7 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
         doc.on("end", () => resolve(Buffer.concat(chunks)));
         doc.on("error", reject);
 
-        const fontPath = "./src/static/Kreadon-Bold.ttf";
+        const fontPath = path.resolve(__dirname, "../static/Kreadon-Bold.ttf");
         doc.registerFont("Main", fontPath);
         doc.font("Main");
 
