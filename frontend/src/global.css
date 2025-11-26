@@ -6,6 +6,16 @@
 
 @custom-variant dark (&:where(.dark *));
 
+/* скрыть скролл для WebKit */
+.scrollbar-none::-webkit-scrollbar {
+    display: none;
+}
+
+/* скрыть скролл в Firefox */
+.scrollbar-none {
+    scrollbar-width: none;
+}
+
 @theme {
     --font-family-nunito: "Nunito", sans-serif;
 

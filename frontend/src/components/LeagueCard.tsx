@@ -11,7 +11,7 @@ import {
     History
 } from "lucide-react";
 
-import { useUI, useNotifications, useUser } from "@/store";
+import {useUI, useNotifications, useUser, useEventsNav} from "@/store";
 import { apiDelete, apiGetFile, apiPost } from "@/api";
 import { leagueForm } from "@/config/leagueForm";
 import { formatDate } from "@/helpers/formatDate";
@@ -113,12 +113,14 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
         await apiGetFile(`leagues/${league.id}/print_teams_names`, `${league.name.replace(" ", "_")}_таблички.pdf`);
     }
 
+  const goInLeagues = useEventsNav((s) => s.goInLeagues);
+
     return (
-        <div className="
-            bg-surface dark:bg-dark-surface
-            border border-border dark:border-dark-border
-            rounded-xl shadow-card p-4 space-y-4
-        ">
+        <div className="bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-xl shadow-card p-4 space-y-4"
+             onClickCapture={() => goInLeagues(league.id, league.name)}
+        >
+
+
 
             {/* ---------- Название и статус ---------- */}
             <h2 className="text-xl font-semibold">{league.name}</h2>

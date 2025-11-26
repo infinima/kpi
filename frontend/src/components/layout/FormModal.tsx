@@ -35,6 +35,34 @@ export function FormModal({
             return;
         }
 
+      if (config.endpoint === "teams") {
+        const f: Record<string, any> = {};
+
+        f.name = initialData.name ?? "";
+        f.league_id = initialData.league_id ?? "";
+
+        // Тренер
+        f.coach_full_name = initialData.members?.coach?.full_name ?? "";
+        f.coach_email = initialData.members?.coach?.email ?? "";
+
+        // Участники (4)
+        (initialData.members?.participants ?? []).forEach((p: any, i: number) => {
+          const n = i + 1;
+          f[`p${n}_full_name`] = p.full_name ?? "";
+          f[`p${n}_school`] = p.school ?? "";
+        });
+
+        // если участников меньше 4 — дополняем пустыми
+        for (let i = (initialData.members?.participants?.length ?? 0) + 1; i <= 4; i++) {
+          f[`p${i}_full_name`] = "";
+          f[`p${i}_school`] = "";
+        }
+
+        setForm(f);
+        setOriginal(f);
+        return;
+      }
+
         const fixed: Record<string, any> = {};
 
         for (const f of config.fields) {
@@ -57,11 +85,31 @@ export function FormModal({
         setForm((prev) => ({ ...prev, [name]: value }));
     }
 
-
-
     /** ▌ Определим изменённые поля */
     function getChangedFields() {
         const payload: Record<string, any> = {};
+
+      if (config.endpoint === "teams") {
+        const payload: any = {
+          name: form.name,
+          league_id: isEdit ? undefined : Number(form.league_id),
+
+          members: {
+            coach: {
+              full_name: form.coach_full_name,
+              email: form.coach_email,
+            },
+            participants: [
+              { full_name: form.p1_full_name, school: form.p1_school },
+              { full_name: form.p2_full_name, school: form.p2_school },
+              { full_name: form.p3_full_name, school: form.p3_school },
+              { full_name: form.p4_full_name, school: form.p4_school },
+            ],
+          },
+        };
+
+        return payload;
+      }
 
         for (const field of config.fields) {
             const key = field.name;
@@ -87,6 +135,39 @@ export function FormModal({
 
 
     async function save() {
+
+      if (config.endpoint === "teams") {
+        if (!form.name.trim()) {
+          notify({ type: "warning", text: "Введите название команды" });
+          return;
+        }
+        if (!isEdit && !form.league_id) {
+          notify({ type: "warning", text: "Укажите ID лиги" });
+          return;
+        }
+
+        if (!form.coach_full_name.trim()) {
+          notify({ type: "warning", text: "Введите ФИО тренера" });
+          return;
+        }
+
+        if (!isEmailValid(form.coach_email)) {
+          notify({ type: "warning", text: "Некорректный email тренера" });
+          return;
+        }
+
+        for (let i = 1; i <= 4; i++) {
+          if (!form[`p${i}_full_name`]?.trim()) {
+            notify({ type: "warning", text: `Введите ФИО участника №${i}` });
+            return;
+          }
+          if (!form[`p${i}_school`]?.trim()) {
+            notify({ type: "warning", text: `Введите школу участника №${i}` });
+            return;
+          }
+        }
+      }
+
         for (const field of config.fields) {
             if (isEdit && field.hiddenWhenEditing) continue;
             if (!isEdit && field.hiddenWhenCreating) continue;
@@ -218,16 +299,19 @@ export function FormModal({
     return (
         <>
             {/* ТЁМНЫЙ ФОН */}
-            <div className="fixed inset-0 p-4 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center">
 
-                <div
-                    className="
-                        w-full max-w-lg p-6 rounded-xl
-                        bg-surface dark:bg-dark-surface
-                        border border-border dark:border-dark-border
-                        shadow-card space-y-6
-                    "
-                >
+            <div
+              className="
+        w-full max-w-lg
+        max-h-[90vh]      /* <- модалка не выходит за экран */
+        overflow-y-auto   /* <- включаем прокрутку */
+        p-6 rounded-xl
+        bg-surface dark:bg-dark-surface
+        border border-border dark:border-dark-border
+        shadow-card space-y-6
+    "
+            >
                     {/* HEADER */}
                     <div className="flex justify-between items-center">
                         <h2 className="text-h2 font-semibold">

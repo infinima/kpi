@@ -9,6 +9,7 @@ import {NotificationCenter} from "@/components/services/NotificationCenter";
 import {LoginModal} from "@/components/services/Login";
 import { EventsPageRoot } from "@/pages/event/EventsPageRoot";
 import {ProfileModal} from "@/components/ProfileModal";
+import {TeamsPage} from "@/pages/TeamsPage";
 
 export function App() {
     const { currentPage } = useNavigation();
@@ -19,6 +20,7 @@ export function App() {
         tables: <TablesPage />,
         logs: <LogsPage />,
         users: <UsersPage/>,
+        teams: <TeamsPage />,
     };
 
     if (useUI.getState().theme === "dark") {

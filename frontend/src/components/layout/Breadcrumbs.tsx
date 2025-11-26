@@ -2,7 +2,7 @@ import { ChevronLeft } from "lucide-react";
 import { useEventsNav } from "@/store";
 
 export function Breadcrumbs() {
-    const { page, eventId, locationId, goBack , eventName, locationName} = useEventsNav();
+    const { page, eventId, locationId,leagueId, goBack , eventName, locationName,leagueName} = useEventsNav();
 
     const chain = [];
 
@@ -10,6 +10,7 @@ export function Breadcrumbs() {
 
     if (eventId) chain.push(`${eventName}`);
     if (locationId) chain.push(`${locationName}`);
+    if (leagueId) chain.push(`${leagueName}`);
 
     return (
         <div className="flex items-center gap-3 text-sm text-text-secondary">

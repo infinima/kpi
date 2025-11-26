@@ -1,82 +1,98 @@
-import { create } from "zustand";
+import {create} from "zustand";
 
 export type EventsPage =
-    | "events"
-    | "locations"
-    | "leagues";
+  | "events"
+  | "locations"
+  | "leagues";
 
 interface EventsNavState {
-    page: EventsPage;
+  page: EventsPage;
 
-    eventId: number | null;
-    eventName: string | null;
+  eventId: number | null;
+  eventName: string | null;
 
-    locationId: number | null;
-    locationName: string | null;
+  locationId: number | null;
+  locationName: string | null;
 
-    goEvents: () => void;
-    goLocations: (eventId: number, eventName: string) => void;
-    goLeagues: (locationId: number, locationName: string) => void;
+  leagueId: number | null;
+  leagueName: string | null;
 
-    goBack: () => void;
+  goEvents: () => void;
+  goLocations: (eventId: number, eventName: string) => void;
+  goLeagues: (locationId: number, locationName: string) => void;
+  goInLeagues: (leagueId: number, leagueName: string) => void;
+
+  goBack: () => void;
 }
 
 export const useEventsNav = create<EventsNavState>((set, get) => ({
 
-    page: "events",
+  page: "events",
 
-    eventId: null,
-    eventName: null,
+  eventId: null,
+  eventName: null,
 
-    locationId: null,
-    locationName: null,
+  locationId: null,
+  locationName: null,
+
+  leagueId: null,
+  leagueName: null,
+
+  goEvents: () =>
+    set({
+      page: "events",
+      eventId: null,
+      eventName: null,
+      locationId: null,
+      locationName: null,
+      leagueId: null,
+      leagueName: null,
+    }),
+
+  goLocations: (eventId, eventName) =>
+    set({
+      page: "locations",
+      eventId,
+      eventName,
+      locationId: null,
+      locationName: null,
+      leagueId: null,
+      leagueName: null,
+    }),
+
+  goLeagues: (locationId, locationName) =>
+    set({
+      page: "leagues",
+      locationId,
+      locationName,
+    }),
+
+  goInLeagues: (leagueId, leagueName) =>
+    set({
+      leagueId,
+      leagueName,
+    }),
 
 
-    goEvents: () =>
-        set({
-            page: "events",
-            eventId: null,
-            eventName: null,
-            locationId: null,
-            locationName: null,
-        }),
+  goBack: () => {
+    const {page} = get();
 
-    goLocations: (eventId, eventName) =>
-        set({
-            page: "locations",
-            eventId,
-            eventName,
-            locationId: null,
-            locationName: null,
-        }),
+    if (page === "leagues") {
+      return set({
+        page: "locations",
+        locationId: null,
+        locationName: null,
+      });
+    }
 
-    goLeagues: (locationId, locationName) =>
-        set({
-            page: "leagues",
-            locationId,
-            locationName,
-        }),
-
-
-    goBack: () => {
-        const { page } = get();
-
-        if (page === "leagues") {
-            return set({
-                page: "locations",
-                locationId: null,
-                locationName: null,
-            });
-        }
-
-        if (page === "locations") {
-            return set({
-                page: "events",
-                eventId: null,
-                eventName: null,
-                locationId: null,
-                locationName: null,
-            });
-        }
-    },
+    if (page === "locations") {
+      return set({
+        page: "events",
+        eventId: null,
+        eventName: null,
+        locationId: null,
+        locationName: null,
+      });
+    }
+  },
 }));
