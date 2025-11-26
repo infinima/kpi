@@ -75,7 +75,6 @@ usersRouter.get(
     "/:id/photo",
     validate(GetOneUserInput, "params"),
     checkPermission("users", "get"),
-    checkNotDeleted("user"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
