@@ -17,8 +17,6 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         }
 
         const league_id: number = socket.data.league_id;
-        const table_type: string = socket.handshake.query.table_type as string;
-
         const { team_id, question_num, delta_correct = 0, delta_incorrect = 0 } = data;
 
         if (!question_num || question_num < 1 || question_num > 16) {
@@ -60,7 +58,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
             );
 
             const table = await getKvartalyTable(Number(league_id));
-            io.to(`league:${league_id}:${table_type}`).emit("table_data", table);
+            io.to(`league:${league_id}:kvartaly`).emit("table_data", table);
 
         } catch (err) {
             console.error(err);
