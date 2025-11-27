@@ -9,6 +9,7 @@ export function validate<T>(
         const parse = schema.safeParse(req[source]);
         if (!parse.success) {
             return res.status(400).json({
+                code: "VALIDATION_FAILED",
                 error: "Validation failed",
                 issues: parse.error.issues,
             });
