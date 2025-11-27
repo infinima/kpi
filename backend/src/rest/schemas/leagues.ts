@@ -185,7 +185,6 @@ registry.registerPath({
     path: "/api/leagues/{id}/final-table",
     summary: "Итоговая таблица команды",
     tags: ["Leagues"],
-    security: [{ BearerAuth: [] }],
     request: {
         params: GetOneLeagueInput,
     },

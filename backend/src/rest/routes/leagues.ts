@@ -209,7 +209,6 @@ leaguesRouter.get(
     "/:id/final-table",
     validate(GetOneLeagueInput, "params"),
     checkNotDeleted("league"),
-    checkPermission("leagues", "get"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
