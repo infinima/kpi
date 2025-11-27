@@ -75,21 +75,17 @@ export function registerConnection(
             if (table_type === "kvartaly") {
                 const table = await getKvartalyTable(Number(league_id));
                 socket.emit("table_data", table);
-                return;
-            }
-
-            if (table_type === "fudzi") {
+            } else if (table_type === "fudzi") {
                 const table = await getFudziTable(Number(league_id));
                 socket.emit("table_data", table);
-                return;
+            } else {
+                socket.emit("error_response", {
+                    error: {
+                        code: "NOT_IMPLEMENTED",
+                        message: `Table type '${table_type}' is not implemented`
+                    }
+                });
             }
-
-            socket.emit("error_response", {
-                error: {
-                    code: "NOT_IMPLEMENTED",
-                    message: `Table type '${table_type}' is not implemented`
-                }
-            });
         } catch (err) {
             console.error(err);
             socket.emit("error_response", {
