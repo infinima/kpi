@@ -1,140 +1,150 @@
-    import express from "express";
-    import { query } from "../../utils/database.js";
-    import { validate } from "../middlewares/validate.js";
-    import {
-        CreatePermissionInput,
-        UpdatePermissionInput,
-        GetPermissionsTargetInput
-    } from "../schemas/permissions.js";
-    import { checkPermission } from "../middlewares/permission-check.js";
+import express from "express";
+import { query } from "../../utils/database.js";
+import { validate } from "../middlewares/validate.js";
+import {
+    CreatePermissionInput,
+    UpdatePermissionInput,
+    GetPermissionsTargetInput
+} from "../schemas/permissions.js";
+import { checkPermission } from "../middlewares/permission-check.js";
 
-    export const permissionsRouter = express.Router();
+export const permissionsRouter = express.Router();
 
-    // GET /api/permissions/user/:user_id
-    permissionsRouter.get(
-        "/user/:user_id",
-        checkPermission("permissions", "get"),
-        async (req, res) => {
-            const { user_id } = req.params;
+function normalize(rows: any[]) {
+    return rows.map(r => ({
+        ...r,
+        permission: typeof r.permission === "string"
+            ? r.permission.split(",")
+            : r.permission
+    }));
+}
 
-            const rows = await query(
-                `SELECT * FROM permissions WHERE user_id = ?`,
-                [user_id]
-            );
+// GET /api/permissions/user/:user_id
+permissionsRouter.get(
+    "/user/:user_id",
+    checkPermission("permissions", "get"),
+    async (req, res) => {
+        const { user_id } = req.params;
 
-            res.json(rows);
-        }
-    );
+        const rows = await query(
+            `SELECT * FROM permissions WHERE user_id = ?`,
+            [user_id]
+        );
 
-    // GET /api/permissions/:object/:object_id?
-    permissionsRouter.get(
-        "/:object/:object_id?",
-        validate(GetPermissionsTargetInput, "params"),
-        checkPermission("permissions", "get"),
-        async (req, res) => {
-            const { object, object_id } = (req as any).validated.params;
+        return res.json(normalize(rows));
+    }
+);
 
-            let rows;
+// GET /api/permissions/:object/:object_id?
+permissionsRouter.get(
+    "/:object/:object_id?",
+    validate(GetPermissionsTargetInput, "params"),
+    checkPermission("permissions", "get"),
+    async (req, res) => {
+        const { object, object_id } = (req as any).validated.params;
 
-            if (!object_id) {
-                rows = await query(
-                    `SELECT * FROM permissions WHERE object=? AND object_id IS NULL AND scope_object IS NULL`,
-                    [object]
-                );
-                return res.json(rows);
-            }
+        let rows;
 
-            // поиск по object_id
+        if (!object_id) {
             rows = await query(
-                `SELECT * FROM permissions
-           WHERE object=? AND object_id=?`,
-                [object, object_id]
+                `SELECT * FROM permissions WHERE object=? AND object_id IS NULL AND scope_object IS NULL`,
+                [object]
             );
-
-            if (rows.length > 0) return res.json(rows);
-
-            // поиск по scope
-            rows = await query(
-                `SELECT * FROM permissions
-           WHERE scope_object=? AND scope_object_id=?`,
-                [object, object_id]
-            );
-
-            res.json(rows);
+            return res.json(normalize(rows));
         }
-    );
 
+        // поиск по object_id
+        rows = await query(
+            `SELECT * FROM permissions
+             WHERE object=? AND object_id=?`,
+            [object, object_id]
+        );
 
-    // POST /api/permissions
-    permissionsRouter.post(
-        "/",
-        validate(CreatePermissionInput, "body"),
-        checkPermission("permissions", "create"),
-        async (req, res) => {
-            const data = (req as any).validated.body;
+        if (rows.length > 0) return res.json(normalize(rows));
 
-            const valid =
-                (data.object_id && !data.scope_object && !data.scope_object_id) ||
-                (!data.object_id && data.scope_object && data.scope_object_id) ||
-                (!data.object_id && !data.scope_object && !data.scope_object_id);
+        // поиск по scope
+        rows = await query(
+            `SELECT * FROM permissions
+             WHERE scope_object=? AND scope_object_id=?`,
+            [object, object_id]
+        );
 
-            if (!valid) {
-                return res.status(400).json({
-                    error: "INVALID_SCOPE"
-                });
-            }
+        res.json(normalize(rows));
+    }
+);
 
-            const result = await query(
-                `INSERT INTO permissions
-           (user_id, object, permission, object_id, scope_object, scope_object_id)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-                [
-                    data.user_id,
-                    data.object,
-                    data.permission.join(","),
-                    data.object_id ?? null,
-                    data.scope_object ?? null,
-                    data.scope_object_id ?? null
-                ]
-            );
+// POST /api/permissions
+permissionsRouter.post(
+    "/",
+    validate(CreatePermissionInput, "body"),
+    checkPermission("permissions", "create"),
+    async (req, res) => {
+        const data = (req as any).validated.body;
 
-            res.json({ id: result.insertId });
+        const valid =
+            (data.object_id && !data.scope_object && !data.scope_object_id) ||
+            (!data.object_id && data.scope_object && data.scope_object_id) ||
+            (!data.object_id && !data.scope_object && !data.scope_object_id);
+
+        if (!valid) {
+            return res.status(400).json({
+                error: "INVALID_SCOPE"
+            });
         }
-    );
 
+        const result = await query(
+            `INSERT INTO permissions
+                 (user_id, object, permission, object_id, scope_object, scope_object_id)
+             VALUES (?, ?, ?, ?, ?, ?)`,
+            [
+                data.user_id,
+                data.object,
+                data.permission.join(","),
+                data.object_id ?? null,
+                data.scope_object ?? null,
+                data.scope_object_id ?? null
+            ]
+        );
 
-    // PATCH /api/permissions/:id
-    permissionsRouter.patch(
-        "/:id",
-        validate(UpdatePermissionInput, "body"),
-        checkPermission("permissions", "update"),
-        async (req, res) => {
-            const data = (req as any).validated.body;
-            const { id } = req.params;
+        res.json({ id: result.insertId });
+    }
+);
 
-            const valid =
-                (data.object_id && !data.scope_object && !data.scope_object_id) ||
-                (!data.object_id && data.scope_object && data.scope_object_id) ||
-                (!data.object_id && !data.scope_object && !data.scope_object_id);
+// PATCH /api/permissions/:id
+permissionsRouter.patch(
+    "/:id",
+    validate(UpdatePermissionInput, "body"),
+    checkPermission("permissions", "update"),
+    async (req, res) => {
+        const data = (req as any).validated.body;
+        const { id } = req.params;
 
-            if (!valid) {
-                return res.status(400).json({
-                    error: "INVALID_SCOPE"
-                });
-            }
+        const valid =
+            (data.object_id && !data.scope_object && !data.scope_object_id) ||
+            (!data.object_id && data.scope_object && data.scope_object_id) ||
+            (!data.object_id && !data.scope_object && !data.scope_object_id);
 
-            await query("UPDATE permissions SET ? WHERE id=?", [data, id]);
-            res.json({ success: true });
+        if (!valid) {
+            return res.status(400).json({
+                error: "INVALID_SCOPE"
+            });
         }
-    );
 
-
-    // DELETE /api/permissions/:id
-    permissionsRouter.delete(
-        "/:id",
-        checkPermission("permissions", "delete"),
-        async (req, res) => {
-            await query("DELETE FROM permissions WHERE id=?", [req.params.id]);
-            res.json({ success: true });
+        if (Array.isArray(data.permission)) {
+            data.permission = data.permission.join(",");
         }
-    );
+
+        await query("UPDATE permissions SET ? WHERE id=?", [data, id]);
+        res.json({ success: true });
+    }
+);
+
+// DELETE /api/permissions/:id
+permissionsRouter.delete(
+    "/:id",
+    checkPermission("permissions", "delete"),
+    async (req, res) => {
+        await query("DELETE FROM permissions WHERE id=?", [req.params.id]);
+        res.json({ success: true });
+    }
+);
