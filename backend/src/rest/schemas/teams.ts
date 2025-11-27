@@ -11,7 +11,7 @@ const ParticipantSchema = z.object({
 });
 export const MembersSchema = z.object({
     coach: CoachSchema,
-    participants: z.array(ParticipantSchema).min(1),
+    participants: z.array(ParticipantSchema).min(4),
 });
 
 const KvartalQuestionSchema = z.object({
