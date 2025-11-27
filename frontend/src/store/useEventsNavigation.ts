@@ -82,6 +82,8 @@ export const useEventsNav = create<EventsNavState>((set, get) => ({
         page: "locations",
         locationId: null,
         locationName: null,
+        leagueId: null,
+        leagueName: null,
       });
     }
 
@@ -92,6 +94,8 @@ export const useEventsNav = create<EventsNavState>((set, get) => ({
         eventName: null,
         locationId: null,
         locationName: null,
+        leagueId: null,
+        leagueName: null,
       });
     }
   },
