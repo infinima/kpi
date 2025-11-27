@@ -5,7 +5,8 @@ export type Page =
     "events" |
     "tables" |
     "logs" |
-    "users";
+    "users" |
+  "teams";
 
 interface NavigationState {
     currentPage: Page;

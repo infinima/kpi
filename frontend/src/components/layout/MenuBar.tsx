@@ -11,7 +11,7 @@ export function MenuBar() {
   const { theme, toggleTheme } = useUI();
 
   // @ts-ignore
-  const { leagueId } = useEventsNav();  // <-- тут узнаём, выбрана ли лига
+  const { leagueId, tableType } = useEventsNav();  // <-- тут узнаём, выбрана ли лига
 
   // Базовое меню
   const menuItems: { id: Page; title: string }[] = [
@@ -31,6 +31,11 @@ export function MenuBar() {
       id: "teams",
       title: "Команды",
     });
+  }
+
+  if (leagueId && tableType) {
+
+    menuItems.push({id: "tables", title: "Таблицы"});
   }
 
   const changePage = (id: Page) => {

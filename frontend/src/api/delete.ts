@@ -1,6 +1,6 @@
 import { useUser, useNotifications } from "@/store";
 import { showApiError } from "./errorHelper";
-import { apiPost } from "@/api/post";
+import { apiPost } from "@/api";
 
 const BASE_URL = window.location.origin + "/api/";
 

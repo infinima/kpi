@@ -1,0 +1,128 @@
+import { create } from "zustand";
+import { io, Socket } from "socket.io-client";
+
+import { useUser, useNotifications, useEventsNav} from "@/store";
+
+const SOCKET_URL = "https://test.kpiturnir.ru";
+
+interface SocketState {
+  socket: Socket | null;
+  tableData: any | null;
+  isConnected: boolean;
+
+  connect: () => void;
+  disconnect: () => void;
+
+  fudziSetAnswer: (
+    team_id: number,
+    question_num: number,
+    status: "correct" | "incorrect" | "not_submitted"
+  ) => void;
+
+  fudziSetCard: (team_id: number, has_card: boolean) => void;
+
+  kvartalyAddAnswer: (
+    team_id: number,
+    question_num: number,
+    delta_correct: number,
+    delta_incorrect: number
+  ) => void;
+}
+
+export const useSocketStore = create<SocketState>((set, get) => ({
+  socket: null,
+  tableData: null,
+  isConnected: false,
+
+  connect: () => {
+    const notify = useNotifications.getState().addMessage;
+
+    const {leagueId , tableType} = useEventsNav.getState()
+    const token = useUser.getState().token;
+
+    if (!leagueId || !tableType) {
+      notify({ type: "warning", text: "Нет данных для подключения к таблице" });
+      return;
+    }
+
+    // закрываем старый сокет
+    const oldSocket = get().socket;
+    if (oldSocket) oldSocket.close();
+
+    const socket = io(SOCKET_URL, {
+      transports: ["websocket"],
+      query: {
+        league_id: String(leagueId),
+        table_type: tableType,
+        ...(token ? { token } : {}),
+      },
+    });
+
+    set({ socket });
+
+    socket.on("connection_error", (err: any) => {
+      notify({
+        type: "error",
+        text: err?.message ?? "Ошибка подключения к таблице",
+      });
+      socket.close();
+      set({ isConnected: false });
+    });
+
+    socket.on("connect", () => {
+      set({ isConnected: true });
+      notify({ type: "success", text: "Подключено к таблице" });
+
+      socket.emit("get_table");
+    });
+
+    socket.on("table_data", (t: any) => {
+      set({ tableData: t });
+    });
+
+    socket.on("error", (err: any) => {
+      const msg = err?.error?.message ?? err?.message ?? "Неизвестная ошибка";
+      notify({ type: "error", text: msg });
+    });
+  },
+
+  disconnect: () => {
+    const s = get().socket;
+    if (s) s.close();
+    set({ socket: null, isConnected: false,  tableData: null });
+  },
+
+  // ------ ДЕЙСТВИЯ ДЛЯ ФУДЗИ ------
+
+  fudziSetAnswer: (team_id, question_num, status) => {
+    const { socket } = get();
+    if (!socket) return;
+
+    socket.emit("fudzi_set_answer", {
+      team_id,
+      question_num,
+      status,
+    });
+  },
+
+  fudziSetCard: (team_id, has_card) => {
+    const { socket } = get();
+    if (!socket) return;
+
+    socket.emit("fudzi_set_card", { team_id, has_card });
+  },
+
+  // ------ ДЕЙСТВИЯ ДЛЯ КВАРТАЛОВ ------
+
+  kvartalyAddAnswer: (team_id, question_num, delta_correct, delta_incorrect) => {
+    const { socket } = get();
+    if (!socket) return;
+
+    socket.emit("kvartaly_add_answer", {
+      team_id,
+      question_num,
+      delta_correct,
+      delta_incorrect,
+    });
+  },
+}));

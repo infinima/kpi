@@ -1,4 +1,5 @@
 import {create} from "zustand";
+import { useSocketStore } from "@/store";
 
 export type EventsPage =
   | "events"
@@ -17,15 +18,18 @@ interface EventsNavState {
   leagueId: number | null;
   leagueName: string | null;
 
+  tableType: "kvartaly"| "fudzi" | null;
+
   goEvents: () => void;
   goLocations: (eventId: number, eventName: string) => void;
   goLeagues: (locationId: number, locationName: string) => void;
   goInLeagues: (leagueId: number, leagueName: string) => void;
+  goToTables: (tableType: "kvartaly"| "fudzi") => void;
 
   goBack: () => void;
 }
 
-export const useEventsNav = create<EventsNavState>((set, get) => ({
+export const useEventsNav = create<EventsNavState>()((set, get) => ({
 
   page: "events",
 
@@ -38,57 +42,12 @@ export const useEventsNav = create<EventsNavState>((set, get) => ({
   leagueId: null,
   leagueName: null,
 
+  tableType: null,
+
   goEvents: () =>
-    set({
-      page: "events",
-      eventId: null,
-      eventName: null,
-      locationId: null,
-      locationName: null,
-      leagueId: null,
-      leagueName: null,
-    }),
-
-  goLocations: (eventId, eventName) =>
-    set({
-      page: "locations",
-      eventId,
-      eventName,
-      locationId: null,
-      locationName: null,
-      leagueId: null,
-      leagueName: null,
-    }),
-
-  goLeagues: (locationId, locationName) =>
-    set({
-      page: "leagues",
-      locationId,
-      locationName,
-    }),
-
-  goInLeagues: (leagueId, leagueName) =>
-    set({
-      leagueId,
-      leagueName,
-    }),
-
-
-  goBack: () => {
-    const {page} = get();
-
-    if (page === "leagues") {
-      return set({
-        page: "locations",
-        locationId: null,
-        locationName: null,
-        leagueId: null,
-        leagueName: null,
-      });
-    }
-
-    if (page === "locations") {
-      return set({
+    set(() => {
+      useSocketStore.getState().disconnect();   // ← корректный вызов
+      return {
         page: "events",
         eventId: null,
         eventName: null,
@@ -96,6 +55,84 @@ export const useEventsNav = create<EventsNavState>((set, get) => ({
         locationName: null,
         leagueId: null,
         leagueName: null,
+        tableType: null,
+      };
+    }),
+
+  goLocations: (eventId, eventName) =>
+    set(() => {
+      useSocketStore.getState().disconnect();
+      return {
+        page: "locations",
+        eventId,
+        eventName,
+        locationId: null,
+        locationName: null,
+        leagueId: null,
+        leagueName: null,
+        tableType: null,
+      };
+    }),
+
+  goLeagues: (locationId, locationName) =>
+    set(() => {
+      useSocketStore.getState().disconnect();
+      return {
+        page: "leagues",
+        locationId,
+        locationName,
+        tableType: null,
+      };
+    }),
+
+  goInLeagues: (leagueId, leagueName) =>
+    set(() => {
+      useSocketStore.getState().disconnect();
+      return {
+        leagueId,
+        leagueName,
+        tableType: null,
+      };
+    }),
+
+  goToTables: (tableType) =>
+    set(()=> {
+      useSocketStore.getState().disconnect();
+      return {
+
+      tableType};
+    }),
+
+  goBack: () => {
+    const { page } = get();
+
+    if (page === "leagues") {
+      return set(() => {
+        useSocketStore.getState().disconnect();
+        return {
+          page: "locations",
+          locationId: null,
+          locationName: null,
+          leagueId: null,
+          leagueName: null,
+          tableType: null,
+        };
+      });
+    }
+
+    if (page === "locations") {
+      return set(() => {
+        useSocketStore.getState().disconnect();
+        return {
+          page: "events",
+          eventId: null,
+          eventName: null,
+          locationId: null,
+          locationName: null,
+          leagueId: null,
+          leagueName: null,
+          tableType: null,
+        };
       });
     }
   },

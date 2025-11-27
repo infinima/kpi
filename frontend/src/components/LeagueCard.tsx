@@ -1,17 +1,17 @@
 import { useState } from "react";
 import {
-    ChevronDown,
-    ChevronUp,
-    Pencil,
-    RotateCcw,
-    Trash,
-    ArrowLeft,
-    ArrowRight,
-    FileDown,
-    History
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  RotateCcw,
+  Trash,
+  ArrowLeft,
+  ArrowRight,
+  FileDown,
+  History, Baby
 } from "lucide-react";
 
-import {useUI, useNotifications, useUser, useEventsNav} from "@/store";
+import {useUI, useNotifications, useUser, useEventsNav, useNavigation} from "@/store";
 import { apiDelete, apiGetFile, apiPost } from "@/api";
 import { leagueForm } from "@/config/leagueForm";
 import { formatDate } from "@/helpers/formatDate";
@@ -27,8 +27,11 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
     const notify = useNotifications((s) => s.addMessage);
     const openForm = useUI((s) => s.openFormModal);
+  const goToTables = useEventsNav((s) => s.goToTables);
 
-    const { can, guest } = useUser();
+
+  const { can, guest } = useUser();
+  const { setPage } = useNavigation();
 
     // ---------- ПРАВА ----------
     const canUpdate = can("leagues", "update", league.id);
@@ -36,6 +39,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
     const canRestore = can("leagues", "restore", league.id);
     const canHistory = can("leagues", "access_history", league.id);
     const canPrint = can("leagues", "print_documents", league.id);
+    const canTeams = can("teams", "get")
 
     // можно ли раскрывать детали
     const canSeeDetails = canUpdate || canDelete || canRestore || canHistory || canPrint;
@@ -134,7 +138,10 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
                 {canShowKvartalyResults && (
                     <button
-                        onClick={() => notify({type: "info", text: "Результаты кварталы (пока пусто)"})}
+                        onClick={() => {
+                          goToTables("kvartaly");
+                          setPage("tables");
+                        }}
                         className="
                             w-full py-3 rounded-lg
                             bg-surface dark:bg-dark-surface border border-border dark:border-dark-border
@@ -148,7 +155,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
                 {canShowFudziResults && (
                     <button
-                        onClick={() => notify({type: "info", text: "Результаты фудзи (пока пусто)"})}
+                        onClick={() =>{goToTables("fudzi");setPage("tables");}}
                         className="
                             w-full py-3 rounded-lg
                             bg-surface dark:bg-dark-surface border border-border dark:border-dark-border
@@ -309,6 +316,40 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                                 </button>
                             </>
                         )}
+
+
+                      {canTeams && !isDeleted && (
+                        <>
+                          <button
+                            onClick={() => setPage("teams")
+                            }
+                            className="
+                                        w-full py-3 rounded-lg bg-surface dark:bg-dark-surface
+                                        border border-border dark:border-dark-border
+                                        hover:bg-hover dark:hover:bg-dark-hover
+                                        flex items-center justify-center gap-2
+                                    "
+                          >
+                            <Baby size={18}/>
+                            Команды
+                          </button>
+
+                          <button
+                            onClick={handleDownloadBlanks}
+                            className="
+                                        w-full py-3 rounded-lg bg-surface dark:bg-dark-surface
+                                        border border-border dark:border-dark-border
+                                        hover:bg-hover dark:hover:bg-dark-hover
+                                        flex items-center justify-center gap-2
+                                    "
+                          >
+                            <FileDown size={18}/>
+                            Скачать бланки
+                          </button>
+                        </>
+                      )}
+
+
 
                         {/* история */}
                         {canHistory && (
