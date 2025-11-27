@@ -17,6 +17,18 @@ export const GetOneLeagueInput = LeagueSchema.pick({ id: true });
 export const GetLeaguesByLocationInput = z.object({
     location_id: z.coerce.number().int().positive(),
 });
+export const FinalTableSchema = z.object({
+    id: z.number(),
+    name: z.string(),
+    place_kvartaly: z.number().nullable(),
+    place_fudzi: z.number().nullable(),
+    place_sum: z.number().nullable(),
+    place_final: z.number().nullable(),
+    diploma: z.string().nullable(),
+    special_nominations: z.array(z.string()).nullable(),
+});
+
+export const GetFinalTableOutput = z.array(FinalTableSchema);
 export const CreateLeagueInput = LeagueSchema
     .omit({
         id: true,
@@ -165,6 +177,27 @@ registry.registerPath({
         400: { description: "The league is deleted" },
         404: { description: "The league does not exist or has no teams" },
         500: { description: "PDF generation failed" },
+    },
+});
+
+registry.registerPath({
+    method: "get",
+    path: "/api/leagues/{id}/final-table",
+    summary: "Итоговая таблица команды",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: GetFinalTableOutput },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist" },
     },
 });
 
