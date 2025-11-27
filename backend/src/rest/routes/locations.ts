@@ -37,8 +37,8 @@ locationsRouter.get(
 locationsRouter.get(
     "/event/:event_id/deleted",
     validate(GetLocationsByEventInput, "params"),
-    checkPermission("locations", "restore"),
     checkParentNotDeleted("location", "event_id"),
+    checkPermission("locations", "restore"),
     async (req, res) => {
         const { event_id } = (req as any).validated.params;
 
@@ -74,8 +74,8 @@ locationsRouter.get(
 locationsRouter.post(
     "/",
     validate(CreateLocationInput, "body"),
-    checkPermission("locations", "create"),
     checkParentNotDeleted("location", "event_id"),
+    checkPermission("locations", "create"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -103,9 +103,9 @@ locationsRouter.patch(
     "/:id",
     validate(GetOneLocationInput, "params"),
     validate(UpdateLocationInput, "body"),
-    checkPermission("locations", "update"),
     checkNotDeleted("location"),
     checkParentNotDeleted("location", "event_id", true),
+    checkPermission("locations", "update"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;
@@ -143,8 +143,8 @@ locationsRouter.delete(
     "/:id",
     validate(GetOneLocationInput, "params"),
     validate(DeleteLocationQuery, "query"),
-    checkPermission("locations", "delete"),
     checkNotDeleted("location"),
+    checkPermission("locations", "delete"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { force } = (req as any).validated.query;

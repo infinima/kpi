@@ -165,8 +165,8 @@ usersRouter.patch(
     "/:id",
     validate(GetOneUserInput, "params"),
     validate(UpdateUserInput, "body"),
-    checkPermission("users", "update"),
     checkNotDeleted("user"),
+    checkPermission("users", "update"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const data = (req as any).validated.body;
@@ -224,8 +224,8 @@ usersRouter.patch(
 usersRouter.delete(
     "/:id",
     validate(GetOneUserInput, "params"),
-    checkPermission("users", "delete"),
     checkNotDeleted("user"),
+    checkPermission("users", "delete"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 

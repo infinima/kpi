@@ -41,8 +41,8 @@ leaguesRouter.get(
 leaguesRouter.get(
     "/location/:location_id/deleted",
     validate(GetLeaguesByLocationInput, "params"),
-    checkPermission("leagues", "restore"),
     checkParentNotDeleted("league", "location_id"),
+    checkPermission("leagues", "restore"),
     async (req, res) => {
         const { location_id } = (req as any).validated.params;
 
@@ -78,8 +78,8 @@ leaguesRouter.get(
 leaguesRouter.get(
     "/:id/fudzi_presentation",
     validate(GetOneLeagueInput, "params"),
-    checkPermission("leagues", "get"),
     checkNotDeleted("league"),
+    checkPermission("leagues", "get"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -135,8 +135,8 @@ leaguesRouter.get(
 leaguesRouter.get(
     "/:id/print_teams_names",
     validate(GetOneLeagueInput, "params"),
-    checkPermission("leagues", "print_documents"),
     checkNotDeleted("league"),
+    checkPermission("leagues", "print_documents"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -204,12 +204,39 @@ leaguesRouter.get(
     }
 );
 
+// GET /api/leagues/:id/final-table
+leaguesRouter.get(
+    "/:id/final-table",
+    validate(GetOneLeagueInput, "params"),
+    checkNotDeleted("league"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const rows = await query(`
+            SELECT
+                t.id,
+                t.name,
+                t.place_kvartaly,
+                t.place_fudzi,
+                (t.place_kvartaly + t.place_fudzi) AS place_sum,
+                t.place_final,
+                t.diploma,
+                JSON_EXTRACT(t.special_nominations, '$') AS special_nominations
+            FROM teams t
+            WHERE t.league_id = ? AND t.deleted_at IS NULL
+            ORDER BY t.id
+        `, [id]);
+
+        res.json(rows);
+    }
+);
+
 // POST /api/leagues
 leaguesRouter.post(
     "/",
     validate(CreateLeagueInput, "body"),
-    checkPermission("leagues", "create"),
     checkParentNotDeleted("league", "location_id"),
+    checkPermission("leagues", "create"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -266,9 +293,9 @@ leaguesRouter.patch(
     "/:id",
     validate(GetOneLeagueInput, "params"),
     validate(UpdateLeagueInput, "body"),
-    checkPermission("leagues", "update"),
     checkNotDeleted("league"),
     checkParentNotDeleted("league", "location_id", true),
+    checkPermission("leagues", "update"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;
@@ -332,8 +359,8 @@ leaguesRouter.post(
     "/:id/status",
     validate(GetOneLeagueInput, "params"),
     validate(UpdateLeagueStatusInput, "body"),
-    checkPermission("leagues", "update"),
     checkNotDeleted("league"),
+    checkPermission("leagues", "update"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { new_status } = (req as any).validated.body;
@@ -403,8 +430,8 @@ leaguesRouter.delete(
     "/:id",
     validate(GetOneLeagueInput, "params"),
     validate(DeleteLeagueQuery, "query"),
-    checkPermission("leagues", "delete"),
     checkNotDeleted("league"),
+    checkPermission("leagues", "delete"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { force } = (req as any).validated.query;

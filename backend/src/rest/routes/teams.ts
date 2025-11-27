@@ -17,8 +17,8 @@ export const teamsRouter = express.Router();
 teamsRouter.get(
     "/league/:league_id",
     validate(GetTeamsByLeagueInput, "params"),
-    checkPermission("teams", "get"),
     checkParentNotDeleted("team", "league_id"),
+    checkPermission("teams", "get"),
     async (req, res) => {
         const { league_id } = (req as any).validated.params;
 
@@ -40,8 +40,8 @@ teamsRouter.get(
 teamsRouter.get(
     "/league/:league_id/deleted",
     validate(GetTeamsByLeagueInput, "params"),
-    checkPermission("teams", "restore"),
     checkParentNotDeleted("team", "league_id"),
+    checkPermission("teams", "restore"),
     async (req, res) => {
         const { league_id } = (req as any).validated.params;
 
@@ -63,8 +63,8 @@ teamsRouter.get(
 teamsRouter.get(
     "/:id",
     validate(GetOneTeamInput, "params"),
-    checkPermission("teams", "get"),
     checkNotDeleted("team"),
+    checkPermission("teams", "get"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -86,8 +86,8 @@ teamsRouter.get(
 teamsRouter.post(
     "/",
     validate(CreateTeamInput, "body"),
-    checkPermission("teams", "create"),
     checkParentNotDeleted("team", "league_id"),
+    checkPermission("teams", "create"),
     async (req, res) => {
         const data = (req as any).validated.body;
 
@@ -145,9 +145,9 @@ teamsRouter.patch(
     "/:id",
     validate(GetOneTeamInput, "params"),
     validate(UpdateTeamInput, "body"),
-    checkPermission("teams", "update"),
     checkNotDeleted("team"),
     checkParentNotDeleted("team", "league_id", true),
+    checkPermission("teams", "update"),
     async (req, res) => {
         const { ...rest } = (req as any).validated.body;
         const { id } = (req as any).validated.params;
@@ -192,8 +192,8 @@ teamsRouter.patch(
 teamsRouter.delete(
     "/:id",
     validate(GetOneTeamInput, "params"),
-    checkPermission("teams", "delete"),
     checkNotDeleted("team"),
+    checkPermission("teams", "delete"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
