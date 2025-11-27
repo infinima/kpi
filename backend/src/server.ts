@@ -14,7 +14,7 @@ import { initSocket } from "./socket/index.js";
             ? { origin: "http://localhost:5173", credentials: true }
             : {}
     });
-    await initSocket(io);
+    initSocket(io);
 
     const PORT = process.env.PORT ?? 3000;
     server.listen(PORT, () => {
