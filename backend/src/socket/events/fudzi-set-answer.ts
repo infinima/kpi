@@ -19,6 +19,12 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
         const league_id = socket.data.league_id;
         const { team_id, question_num, status } = data;
 
+        if (!question_num || question_num < 1 || question_num > 16) {
+            return socket.emit("error_response", {
+                error: { code: "INVALID_QUESTION_NUM" }
+            });
+        }
+
         const allowed = ["not_submitted", "correct", "incorrect"];
         if (!allowed.includes(status)) {
             return socket.emit("error_response", {
