@@ -115,8 +115,8 @@ eventsRouter.patch(
     "/:id",
     validate(GetOneEventInput, "params"),
     validate(UpdateEventInput, "body"),
-    checkPermission("events", "update"),
     checkNotDeleted("event"),
+    checkPermission("events", "update"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { ...rest } = (req as any).validated.body;
@@ -158,8 +158,8 @@ eventsRouter.delete(
     "/:id",
     validate(GetOneEventInput, "params"),
     validate(DeleteEventQuery, "query"),
-    checkPermission("events", "delete"),
     checkNotDeleted("event"),
+    checkPermission("events", "delete"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
         const { force } = (req as any).validated.query;

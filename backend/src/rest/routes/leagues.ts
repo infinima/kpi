@@ -293,8 +293,8 @@ leaguesRouter.patch(
     "/:id",
     validate(GetOneLeagueInput, "params"),
     validate(UpdateLeagueInput, "body"),
-    checkParentNotDeleted("league", "location_id", true),
     checkNotDeleted("league"),
+    checkParentNotDeleted("league", "location_id", true),
     checkPermission("leagues", "update"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
