@@ -1,5 +1,7 @@
 import type { Server, Socket } from "socket.io";
 import { query } from "../utils/database.js";
+import {getKvartalyTable} from "./services/kvartaly.js";
+import {getFudziTable} from "./services/fudzi.js";
 
 export function registerConnection(
     io: Server,
@@ -69,7 +71,34 @@ export function registerConnection(
 
         console.log(`Connected: L=${league_id} T=${table_type} U=${user_id}`);
 
-        // Pass socket to event registration
+        try {
+            if (table_type === "kvartaly") {
+                const table = await getKvartalyTable(Number(league_id));
+                socket.emit("table_data", table);
+                return;
+            }
+
+            if (table_type === "fudzi") {
+                const table = await getFudziTable(Number(league_id));
+                socket.emit("table_data", table);
+                return;
+            }
+
+            socket.emit("error_response", {
+                error: {
+                    code: "NOT_IMPLEMENTED",
+                    message: `Table type '${table_type}' is not implemented`
+                }
+            });
+        } catch (err) {
+            console.error(err);
+            socket.emit("error_response", {
+                error: {
+                    code: "INTERNAL_ERROR",
+                    message: "Failed to fetch table"
+                }
+            });
+        }
         onConnected(socket);
     });
 }
