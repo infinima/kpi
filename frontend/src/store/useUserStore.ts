@@ -18,7 +18,11 @@ export type PermissionAction =
   "delete" |
   "restore" |
   "access_history" |
-  "print_documents";
+  "print_documents" |
+  "edit_answers" |
+  "get_show" |
+  "control_show" |
+  "edit_penalties";
 
 export type EntityPermissions = {
   global?: PermissionAction[];

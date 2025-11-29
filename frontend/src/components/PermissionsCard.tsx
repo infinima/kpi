@@ -19,6 +19,10 @@ export const actions = [
   "restore",
   "access_history",
   "print_documents",
+  "edit_answers",
+  "get_show",
+  "control_show",
+  "edit_penalties"
 ] as const;
 
 export type PermissionAction = (typeof actions)[number];
@@ -62,6 +66,10 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   restore: "Восстановление",
   access_history: "История изменений",
   print_documents: "Печать документов",
+  edit_answers: "Внесение ответов команд",
+  get_show: "Получение показа",
+  control_show: "Управление показом",
+  edit_penalties: "Изменение штрафов команд"
 };
 
 const SCOPE_DESCR: Record<PermissionScope, string> = {
@@ -267,7 +275,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {actions
             .filter((a) =>
-              data.object === "leagues" ? true : a !== "print_documents"
+              data.object === "leagues" ? true : !["print_documents", "edit_answers", "get_show", "control_show", "edit_penalties"].includes(a)
             )
             .map((action) => (
               <label

@@ -56,7 +56,7 @@ export function HomePage() {
             "
                     >
                         <FileText size={20} />
-                        Скачать правила турнира
+                        Открыть правила турнира
                     </a>
                 </div>
 

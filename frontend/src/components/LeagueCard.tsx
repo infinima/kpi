@@ -39,6 +39,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
     const canRestore = can("leagues", "restore", league.id);
     const canHistory = can("leagues", "access_history", league.id);
     const canPrint = can("leagues", "print_documents", league.id);
+    const canGetShow = can("leagues", "get_show", league.id);
     const canTeams = can("teams", "get")
 
     // можно ли раскрывать детали
@@ -281,8 +282,8 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                             </button>
                         )}
 
-                        {/* скачать документы */}
-                        {canPrint && !isDeleted && (
+                        {/* скачать фудзи */}
+                        {canGetShow && !isDeleted && (
                             <>
                                 <button
                                     onClick={async () =>
@@ -301,7 +302,12 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                                     <FileDown size={18}/>
                                     Скачать презентацию «Фудзи»
                                 </button>
+                            </>
+                        )}
 
+                        {/* скачать документы */}
+                        {canPrint && !isDeleted && (
+                            <>
                                 <button
                                     onClick={handleDownloadBlanks}
                                     className="
@@ -332,19 +338,6 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                           >
                             <Baby size={18}/>
                             Команды
-                          </button>
-
-                          <button
-                            onClick={handleDownloadBlanks}
-                            className="
-                                        w-full py-3 rounded-lg bg-surface dark:bg-dark-surface
-                                        border border-border dark:border-dark-border
-                                        hover:bg-hover dark:hover:bg-dark-hover
-                                        flex items-center justify-center gap-2
-                                    "
-                          >
-                            <FileDown size={18}/>
-                            Скачать бланки
                           </button>
                         </>
                       )}
