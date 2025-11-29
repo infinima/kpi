@@ -6,6 +6,9 @@ import { checkPermission } from "../middlewares/permission-check.js";
 import { saveFile } from "../../utils/save-file.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { generatePDFBuffer } from "../../utils/generate-teams-names.js";
+import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
+import { getFudziTable } from "../../socket/services/fudzi-table.js";
+import { rankTeams } from "../../utils/rankTeams.js";
 
 import {
     GetOneLeagueInput,
@@ -397,14 +400,107 @@ leaguesRouter.post(
 
         try {
             switch (new_status) {
-                case "REGISTRATION_ENDED":
-                    break;
                 case "KVARTALY_GAME":
+                    await query(
+                        `UPDATE teams SET place_kvartaly = NULL WHERE league_id = ?`,
+                        [id]
+                    );
                     break;
-                case "FUDZI_GAME":
+                case "FUDZI_GAME_BREAK":
+                    await query(
+                        `UPDATE teams 
+                              SET place_fudzi = NULL, 
+                                  place_final = NULL, 
+                                  diploma = NULL, 
+                                  special_nominations = NULL 
+                              WHERE league_id = ?`,
+                        [id]
+                    );
                     break;
-                case "GAMES_ENDED":
+                case "LUNCH":
+                    const table = await getKvartalyTable(id);
+
+                    const ranking = rankTeams(
+                        table.map(t => ({
+                            id: t.id,
+                            total: t.total,
+                            scores: t.quarters.flatMap((q: any) =>
+                                q.answers.map((a: any) => a.score)
+                            )
+                        }))
+                    );
+
+                    for (const r of ranking) {
+                        await query(
+                            `UPDATE teams SET place_kvartaly = ? WHERE id = ?`,
+                            [r.place, r.id]
+                        );
+                    }
                     break;
+                case "GAMES_ENDED": {
+                    const kv = await getKvartalyTable(id);
+                    const fud = await getFudziTable(id);
+
+                    // ---------- 1. place_fudzi ----------
+                    const fudRank = rankTeams(
+                        fud.map(t => ({
+                            id: t.id,
+                            total: t.total,
+                            scores: t.answers.map(a => a.score)
+                        }))
+                    );
+
+                    for (const r of fudRank) {
+                        await query(
+                            `UPDATE teams SET place_fudzi = ? WHERE id = ?`,
+                            [r.place, r.id]
+                        );
+                    }
+
+                    // ---------- 2. place_final ----------
+                    // правила те же, только ранжируем по Фудзи
+                    const finalRank = rankTeams(
+                        fud.map(t => ({
+                            id: t.id,
+                            total: t.total,
+                            scores: t.answers.map(a => a.score)
+                        }))
+                    );
+
+                    for (const r of finalRank) {
+                        await query(
+                            `UPDATE teams SET place_final = ? WHERE id = ?`,
+                            [r.place, r.id]
+                        );
+                    }
+
+                    // ---------- 3. дипломы ----------
+                    const sortedFinal = [...finalRank].sort((a,b) => a.place - b.place);
+
+                    const setDiploma = (id: number, d: string) =>
+                        query(`UPDATE teams SET diploma = ? WHERE id = ?`, [d,id]);
+
+                    if (sortedFinal.length >= 1)
+                        await setDiploma(sortedFinal[0].id, 'FIRST_DEGREE');
+
+                    if (sortedFinal.length >= 2)
+                        await setDiploma(sortedFinal[1].id, 'SECOND_DEGREE');
+                    if (sortedFinal.length >= 3)
+                        await setDiploma(sortedFinal[2].id, 'SECOND_DEGREE');
+
+                    if (sortedFinal.length >= 4)
+                        await setDiploma(sortedFinal[3].id, 'THIRD_DEGREE');
+                    if (sortedFinal.length >= 5)
+                        await setDiploma(sortedFinal[4].id, 'THIRD_DEGREE');
+                    if (sortedFinal.length >= 6)
+                        await setDiploma(sortedFinal[5].id, 'THIRD_DEGREE');
+
+                    for (let i = 6; i < sortedFinal.length; i++) {
+                        await setDiploma(sortedFinal[i].id, 'PARTICIPANT');
+                    }
+
+                    break;
+                }
             }
         } catch (e: any) {
             console.error(e);
