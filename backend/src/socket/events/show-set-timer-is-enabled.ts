@@ -3,7 +3,7 @@ import db from "../../utils/database.js";
 import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getShowState } from "../services/show.js";
 
-export function showSetTimerIsEnabled(socket: Socket, io: Server) {
+export function registerShowSetTimerIsEnabled(socket: Socket, io: Server) {
     socket.on("show_set_timer_is_enabled", async (data) => {
         const hasRight = await checkSocketPermission(
             socket.data.user_id,
@@ -39,8 +39,7 @@ export function showSetTimerIsEnabled(socket: Socket, io: Server) {
             );
 
             const show = await getShowState(league_id);
-            io.to(`league:${league_id}:show`).emit("show_data", show);
-
+            io.to(`league:${league_id}:show`).emit("data", show);
         } catch (err) {
             console.error(err);
             socket.emit("error_response", {

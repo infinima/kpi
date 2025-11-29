@@ -56,7 +56,7 @@ interface SocketState {
   ) => void;
 
   showSetSlideNum:(
-    number: number,
+    slide_num: number,
   )=> void;
 
   showSetTimerIsEnabled:(
@@ -194,11 +194,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   },
 
   showSetSlideNum:(
-    number: number,
+    slide_num: number,
   )=> {
     const {socket} = get();
     if (!socket) return;
-    socket.emit("show_set_slide_num", {number});
+    socket.emit("show_set_slide_num", {slide_num});
 
   },
 

@@ -10,6 +10,7 @@ import { registerFudziSetPenalty } from "./fudzi-set-penalty.js";
 
 import { registerShowSetStatus } from "./show-set-status.js";
 import { registerShowSetSlideNum } from "./show-set-slide-num.js";
+import { registerShowSetTimerIsEnabled } from "./show-set-timer-is-enabled.js";
 
 export function registerAllEvents(socket: Socket, io: Server): void {
     registerKvartalyAddAnswer(socket, io);
@@ -22,4 +23,5 @@ export function registerAllEvents(socket: Socket, io: Server): void {
 
     registerShowSetStatus(socket, io);
     registerShowSetSlideNum(socket, io);
+    registerShowSetTimerIsEnabled(socket, io);
 }
