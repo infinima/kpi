@@ -2,6 +2,7 @@ import type { Server, Socket } from "socket.io";
 import { query } from "../utils/database.js";
 import { getKvartalyTable } from "./services/kvartaly-table.js";
 import { getFudziTable } from "./services/fudzi-table.js";
+import { getShowState } from "./services/show.js";
 
 export function registerConnection(
     io: Server,
@@ -23,12 +24,12 @@ export function registerConnection(
             return socket.disconnect(true);
         }
 
-        const allowedTypes = ["kvartaly", "fudzi"];
+        const allowedTypes = ["kvartaly", "fudzi", "show"];
         if (!allowedTypes.includes(String(table_type))) {
             socket.emit("error_response", {
                 error: {
                     code: "INVALID_TABLE_TYPE",
-                    message: "Table type must be 'kvartaly' or 'fudzi'"
+                    message: "Table type must be 'kvartaly', 'fudzi' or 'show'"
                 }
             });
             return socket.disconnect(true);
@@ -84,9 +85,12 @@ export function registerConnection(
             if (table_type === "kvartaly") {
                 const table = await getKvartalyTable(league_id);
                 socket.emit("table_data", table);
-            } else {
+            } else if (table_type === "fudzi") {
                 const table = await getFudziTable(league_id);
                 socket.emit("table_data", table);
+            } else if (table_type === "show") {
+                const show = await getShowState(league_id);
+                socket.emit("show_data", show);
             }
         } catch (err) {
             console.error(err);

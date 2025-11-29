@@ -33,14 +33,19 @@ export const KPIPermissionEnum = z.enum([
     "delete",
     "restore",
     "access_history",
-    "print_documents"
+    "print_documents",
+    "edit_answers",
+    "get_show",
+    "control_show",
+    "edit_penalties"
 ]);
 export const KPIObjectEnum = z.enum([
     "events",
     "locations",
     "leagues",
     "teams",
-    "users"
+    "users",
+    "permissions"
 ]);
 export const PermissionOutput = z.record(
     KPIObjectEnum,
