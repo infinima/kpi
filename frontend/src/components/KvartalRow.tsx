@@ -1,208 +1,240 @@
-import React, { useState } from "react";
-import { useSocketStore } from "@/store";
-import {
-  XCircle,
-  ChevronDown,
-  ChevronUp,
-} from "lucide-react";
-
+import React, { useState, useRef, useEffect } from "react";
+import {useSocketStore, useUI} from "@/store";
+import {XCircle, Check, X, MinusCircle, ChevronUp, ChevronDown} from "lucide-react";
 import type { KvartalRow as KvartalRowType } from "@/types";
 
 type Props = { item: KvartalRowType };
 
 export function KvartalRow({ item }: Props) {
-  const {
-    kvartalAddAnswer,
-    kvartalFinish,
-    kvartalSetPenalty,
-  } = useSocketStore();
-
-  const [popup, setPopup] = useState<{
-    x: number;
-    y: number;
-    q: number;
-  } | null>(null);
-
-  const [popupPenalty, setPopupPenalty] = useState<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const { kvartalAddAnswer, kvartalFinish, kvartalSetPenalty } =
+    useSocketStore();
 
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openQuarter, setOpenQuarter] = useState<number | null>(null);
 
+  const hoveredColumn = useUI((s) => s.hoveredColumn);
+  const setHoveredColumn = useUI((s) => s.setHoveredColumn);
+
+  const [popup, setPopup] = useState<{
+    q: number;
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const [penaltyPopup, setPenaltyPopup] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+
+  const popupRef = useRef<HTMLDivElement | null>(null);
+  const penaltyRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(e.target as Node)
+      ) {
+        setPopup(null);
+        setPenaltyPopup(null);
+      }
+    }
+    window.addEventListener("mousedown", handle);
+    return () => window.removeEventListener("mousedown", handle);
+  }, []);
+
   // ───────────────────────────────────────────────
-  // ПОПАПЫ
+  // Попапы удерживать в пределах экрана
+  // ───────────────────────────────────────────────
+  useEffect(() => {
+    const fix = (ref: any, setter: any) => {
+      if (!ref.current) return;
+
+      const rect = ref.current.getBoundingClientRect();
+      const maxY = window.innerHeight - 10;
+
+      if (rect.bottom > maxY)
+        setter((p: any) => p && { ...p, y: p.y - (rect.bottom - maxY) - 10 });
+    };
+
+    fix(popupRef, setPopup);
+    fix(penaltyRef, setPenaltyPopup);
+  }, [popup, penaltyPopup]);
+
+  // ───────────────────────────────────────────────
+  // Открытие попапов
   // ───────────────────────────────────────────────
   function openPopupAnswer(e: React.MouseEvent, q: number) {
     const r = e.currentTarget.getBoundingClientRect();
-    setPopup({
-      q,
-      x: r.left,
-      y: r.bottom + 4,
-    });
+    setPopup({ q, x: r.left, y: r.bottom + 4 });
   }
 
-  function openPopupPenalty(e: React.MouseEvent) {
+  function openPenaltyPopup(e: React.MouseEvent) {
     const r = e.currentTarget.getBoundingClientRect();
-    setPopupPenalty({
-      x: r.left,
-      y: r.bottom + 4,
-    });
+    setPenaltyPopup({ x: r.left, y: r.bottom + 4 });
   }
 
+  // ───────────────────────────────────────────────
+  // Обновление данных
+  // ───────────────────────────────────────────────
   function changeScore(q: number, dc: number, di: number) {
+    console.log(item.id, q, dc, di);
     kvartalAddAnswer(item.id, q, dc, di);
-    setPopup(null);
-  }
-
-  function changePenalty(delta: number) {
-    kvartalSetPenalty(item.id, item.penalty + delta);
   }
 
   function toggleQuarter(qi: number) {
     kvartalFinish(item.id, qi + 1, !item.quarters[qi].finished);
   }
 
-  // ───────────────────────────────────────────────
-  // ДЕСКТОПНАЯ ВЕРСИЯ
-  // ───────────────────────────────────────────────
+  function changePenalty(delta: number) {
+    kvartalSetPenalty(item.id, item.penalty + delta);
+  }
+
+  // =====================================================================
+  // DESKTOP — ЧИСТАЯ ТАБЛИЦА
+  // =====================================================================
+
   const desktop = (
     <>
-      <tr className="hidden md:table-row hover:bg-hover/50 dark:hover:bg-dark-hover/50">
+      <tr className="hidden md:table-row border-b  hover:bg-hover dark:hover:bg-dark-hover border-border dark:border-dark-border">
 
-        {/* ИМЯ */}
-        <td className="td text-center py-4 font-medium border-r border-border">
-          {item.name}
-        </td>
+        {/* Команда */}
+        <td className="td text-center font-medium border-r border-border dark:border-dark-border">{item.name}</td>
 
-        {/* КВАРТАЛЫ */}
+        {/* Кварталы: 4 вопроса + 1 статус */}
         {item.quarters.map((q, qi) => {
-          const baseIndex = qi * 5;
+          const base = qi * 4;
 
           return (
-            <td
-              key={qi}
-              className="
-                td p-0 border-r border-border
-                align-top
-              "
-            >
-              <div className="
-                flex flex-col items-center
-                p-2 gap-2 rounded-xl
-                bg-hover/20 dark:bg-dark-hover/20
-                mx-auto w-[150px]
-              ">
-                {/* СТАТУС */}
-                <button
-                  onClick={() => toggleQuarter(qi)}
-                  className={`
-                    text-sm font-medium cursor-pointer
-                    ${q.finished ? "text-green-500" : "text-red-500"}
-                  `}
-                >
-                  {q.finished ? "Сдан" : "Не сдан"}
-                </button>
+            <React.Fragment key={qi}>
+              {/* 4 вопроса */}
+              {q.answers.slice(0, 4).map((a, i) => {
+                const qNum = base + i + 1;
 
-                {/* 5 задач */}
-                <div className="flex gap-2">
-                  {q.answers.map((a, i) => {
-                    const qNum = baseIndex + i + 1;
+                // @ts-ignore
+                return (
+                  <td
+                    key={i}
+                    onClick={(e) => openPopupAnswer(e, qNum)}
+                    className={`td text-center cursor-pointer
+                      border-r border-border
+                      hover:bg-hover dark:hover:bg-dark-hover  dark:border-dark-border
+                      ${a.correct ? a.incorrect ? "text-yellow-500"  : "text-green-500": a.incorrect ? "text-red-500"  : "opacity-40"}
+                                  ${hoveredColumn === (qi-1) * 5 + i+5 ? "!bg-primary/10 dark:!bg-primary/20" : ""}\`}
+`}
 
-                    return (
-                      <div
-                        key={i}
-                        onClick={(e) => openPopupAnswer(e, qNum)}
-                        className="
-                          w-9 h-10 rounded-lg
-                          flex items-center justify-center
-                          cursor-pointer
-                          border border-border dark:border-dark-border
-                          text-sm select-none
-                          hover:bg-hover dark:hover:bg-dark-hover
-                        "
-                      >
-                        {a.score}
-                      </div>
-                    );
-                  })}
-                </div>
+                    onMouseEnter={() => {
+                      setHoveredColumn((qi-1) * 5 + i+5);
+                    }}
+                    onMouseLeave={() => setHoveredColumn(null)}
+                  >
+                    {a.score}
+                  </td>
+                );
+              })}
 
-                {/* БОНУС */}
-                <div className="text-xs opacity-70">
-                  Бонус: {q.bonus}
-                </div>
-              </div>
-            </td>
+              {/* Статус квартала */}
+              <td
+                onClick={() => toggleQuarter(qi)}
+                className=
+                  {`td text-center cursor-pointer border-r border-border
+                  font-medium
+                  hover:bg-hover dark:hover:bg-dark-hover  dark:border-dark-border
+                  ${hoveredColumn === (qi-1) * 5 + 9? "!bg-primary/10 dark:!bg-primary/20" : ""}`}
+
+
+                onMouseEnter={() => setHoveredColumn((qi-1) * 5 + 9)}
+                onMouseLeave={() => setHoveredColumn(null)}
+              >
+                {q.finished ? (
+                  <span className={`${q.bonus? "text-green-500" : "text-red-500"}`}>{q.bonus}</span>
+                ) : (
+                  <span className="opacity-40"></span>
+                )}
+              </td>
+            </React.Fragment>
           );
         })}
 
-        {/* ШТРАФ */}
+        {/* Штраф */}
         <td
-          className="td text-center py-4 border-r cursor-pointer text-red-400"
-          onClick={openPopupPenalty}
+          className="td text-center cursor-pointer  border-r border-border dark:border-dark-border"
+          onClick={openPenaltyPopup}
         >
           {item.penalty}
         </td>
 
-        {/* ИТОГО */}
-        <td className="td text-center py-4 font-semibold">{item.total}</td>
+        {/* Итог */}
+        <td className="td text-center font-semibold">{item.total}</td>
       </tr>
 
-      {/* POPUP ответов */}
+      {/* ===== POPUP: ответ ===== */}
       {popup && (
         <div
+          ref={popupRef}
           className="
-            fixed z-50 w-64 rounded-xl py-3 px-4
+            fixed z-50 w-56 rounded-xl
             bg-surface dark:bg-dark-surface
             border border-border dark:border-dark-border
-            shadow-xl space-y-4
+            shadow-xl py-2
           "
           style={{ top: popup.y, left: popup.x }}
         >
-          <div className="flex items-center justify-between pb-2 border-b">
-            <span className="font-semibold text-sm">Вопрос {popup.q}</span>
+          <div className="flex justify-between items-center px-4 pb-2 border-b border-border dark:border-dark-border">
+            <span className="text-sm font-semibold opacity-80">
+              Вопрос {popup.q}
+            </span>
             <button onClick={() => setPopup(null)}>
               <XCircle size={18} className="opacity-60" />
             </button>
           </div>
 
-          {/* Найти данные */}
           {(() => {
-            const qi = Math.floor((popup.q - 1) / 5);
-            const ai = (popup.q - 1) % 5;
+            const qi = Math.floor((popup.q - 1) / 4);
+            const ai = (popup.q - 1) % 4;
             const ans = item.quarters[qi].answers[ai];
 
             return (
               <>
-                {/* Правильные */}
-                <div>
+                {/* correct */}
+                <div className="px-4 pt-3">
                   <div className="text-xs opacity-70 mb-1">Правильных</div>
-                  <div className="flex justify-between items-center">
-                    <button className="btn" onClick={() => changeScore(popup.q, -1, 0)}>
+                  <div className="flex items-center justify-between">
+                    <button
+                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border"
+                      onClick={() => changeScore(popup.q, -1, 0)}
+                    >
                       -1
                     </button>
-
-                    <div className="value">{ans.correct}</div>
-
-                    <button className="btn" onClick={() => changeScore(popup.q, +1, 0)}>
+                    <div className="w-10 text-center font-semibold">
+                      {ans.correct}
+                    </div>
+                    <button
+                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                      onClick={() => changeScore(popup.q, +1, 0)}
+                    >
                       +1
                     </button>
                   </div>
                 </div>
 
-                {/* Неправильные */}
-                <div>
+                {/* incorrect */}
+                <div className="px-4 pt-3 pb-2">
                   <div className="text-xs opacity-70 mb-1">Неправильных</div>
-                  <div className="flex justify-between items-center">
-                    <button className="btn" onClick={() => changeScore(popup.q, 0, -1)}>
+                  <div className="flex items-center justify-between">
+                    <button
+                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                      onClick={() => changeScore(popup.q, 0, -1)}
+                    >
                       -1
                     </button>
-
-                    <div className="value">{ans.incorrect}</div>
-
-                    <button className="btn" onClick={() => changeScore(popup.q, 0, +1)}>
+                    <div className="w-10 text-center font-semibold">
+                      {ans.incorrect}
+                    </div>
+                    <button
+                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                      onClick={() => changeScore(popup.q, 0, +1)}
+                    >
                       +1
                     </button>
                   </div>
@@ -213,40 +245,55 @@ export function KvartalRow({ item }: Props) {
         </div>
       )}
 
-      {/* POPUP штрафа */}
-      {popupPenalty && (
+      {/* ===== POPUP: штраф ===== */}
+      {penaltyPopup && (
         <div
+          ref={penaltyRef}
           className="
-            fixed z-50 w-40 rounded-xl py-3 px-4
-            bg-surface dark:bg-dark-surface border shadow-xl
-            space-y-3
+            fixed z-50 w-40 rounded-xl
+            bg-surface dark:bg-dark-surface
+            border border-border dark:border-dark-border
+            shadow-xl py-2
           "
-          style={{ top: popupPenalty.y, left: popupPenalty.x }}
+          style={{ top: penaltyPopup.y, left: penaltyPopup.x }}
         >
-          <div className="flex justify-between items-center border-b pb-2">
-            <span className="font-semibold text-sm">Штраф</span>
-            <button onClick={() => setPopupPenalty(null)}>
+          <div className="flex justify-between items-center px-4 pb-2 border-b border-border dark:border-dark-border">
+            <span className="text-sm font-semibold opacity-80">Штраф</span>
+            <button onClick={() => setPenaltyPopup(null)}>
               <XCircle size={18} className="opacity-60" />
             </button>
           </div>
 
-          <div className="flex justify-between items-center mt-2">
-            <button className="btn" onClick={() => changePenalty(-1)}>-1</button>
-            <div className="value">{item.penalty}</div>
-            <button className="btn" onClick={() => changePenalty(+1)}>+1</button>
+          <div className="flex items-center justify-between px-4 py-2">
+            <button
+              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+              onClick={() => changePenalty(-1)}
+            >
+              -1
+            </button>
+            <div className="w-10 text-center font-semibold">
+              {item.penalty}
+            </div>
+            <button
+              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+              onClick={() => changePenalty(+1)}
+            >
+              +1
+            </button>
           </div>
         </div>
       )}
     </>
   );
 
-  // ───────────────────────────────────────────────
-  // МОБИЛЬНАЯ ВЕРСИЯ
-  // ───────────────────────────────────────────────
+  // =====================================================================
+  // MOBILE — твоя старая версия (оставил как есть)
+  // =====================================================================
+
   const mobile = (
-    <tr className="md:hidden">
-      <td colSpan={999} className="p-2">
-        <div className="p-4 rounded-xl bg-surface border shadow-card space-y-3">
+    <tr className="md:hidden !w-full">
+      <td colSpan={999} className="p-2 w-224">
+        <div className="p-4 rounded-xl bg-surface dark:bg-dark-surface border shadow-card space-y-3 !w-full border-border dark:border-dark-border">
 
           {/* ГОЛОВА */}
           <div className="flex justify-between items-start">
@@ -255,8 +302,8 @@ export function KvartalRow({ item }: Props) {
               <div className="text-xs opacity-70">
                 Итог: {item.total} · Штраф:{" "}
                 <button
-                  onClick={openPopupPenalty}
-                  className="underline text-red-400"
+                  onClick={openPenaltyPopup}
+                  className=""
                 >
                   {item.penalty}
                 </button>
@@ -264,19 +311,19 @@ export function KvartalRow({ item }: Props) {
             </div>
 
             <button
-              className="p-2 rounded-lg bg-hover"
+              className="p-2 rounded-lg  "
               onClick={() => setMobileOpen((v) => !v)}
             >
-              {mobileOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {mobileOpen ? <ChevronUp /> : <ChevronDown/>}
             </button>
           </div>
 
           {mobileOpen && (
-            <div className="space-y-3">
+            <div className="space-y-3 border-border dark:border-dark-border">
               {item.quarters.map((q, qi) => (
                 <div
                   key={qi}
-                  className="border rounded-xl p-3 bg-hover/10 space-y-2"
+                  className="border rounded-xl p-3 bg-hover/10 space-y-2 border-border dark:border-dark-border"
                 >
                   <button
                     className="w-full flex justify-between items-center"
@@ -309,7 +356,7 @@ export function KvartalRow({ item }: Props) {
                   </button>
 
                   {openQuarter === qi && (
-                    <div className="grid grid-cols-5 gap-2 pt-2">
+                    <div className="grid grid-cols-5 gap-2 pt-2 border-border dark:border-dark-border">
                       {q.answers.map((a, i) => {
                         const qNum = qi * 5 + i + 1;
 
@@ -318,8 +365,8 @@ export function KvartalRow({ item }: Props) {
                             key={i}
                             onClick={(e) => openPopupAnswer(e, qNum)}
                             className="
-                              rounded-lg border p-2 bg-surface
-                              text-center text-sm hover:bg-hover
+                              rounded-lg border p-2 bg-surface dark:bg-dark-surface hover:dark:bg-dark-hover
+                              text-center text-sm hover:bg-hover border-border dark:border-dark-border
                             "
                           >
                             {a.score}

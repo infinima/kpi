@@ -167,8 +167,8 @@ export function ResultPage() {
           >
             <option value="place_final">По месту</option>
             <option value="name">По команде</option>
-            <option value="place_fudzi">Фудзи</option>
             <option value="place_kvartaly">Кварталы</option>
+            <option value="place_fudzi">Фудзи</option>
             <option value="place_sum">Сумма мест</option>
           </select>
         </div>
@@ -249,8 +249,8 @@ export function ResultPage() {
               >
                 <td className={tdCenter}>{t.place_final ?? "—"}</td>
                 <td className={td}>{t.name ?? "—"}</td>
-                <td className={tdCenter}>{t.place_fudzi ?? "—"}</td>
                 <td className={tdCenter}>{t.place_kvartaly ?? "—"}</td>
+                <td className={tdCenter}>{t.place_fudzi ?? "—"}</td>
                 <td className={tdCenter}>{t.place_sum ?? "—"}</td>
 
                 {/* ДИПЛОМ */}
@@ -314,8 +314,8 @@ export function ResultPage() {
               </div>
 
               <div className="text-sm space-y-1 opacity-90">
-                <p>Фудзи: <b>{t.place_fudzi ?? "—"}</b></p>
                 <p>Кварталы: <b>{t.place_kvartaly ?? "—"}</b></p>
+                <p>Фудзи: <b>{t.place_fudzi ?? "—"}</b></p>
                 <p>Сумма мест: <b>{t.place_sum ?? "—"}</b></p>
 
                 {/* Диплом */}

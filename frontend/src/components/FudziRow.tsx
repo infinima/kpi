@@ -50,21 +50,32 @@ export function FudziRow({ item }: Props) {
   // ====== Открыть popup ответа ======
   function openPopup(e: React.MouseEvent, q: number) {
     const r = e.currentTarget.getBoundingClientRect();
-    setPenaltyPopup(null);   // закрыть штрафную, если открыта
+
+    // временная ширина/высота (до рендера)
+    const popupWidth = 220;
+    const popupHeight = 150;
+
+    const pos = clampPopupPosition(r.left, r.bottom + 4, popupWidth, popupHeight);
+
     setPopup({
       q,
-      x: r.left,
-      y: r.bottom + 4
+      x: pos.x,
+      y: pos.y,
     });
   }
 
   // ====== Открыть popup штрафа ======
   function openPenaltyPopup(e: React.MouseEvent) {
     const r = e.currentTarget.getBoundingClientRect();
-    setPopup(null); // закрыть попап задач
+
+    const popupWidth = 160;
+    const popupHeight = 110;
+
+    const pos = clampPopupPosition(r.left, r.bottom + 4, popupWidth, popupHeight);
+
     setPenaltyPopup({
-      x: r.left,
-      y: r.bottom + 4
+      x: pos.x,
+      y: pos.y,
     });
   }
 
@@ -72,6 +83,18 @@ export function FudziRow({ item }: Props) {
     if (!popup) return;
     fudziSetAnswer(item.id, popup.q, status);
     setPopup(null);
+  }
+
+  function clampPopupPosition(x: number, y: number, popupWidth: number, popupHeight: number) {
+    const padding = 8; // чтобы не прилипало к краю
+
+    const maxX = window.innerWidth - popupWidth - padding;
+    const maxY = window.innerHeight - popupHeight - padding;
+
+    return {
+      x: Math.min(Math.max(x, padding), maxX),
+      y: Math.min(Math.max(y, padding), maxY),
+    };
   }
 
   // ------------------------------------------------------

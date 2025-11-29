@@ -93,13 +93,14 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       socket.emit("get_table");
     });
 
-    socket.on("table_data", (t: any) => {
+    socket.on("data", (t: any) => {
       set({tableData: t});
     });
 
-    socket.on("error", (err: any) => {
-      const msg = err?.error?.message ?? err?.message ?? "Неизвестная ошибка";
-      notify({type: "error", text: msg});
+    socket.on("error_response", (err: any) => {
+      console.error(err);
+      // const msg = err?.error?.message ?? err?.message ?? "Неизвестная ошибка";
+      // notify({type: "error", text: msg});
     });
   },
 

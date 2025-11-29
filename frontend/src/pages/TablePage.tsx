@@ -97,14 +97,16 @@ export function TablesPage() {
   );
 
   const renderKvartalyHeader = () => (
-    <thead className="md:table-header-group">
+    <thead className="md:table-header-group sticky top-0 ">
+    {/* ───── СТРОКА 1 ───── */}
     <tr>
       <th
         className="
-            sticky top-0 z-30 th w-32
-            bg-surface dark:bg-dark-surface
-            border-b border-border dark:border-dark-border
-          "
+           z-30 th w-32
+          bg-surface dark:bg-dark-surface
+          border-b border-border dark:border-dark-border
+        "
+        rowSpan={2}
       >
         Команда
       </th>
@@ -112,36 +114,72 @@ export function TablesPage() {
       {[1, 2, 3, 4].map((q) => (
         <th
           key={q}
-          className="
-              sticky top-0 z-30 th text-center
-              bg-surface dark:bg-dark-surface
-              border-b border-border dark:border-dark-border
-              border-r border-border dark:border-dark-border
-            "
+          colSpan={5}
+          className=
+            {`z-30 th text-center
+            bg-surface dark:bg-dark-surface
+            border-b border-border dark:border-dark-border
+            border-r
+            ${hoveredColumn !== null &&
+            Math.floor(hoveredColumn / 5) + 1 === q
+              ? "!bg-primary/10 dark:!bg-primary/20"
+              : ""}`}
+
         >
+
           Квартал {q}
         </th>
       ))}
 
       <th
         className="
-            sticky top-0 z-30 th w-20
-            bg-surface dark:bg-dark-surface
-            border-b border-border dark:border-dark-border
-          "
+          z-30 th w-20
+          bg-surface dark:bg-dark-surface
+          border-b border-border dark:border-dark-border
+        "
+        rowSpan={2}
       >
         Штраф
       </th>
 
       <th
         className="
-            sticky top-0 z-30 th w-20
-            bg-surface dark:bg-dark-surface
-            border-b border-border dark:border-dark-border
-          "
+       z-30 th w-20
+          bg-surface dark:bg-dark-surface
+          border-b border-border dark:border-dark-border
+        "
+        rowSpan={2}
       >
         Итого
       </th>
+    </tr>
+
+    {/* ───── СТРОКА 2 (ЗАДАЧИ) ───── */}
+    <tr>
+
+
+      {[1, 2, 3, 4].map((q) =>
+        [...Array(5)].map((_, i) => (
+          <th
+            onMouseEnter={() => {
+              setHoveredColumn((q-1) * 5 + i);
+            }}
+            onMouseLeave={() => setHoveredColumn(null)}
+            key={`${q}-${i}`}
+            className=
+              {`z - 30 th text-center
+                bg-surface dark:bg-dark-surface
+                border border-border dark:border-dark-border
+                w-10 px-2
+            ${hoveredColumn === (q-1) * 5 + i? "!bg-primary/10 dark:!bg-primary/20" : ""}`}
+
+          >
+
+            {i === 4 ? "Бонус":(q-1) * 4 + i + 1}
+          </th>
+        ))
+      )}
+
     </tr>
     </thead>
   );
@@ -184,6 +222,20 @@ export function TablesPage() {
         )}
       </div>
 
+      {/* 🔍 MOBILE SEARCH */}
+      <div className="md:hidden mt-2 mb-3 px-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Поиск по командам..."
+          className="
+      w-full px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface
+      border border-border dark:border-dark-border
+      text-sm
+    "
+        />
+      </div>
+
       {/* ====== SCROLLABLE CONTENT ====== */}
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 md:px-6 lg:px-8 py-4">
 
@@ -220,20 +272,9 @@ export function TablesPage() {
                 </tbody>
               </table>
             </div>
-            {/* 🔍 MOBILE SEARCH */}
-            <div className="md:hidden mt-2 mb-3 px-2">
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Поиск по командам..."
-                className="
-      w-full px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface
-      border border-border dark:border-dark-border
-      text-sm
-    "
-              />
-            </div>
+
             {/* 📱 MOBILE CARDS */}
+            {console.log(filteredData)}
             <div className="md:hidden space-y-3">
               {filteredData.map((team: TFudzi | TKvartal) =>
                 tableType === "fudzi"
