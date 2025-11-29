@@ -329,7 +329,19 @@ registry.registerPath({
         }
     },
     responses: {
-        200: { description: "OK" },
+        200: {
+            description: "OK",
+            content: {
+                "application/json": {
+                    schema: z.object({
+                        inserted: z.array(z.number())
+                    }),
+                    example: {
+                        inserted: [12, 13, 14]
+                    }
+                }
+            }
+        },
         400: { description: "Invalid URL or invalid data" }
     }
 });

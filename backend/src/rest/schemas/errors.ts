@@ -18,47 +18,70 @@ registry.registerComponent(
 
             // ===== PERMISSIONS =====
             "FORBIDDEN",
+            "INVALID_SCOPE",
 
             // ===== USERS =====
             "USER_NOT_FOUND",
             "USER_DELETED",
             "USER_NOT_DELETED",
+            "EMAIL_ALREADY_EXISTS",
             "CREATE_USER_FAILED",
             "UPDATE_USER_FAILED",
             "NO_FIELDS_FOR_UPDATE",
-            "EMAIL_ALREADY_EXISTS",
 
             // ===== EVENTS =====
             "EVENT_NOT_FOUND",
             "EVENT_DELETED",
             "EVENT_NOT_DELETED",
+            "EVENT_HAS_RELATED_OBJECTS",
             "CREATE_EVENT_FAILED",
             "UPDATE_EVENT_FAILED",
-            "NO_FIELDS_FOR_UPDATE",
-            "EVENT_HAS_RELATED_OBJECTS",
 
             // ===== LOCATIONS =====
             "LOCATION_NOT_FOUND",
             "LOCATION_DELETED",
+            "LOCATION_NOT_DELETED",
             "LOCATION_HAS_RELATED_OBJECTS",
+            "CREATE_LOCATION_FAILED",
+            "UPDATE_LOCATION_FAILED",
 
             // ===== LEAGUES =====
             "LEAGUE_NOT_FOUND",
             "LEAGUE_DELETED",
+            "LEAGUE_HAS_RELATED_OBJECTS",
+            "NO_TEAMS",
             "INVALID_PRESENTATION_FORMAT",
             "INVALID_PDF_SIGNATURE",
             "NO_FUDZI_PRESENTATION",
             "PDF_GENERATION_FAILED",
-            "LEAGUE_HAS_RELATED_OBJECTS",
-            "NO_TEAMS",
+            "UPDATE_LEAGUE_FAILED",
+            "ILLEGAL_STATUS_TRANSITION",
+            "INVALID_IMPORT_DATA",
+            "STATUS_SIDE_EFFECT_FAILED",
 
             // ===== TEAMS =====
             "TEAM_NOT_FOUND",
             "TEAM_DELETED",
+            "TEAM_NOT_DELETED",
+            "CREATE_TEAM_FAILED",
+            "UPDATE_TEAM_FAILED",
 
             // ===== FILES =====
             "FAILED_TO_SEND_FILE",
-            "INVALID_FILE_PATH"
+            "INVALID_FILE_PATH",
+
+            // ===== SOCKET GENERAL =====
+            "WRONG_SOCKET_TYPE",
+            "WRONG_LEAGUE_STATUS",
+
+            // ===== SOCKET — KVARTALY =====
+            "INVALID_QUESTION_NUM",
+            "INVALID_PENALTY",
+            "INVALID_TEAM_ID",
+
+            // ===== SOCKET — FUDZI =====
+            "INVALID_STATUS",
+            "INVALID_HAS_CARD"
         ]
     }
 );
