@@ -1,14 +1,14 @@
-import { useEffect } from "react";
-import { useSocketStore, useEventsNav } from "@/store";
+import {useEffect} from "react";
+import {useEventsNav, useSocketStore} from "@/store";
 
-import { FudziRow } from "@/components/FudziRow";
-import { KvartalRow } from "@/components/KvartalRow";
-import type { FudziRow as TFudzi, KvartalRow as TKvartal } from "@/types";
+import {FudziRow} from "@/components/FudziRow";
+import {KvartalRow} from "@/components/KvartalRow";
+import type {FudziRow as TFudzi, KvartalRow as TKvartal} from "@/types";
 
 export function TablesPage() {
 
-  const { connect, disconnect, tableData, isConnected } = useSocketStore();
-  const { eventName, locationName, leagueName, tableType } = useEventsNav();
+  const {connect, disconnect, tableData, isConnected} = useSocketStore();
+  const {eventName, locationName, leagueName, tableType} = useEventsNav();
 
   useEffect(() => {
     connect();
@@ -80,10 +80,12 @@ export function TablesPage() {
       {isConnected && tableData && (
         <div
           className="
-            overflow-x-auto rounded-xl
-            border border-border dark:border-dark-border
-            shadow-card
-          "
+  overflow-x-auto rounded-xl
+  border-0
+  md:border md:border-border
+  dark:md:border-dark-border
+  shadow-card
+"
         >
           <table className="hidden md:table w-full border-collapse text-sm">
 
@@ -94,21 +96,21 @@ export function TablesPage() {
             <tbody>
             {tableData.map((team: TFudzi | TKvartal) =>
               tableType === "fudzi" ? (
-                <FudziRow key={team.id} item={team as TFudzi} />
+                <FudziRow key={team.id} item={team as TFudzi}/>
               ) : (
-                <KvartalRow key={team.id} item={team as TKvartal} />
+                <KvartalRow key={team.id} item={team as TKvartal}/>
               )
             )}
             </tbody>
           </table>
 
           {/* ----- MOBILE VERSION ----- */}
-          <div className="md:hidden space-y-3 py-1">
+          <div className="md:hidden space-y-3 py-1 border-transparent">
             {tableData.map((team: TFudzi | TKvartal) =>
               tableType === "fudzi" ? (
-                <FudziRow key={team.id} item={team as TFudzi} />
+                <FudziRow key={team.id} item={team as TFudzi}/>
               ) : (
-                <KvartalRow key={team.id} item={team as TKvartal} />
+                <KvartalRow key={team.id} item={team as TKvartal}/>
               )
             )}
           </div>

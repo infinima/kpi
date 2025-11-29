@@ -12,6 +12,7 @@ import type { FudziRow as FudziRowType } from "@/types";
 
 type Props = {
   item: FudziRowType;
+
 };
 
 function nextStatus(s: "correct" | "incorrect" | "not_submitted") {
@@ -49,22 +50,23 @@ export function FudziRow({ item }: Props) {
     <>
       <tr
         className="
-        hidden md:table-row
-        transition-colors
-        hover:bg-hover/60 dark:hover:bg-dark-hover/60
-      "
+    hidden md:table-row
+    transition-colors
+    hover:bg-hover dark:hover:bg-dark-hover/60
+    border-b border-border dark:border-dark-border
+  "
       >
         {/* Команда */}
-        <td className="td text-center py-4 text-base border-r border-border dark:border-dark-border px-3">
+        <td className="td text-center py--1 text-base border-r border-border dark:border-dark-border px-3">
           {item.name}
         </td>
 
         {/* Карта */}
-        <td className="td text-center py-4 border-r border-border dark:border-dark-border px-3">
+        <td className="td text-center py-1 border-r border-border dark:border-dark-border px-3">
           <button
             onClick={() => fudziSetCard(item.id, !item.has_card)}
             className={`
-            px-3 py-2 rounded-lg w-full text-sm font-medium
+            px-3  rounded-lg w-full text-sm font-medium
             ${item.has_card
               ? "bg-green-600/20 text-green-500"
               : "bg-red-600/20 text-red-500"}
@@ -80,7 +82,7 @@ export function FudziRow({ item }: Props) {
             key={i}
             onClick={(e) => openPopup(e, i + 1)}
             className={`
-            td cursor-pointer text-center w-12 py-4
+            td cursor-pointer text-center w-12 py-0
             border-r border-border dark:border-dark-border
             ${a.status === "correct" ? "text-green-500" : ""}
             ${a.status === "incorrect" ? "text-red-500" : ""}
@@ -92,12 +94,12 @@ export function FudziRow({ item }: Props) {
         ))}
 
         {/* Штраф */}
-        <td className="td text-center py-4 border-r border-border dark:border-dark-border">
+        <td className="td text-center py-0 border-r border-border dark:border-dark-border">
           {item.penalty}
         </td>
 
         {/* Итог (последняя колонка → без линии) */}
-        <td className="td text-center py-4 font-semibold">
+        <td className="td text-center py-0 font-semibold">
           {item.total}
         </td>
       </tr>
@@ -172,8 +174,8 @@ export function FudziRow({ item }: Props) {
 
   // ---------- MOBILE ----------
   const mobileRow = (
-    <tr className="md:hidden block w-full">
-      <td className="block w-full p-0" colSpan={999}>
+    <tr className="md:hidden block w-full bg-transparent">
+      <td className="block w-full p-0 bg-transparent" colSpan={999}>
         <div className="w-full px-2">
           <div
             className="
