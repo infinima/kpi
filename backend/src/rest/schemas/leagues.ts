@@ -61,6 +61,9 @@ export const UpdateLeagueStatusInput = z.object({
 export const DeleteLeagueQuery = z.object({
     force: z.preprocess(v => v === "true", z.boolean()),
 });
+export const ImportTeamsInput = z.object({
+    url: z.url()
+});
 
 
 
@@ -308,6 +311,27 @@ registry.registerPath({
         400: { description: "The league is not deleted" },
         404: { description: "The league does not exist" },
     },
+});
+
+// POST /api/leagues/{id}/import-teams
+registry.registerPath({
+    method: "post",
+    path: "/api/leagues/{id}/import-teams",
+    summary: "Импорт команд по URL",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+        body: {
+            content: {
+                "application/json": { schema: ImportTeamsInput }
+            }
+        }
+    },
+    responses: {
+        200: { description: "OK" },
+        400: { description: "Invalid URL or invalid data" }
+    }
 });
 
 export type League = z.infer<typeof LeagueSchema>;

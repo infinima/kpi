@@ -1,4 +1,6 @@
 import express from "express";
+import fetch from "node-fetch";
+import { z } from "../../utils/zod-openapi-init.js";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../utils/database.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
@@ -16,8 +18,10 @@ import {
     CreateLeagueInput,
     UpdateLeagueInput,
     UpdateLeagueStatusInput,
-    DeleteLeagueQuery
+    DeleteLeagueQuery,
+    ImportTeamsInput
 } from "../schemas/leagues.js";
+import { MembersSchema } from "../schemas/teams.js";
 
 export const leaguesRouter = express.Router();
 
@@ -594,5 +598,161 @@ leaguesRouter.post(
         );
 
         res.json({ success: true });
+    }
+);
+
+
+// POST /api/leagues/:id/import-teams
+leaguesRouter.post(
+    "/:id/import-teams",
+    validate(GetOneLeagueInput, "params"),
+    validate(ImportTeamsInput, "body"),
+    checkNotDeleted("league"),
+    checkPermission("teams", "create"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+        const { url } = (req as any).validated.body;
+
+        let teams: Array<{
+            id: number;
+            name: string;
+            members: z.infer<typeof MembersSchema>;
+        }>;
+        try {
+            const r = await fetch(url);
+            const raw = await r.json();
+
+            const SingleTeamSchema = z.object({
+                id: z.number().int().positive(),
+                name: z.string().min(1),
+                members: MembersSchema
+            });
+
+            teams = z.array(SingleTeamSchema).parse(raw);
+        } catch (e: any) {
+            return res.status(400).json({
+                error: {
+                    code: "INVALID_IMPORT_DATA",
+                    message: String(e)
+                }
+            });
+        }
+
+        let created = 0;
+        let updated = 0;
+
+        for (const t of teams) {
+            const [existing] = await query(
+                `SELECT id FROM teams WHERE import_id = ? AND league_id = ? AND deleted_at IS NULL`,
+                [t.id, id]
+            );
+
+            const members = JSON.stringify(t.members);
+
+            if (!existing) {
+                await query(
+                    `INSERT INTO teams
+                     (league_id, import_id, name, members,
+                      answers_kvartaly, answers_fudzi, special_nominations)
+                     VALUES (?, ?, ?, ?, ?, ?, '[]')`,
+                    [
+                        id,
+                        t.id,
+                        t.name,
+                        members,
+                        JSON.stringify(
+                            Array.from({ length: 4 }, () => ({
+                                finished: 0,
+                                questions: Array.from({ length: 4 }, () => ({
+                                    correct: 0,
+                                    incorrect: 0
+                                }))
+                            }))
+                        ),
+                        JSON.stringify({
+                            has_card: false,
+                            questions: Array.from({ length: 16 }, () => ({
+                                status: "not_submitted"
+                            }))
+                        })
+                    ]
+                );
+                created++;
+            } else {
+                await query(
+                    `UPDATE teams
+                     SET name = ?, members = ?
+                     WHERE id = ?`,
+                    [t.name, members, existing.id]
+                );
+                updated++;
+            }
+        }
+
+        res.json({ success: true, created, updated });
+    }
+);
+
+leaguesRouter.get(
+    "/static/teams-example",
+    async (req, res) => {
+        res.json([
+            {
+                name: "Некая команда 3",
+                id: 1,
+                members: {
+                    coach: {
+                        full_name: "Иванова Мария Петровна",
+                        email: "test@mail.ru"
+                    },
+                    participants: [
+                        {
+                            full_name: "Березин Андрей Сергеевич",
+                            school: "МБОУ СОШ №24"
+                        },
+                        {
+                            full_name: "Силаев Михаил Антонович",
+                            school: "МБОУ СОШ №55"
+                        },
+                        {
+                            full_name: "Кержнер Яков Денисович",
+                            school: "МБОУ СОШ №12"
+                        },
+                        {
+                            full_name: "Тестина",
+                            school: "МБОУ СОШ №90"
+                        }
+                    ]
+                }
+            },
+            {
+                name: "Некая команда 4",
+                id: 5,
+                members: {
+                    coach: {
+                        full_name: "Тупикина",
+                        email: "test@mail.ru"
+                    },
+                    participants: [
+                        {
+                            full_name: "Швырев Александр Олегович",
+                            school: "МБОУ СОШ №2"
+                        },
+                        {
+                            full_name: "Комков Никита Владимирович",
+                            school: "МБОУ СОШ №5"
+                        },
+                        {
+                            full_name: "Георгиев Владимир Васильевич",
+                            school: "МБОУ СОШ №4"
+                        },
+                        {
+                            full_name: "Лисина Александра Максимовна",
+                            school: "МБОУ СОШ №8"
+                        }
+                    ]
+                }
+            }
+        ]);
     }
 );
