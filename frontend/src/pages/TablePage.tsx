@@ -1,156 +1,117 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSocketStore, useEventsNav } from "@/store";
 
 import { FudziRow } from "@/components/FudziRow";
-import { KvartalyRow } from "@/components/KvartalyRow";
+import { KvartalRow } from "@/components/KvartalRow";
+import type { FudziRow as TFudzi, KvartalRow as TKvartal } from "@/types";
 
 export function TablesPage() {
-  // Сокет
-  const connect = useSocketStore((s) => s.connect);
-  const disconnect = useSocketStore((s) => s.disconnect);
 
-  const tableData = useSocketStore((s) => s.tableData);
-  const isConnected = useSocketStore((s) => s.isConnected);
+  const { connect, disconnect, tableData, isConnected } = useSocketStore();
+  const { eventName, locationName, leagueName, tableType } = useEventsNav();
 
-  // Методы сокета
-  const fudziSetAnswer = useSocketStore((s) => s.fudziSetAnswer);
-  const fudziSetCard = useSocketStore((s) => s.fudziSetCard);
-  const kvartalyAddAnswer = useSocketStore((s) => s.kvartalyAddAnswer);
-
-  // Навигация
-  const eventName = useEventsNav((s) => s.eventName);
-  const locationName = useEventsNav((s) => s.locationName);
-  const leagueName = useEventsNav((s) => s.leagueName);
-  const tableType = useEventsNav((s) => s.tableType);
-
-  // Ховер колонка
-  const [hoverCol, setHoverCol] = useState<number | null>(null);
-
-  // Заголовки
-  const headersFudzi = [
-    "Команда",
-    "ID",
-    "Карта",
-    ...Array.from({ length: 16 }, (_, i) => `В ${i + 1}`),
-    "Штраф",
-    "Итого",
-  ];
-
-  const headersKvartaly = [
-    "Команда",
-    "ID",
-    "Кв1",
-    "Кв2",
-    "Кв3",
-    "Кв4",
-    "Штраф",
-    "Итого",
-  ];
-
-  const headers = tableType === "fudzi" ? headersFudzi : headersKvartaly;
-
-  // Подключение
   useEffect(() => {
     connect();
     return () => disconnect();
   }, [tableType]);
 
+  const renderFudziHeader = () => (
+    <thead className="hidden md:table-header-group sticky top-0 z-30">
+    <tr className="bg-surface dark:bg-dark-surface border-b border-border dark:border-dark-border">
+      <th className="th w-24">Команда</th>
+      <th className="th w-16">Карта</th>
+      {[...Array(16)].map((_, i) => (
+        <th key={i} className="th text-center w-10">{i + 1}</th>
+      ))}
+      <th className="th w-17">Штраф</th>
+      <th className="th w-15">Итого</th>
+    </tr>
+    </thead>
+  );
 
-  console.log(tableData);
+  // ----- Заголовки для Кварталов -----
+  const renderKvartalyHeader = () => (
+    <thead className="hidden md:table-header-group sticky top-0 z-30">
+    {/* первая строка */}
+    <tr className="bg-surface dark:bg-dark-surface border-b border-border dark:border-dark-border">
+      <th rowSpan={2} className="th">Команда</th>
+
+      {[1, 2, 3, 4].map((q) => (
+        <th key={q} className="th border-r border-border dark:border-dark-border">
+          Квартал {q}
+        </th>
+      ))}
+
+      <th rowSpan={2} className="th">Штраф</th>
+      <th rowSpan={2} className="th">Итого</th>
+    </tr>
+    </thead>
+  );
 
   return (
-    <div className="flex flex-col w-full gap-6">
+    <div className="flex flex-col gap-6 w-full px-4 md:px-6 lg:px-8">
 
-      {/* -------- TOP BAR -------- */}
-      <div
-        className="
-          w-full px-6 py-4 rounded-xl
-          bg-surface dark:bg-dark-surface
-          border border-border dark:border-dark-border
-          shadow-card
-          flex flex-col gap-2
-        "
-      >
-        <div className="text-2xl font-semibold">
+      {/* ===== TOP PANEL ===== */}
+      <div className="
+        rounded-xl p-4
+        bg-surface dark:bg-dark-surface
+        border border-border dark:border-dark-border
+        shadow-card
+      ">
+        <div className="text-2xl font-bold">
           Таблица: {tableType === "fudzi" ? "Фудзи" : "Кварталы"}
         </div>
 
-        <div className="text-sm opacity-80">
-          {eventName && <p>Мероприятие: <b>{eventName}</b></p>}
-          {locationName && <p>Площадка: <b>{locationName}</b></p>}
-          {leagueName && <p>Лига: <b>{leagueName}</b></p>}
-        </div>
-
-        <div className="pt-2 text-xs opacity-50">
-          (Настройки цвета появятся позже)
+        <div className="text-sm opacity-80 space-y-1 mt-1">
+          {eventName && <p>Мероприятие: {eventName}</p>}
+          {locationName && <p>Площадка: {locationName}</p>}
+          {leagueName && <p>Лига: {leagueName}</p>}
         </div>
       </div>
 
-      {/* -------- STATUS -------- */}
+      {/* ===== CONNECTION STATUS ===== */}
       {!isConnected && (
-        <div className="p-3 rounded-lg bg-hover dark:bg-dark-hover opacity-70">
-          Подключение к таблице…
+        <div className="p-3 rounded-lg bg-hover dark:bg-dark-hover text-sm opacity-75 text-center">
+          Подключение…
         </div>
       )}
 
-      {/* -------- TABLE -------- */}
+      {/* ===== TABLE / CARDS ===== */}
       {isConnected && tableData && (
         <div
           className="
             overflow-x-auto rounded-xl
             border border-border dark:border-dark-border
+            shadow-card
           "
         >
-          <table className="w-full border-collapse text-sm">
+          <table className="hidden md:table w-full border-collapse text-sm">
 
-            {/* HEADERS */}
-            <thead>
-            <tr className="bg-surface dark:bg-dark-surface border-b border-border dark:border-dark-border">
-              {headers.map((h, i) => (
-                <th
-                  key={i}
-                  onMouseEnter={() => setHoverCol(i)}
-                  className={`
-                      px-3 py-2 text-left font-semibold border-r 
-                      border-border dark:border-dark-border whitespace-nowrap
-                      ${hoverCol === i ? "bg-hover dark:bg-dark-hover" : ""}
-                    `}
-                >
-                  {h}
-                </th>
-              ))}
-            </tr>
-            </thead>
+            {tableType === "fudzi"
+              ? renderFudziHeader()
+              : renderKvartalyHeader()}
 
-            {/* BODY */}
             <tbody>
-            {tableData.map((team: any) =>
+            {tableData.map((team: TFudzi | TKvartal) =>
               tableType === "fudzi" ? (
-                <FudziRow
-                  key={team.id}
-                  item={team}
-
-                  hoverCol={hoverCol}
-                  setHoverCol={setHoverCol}
-
-                  fudziSetAnswer={fudziSetAnswer}
-                  fudziSetCard={fudziSetCard}
-                />
+                <FudziRow key={team.id} item={team as TFudzi} />
               ) : (
-                <KvartalyRow
-                  key={team.id}
-                  item={team}
-
-                  hoverCol={hoverCol}
-                  setHoverCol={setHoverCol}
-
-                  kvartalyAddAnswer={kvartalyAddAnswer}
-                />
+                <KvartalRow key={team.id} item={team as TKvartal} />
               )
             )}
             </tbody>
-
           </table>
+
+          {/* ----- MOBILE VERSION ----- */}
+          <div className="md:hidden space-y-3 py-1">
+            {tableData.map((team: TFudzi | TKvartal) =>
+              tableType === "fudzi" ? (
+                <FudziRow key={team.id} item={team as TFudzi} />
+              ) : (
+                <KvartalRow key={team.id} item={team as TKvartal} />
+              )
+            )}
+          </div>
         </div>
       )}
     </div>

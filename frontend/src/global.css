@@ -113,3 +113,47 @@ body {
 .toast-exit {
     animation: toastOut 0.25s ease-in forwards;
 }
+
+
+/*th {*/
+/*    @apply px-3 py-2 border-r border-border dark:border-dark-border*/
+/*    text-center whitespace-nowrap font-semibold;*/
+/*}*/
+
+/*.th {*/
+/*    @apply px-3 py-2 text-center border-r border-border dark:border-dark-border bg-surface dark:bg-dark-surface whitespace-nowrap;*/
+/*}*/
+
+/*.td {*/
+/*    @apply px-3 py-2 text-center border-r border-border dark:border-dark-border align-middle;*/
+/*}*/
+
+/*.row {*/
+/*    @apply hover:bg-hover dark:hover:bg-dark-hover;*/
+/*}*/
+
+/*.popup {*/
+/*    @apply fixed z-50 bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-lg p-1 shadow-card space-y-1;*/
+/*}*/
+
+/*.popup-btn {*/
+/*    @apply block w-full text-left px-3 py-1 hover:bg-hover dark:hover:bg-dark-hover;*/
+/*}*/
+
+/*.panel {*/
+/*    @apply p-4 rounded-xl bg-surface dark:bg-dark-surface border border-border dark:border-dark-border shadow-card;*/
+/*}*/
+
+/*.info {*/
+/*    @apply p-3 rounded bg-hover dark:bg-dark-hover opacity-70;*/
+/*}*/
+
+/*.table-kv {*/
+/*    border-collapse: separate !important;*/
+/*    border-spacing: 0 !important;*/
+/*}*/
+
+/*.table-kv th,*/
+/*.table-kv td {*/
+/*    border: 1px solid var(--border-color);*/
+/*}*/
