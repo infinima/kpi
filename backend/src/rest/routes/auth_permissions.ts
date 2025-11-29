@@ -35,9 +35,8 @@ export interface PermissionOutput {
 }
 
 // правила глобальных
-const STRICT_GLOBAL: KPIPermission[] = ["create"];
-const EXTRA_GLOBAL: KPIPermission[] = ["restore"];
-const USERS_EXTRA_GLOBAL: KPIPermission[] = ["get"];
+const GLOBAL_ONLY: KPIPermission[] = ["create"];
+const GLOBAL_AND_IDS: KPIPermission[] = ["get", "restore", "access_history"];
 
 // -----------------------------------------------------
 // Утилиты: получение дочерних объектов
@@ -170,34 +169,36 @@ authPermissionsRouter.get(
             // ГЛОБАЛЬНЫЕ ПРАВА
             // ------------------------------------------------
             if (!row.object_id && !row.scope_object) {
-                const allowedGlobal =
-                    obj === "users"
-                        ? [...STRICT_GLOBAL, ...USERS_EXTRA_GLOBAL, ...EXTRA_GLOBAL]
-                        : [...STRICT_GLOBAL, ...EXTRA_GLOBAL];
 
                 if (!out[obj].global) out[obj].global = [];
 
-                // 1. Оставить только "разрешённые глобальные" в global[]
                 for (const p of perms) {
-                    if (allowedGlobal.includes(p)) {
-                        if (!out[obj].global!.includes(p)) {
+
+                    // 1. GLOBAL_ONLY остаются ТОЛЬКО в global
+                    if (GLOBAL_ONLY.includes(p)) {
+                        if (!out[obj].global!.includes(p))
                             out[obj].global!.push(p);
-                        }
+                    }
+
+                    // 2. GLOBAL_AND_IDS — и в global, и в ID
+                    if (GLOBAL_AND_IDS.includes(p)) {
+                        if (!out[obj].global!.includes(p))
+                            out[obj].global!.push(p);
                     }
                 }
 
-                // 2. ВСЕ ГЛОБАЛЬНЫЕ ПРАВА (и разрешённые, и нет) — раскрыть в каждый ID
-                // специальный случай: users:get — тоже должен раскрыться
+                // теперь раскрываем ТОЛЬКО GLOBAL_AND_IDS и IDS_ONLY
                 const rowsIds = await query(`SELECT id FROM ${obj}`, []);
                 const ids = rowsIds.map((r: any) => r.id);
 
                 for (const id of ids) {
                     if (!out[obj][id]) out[obj][id] = [];
 
-                    const tgt = out[obj][id] as KPIPermission[];
-
                     for (const p of perms) {
-                        if (!tgt.includes(p)) tgt.push(p);
+                        if (p === "create") continue; // запрещено расширять
+                        if (!out[obj][id]!.includes(p)) {
+                            out[obj][id]!.push(p);
+                        }
                     }
                 }
 
