@@ -6,7 +6,8 @@ export const PermissionObjectEnum = z.enum([
     "locations",
     "leagues",
     "teams",
-    "users"
+    "users",
+    "permissions"
 ]);
 export const PermissionScopeEnum = z.enum([
     "events",
@@ -20,7 +21,11 @@ export const PermissionActionsEnum = z.enum([
     "delete",
     "restore",
     "access_history",
-    "print_documents"
+    "print_documents",
+    "edit_answers",
+    "get_show",
+    "control_show",
+    "edit_penalties"
 ]);
 
 export const PermissionSchema = z.object({
