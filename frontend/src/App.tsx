@@ -11,6 +11,7 @@ import {EventsPageRoot} from "@/pages/event/EventsPageRoot";
 import {ProfileModal} from "@/components/ProfileModal";
 import {TeamsPage} from "@/pages/TeamsPage";
 import {ResultPage} from "@/pages/ResultPage";
+import {ShowControlPage} from "@/pages/ShowControlPage";
 
 export function App() {
   const {currentPage} = useNavigation();
@@ -22,7 +23,8 @@ export function App() {
     logs: <LogsPage/>,
     users: <UsersPage/>,
     teams: <TeamsPage/>,
-    result: <ResultPage/>
+    result: <ResultPage/>,
+    show: <ShowControlPage/>
   };
 
   if (useUI.getState().theme === "dark") {

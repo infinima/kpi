@@ -37,6 +37,12 @@ export function MenuBar() {
       id: "result",
       title: "Результаты",
     });
+
+    menuItems.push({
+      // @ts-ignore
+      id: "show",
+      title: "Показ",
+    });
   }
 
   if (leagueId && tableType) {
