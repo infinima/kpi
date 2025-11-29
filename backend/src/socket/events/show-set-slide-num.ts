@@ -32,7 +32,7 @@ export function registerShowSetSlideNum(socket: Socket, io: Server) {
 
         try {
             await db.query(
-                `UPDATE leagues SET show_slide_num = ? WHERE id = ?`,
+                `UPDATE leagues SET show_slide_num = ?, show_timer_is_enabled = false WHERE id = ?`,
                 [slide_num, league_id]
             );
 
