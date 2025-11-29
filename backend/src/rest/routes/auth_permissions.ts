@@ -17,7 +17,11 @@ export type KPIPermission =
     | "delete"
     | "restore"
     | "access_history"
-    | "print_documents";
+    | "print_documents"
+    | "edit_answers"
+    | "get-show"
+    | "control_show"
+    | "edit_penalties";
 
 export interface PermissionRow {
     object: KPIObject;
