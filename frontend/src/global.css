@@ -157,3 +157,12 @@ body {
 /*.table-kv td {*/
 /*    border: 1px solid var(--border-color);*/
 /*}*/
+
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
