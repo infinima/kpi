@@ -79,8 +79,6 @@ export function registerConnection(
         socket.join(`league:${league_id}`);
         socket.join(`league:${league_id}:${type}`);
 
-        console.log(`Connected: L=${league_id} T=${type} U=${user_id}`);
-
         try {
             if (type === "kvartaly") {
                 const table = await getKvartalyTable(league_id);
