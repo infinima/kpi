@@ -67,6 +67,7 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
   const canDelete = can("users", "delete", user.id);
   const canRestore = can("users", "restore", user.id);
   const canHistory = can("users", "access_history", user.id);
+  const canGetPermissions = can("permissions", "get");
   const canEditPermissions = can("permissions", "create");
 
 
@@ -138,7 +139,7 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
                   </button>
                 )}
 
-                {canEditPermissions && (<button
+                {canGetPermissions && canEditPermissions && (<button
                   onClick={() => useUI.getState().openRightsModal(user.id, `${user.last_name} ${user.first_name}`)}
                   className="px-3 py-2 flex items-center gap-2 rounded-lg bg-success text-white hover:bg-success/80 flex-1"
                 >

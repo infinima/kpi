@@ -274,9 +274,23 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {actions
-            .filter((a) =>
-              data.object === "leagues" ? true : !["print_documents", "edit_answers", "get_show", "control_show", "edit_penalties"].includes(a)
-            )
+              .filter(a => {
+                if (a === "get" && !["teams", "users", "permissions"].includes(data.object)) {
+                  return false;
+                }
+
+                if (data.object === "permissions" && ["restore", "access_history"].includes(a)) {
+                  return false;
+                }
+
+                if (data.object !== "leagues") {
+                  if (["print_documents", "edit_answers", "get_show", "control_show", "edit_penalties"].includes(a)) {
+                    return false;
+                  }
+                }
+
+                return true;
+              })
             .map((action) => (
               <label
                 key={action}
