@@ -26,7 +26,7 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
             [league_id]
         );
-        if (!leagues.length || leagues[0].status !== "KVARTALY_GAME") {
+        if (!leagues.length || leagues.status !== "KVARTALY_GAME") {
             return socket.emit("error_response", {
                 error: { code: "WRONG_LEAGUE_STATUS" }
             });

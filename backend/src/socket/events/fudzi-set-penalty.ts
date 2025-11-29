@@ -22,13 +22,13 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
         }
 
         const league_id: number = socket.data.league_id;
-        const [leagues] = await db.query(
+        const [rows] = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
             [league_id]
         );
-        if (!leagues.length ||
-            (leagues[0].status !== "FUDZI_GAME" &&
-                leagues[0].status !== "FUDZI_GAME_BREAK")
+        if (!rows.length ||
+            (rows.status !== "FUDZI_GAME" &&
+                rows.status !== "FUDZI_GAME_BREAK")
         ) {
             return socket.emit("error_response", {
                 error: { code: "WRONG_LEAGUE_STATUS" }
@@ -42,11 +42,11 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
         if (typeof penalty !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_PENALTY" } });
         }
-        const [rows] = await db.query(
+        const [rows2] = await db.query(
             `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,
             [team_id, league_id]
         );
-        if (rows.length === 0) {
+        if (rows2.length === 0) {
             return socket.emit("error_response", {
                 error: { code: "TEAM_NOT_FOUND" }
             });

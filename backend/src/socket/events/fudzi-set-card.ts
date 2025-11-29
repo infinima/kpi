@@ -24,13 +24,13 @@ export function registerFudziSetCard(socket: Socket, io: Server): void {
         }
 
         const league_id = socket.data.league_id;
-        const [leagues] = await db.query(
+        const [rows] = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
             [league_id]
         );
-        if (!leagues.length ||
-            (leagues[0].status !== "FUDZI_GAME" &&
-                leagues[0].status !== "FUDZI_GAME_BREAK")
+        if (!rows.length ||
+            (rows.status !== "FUDZI_GAME" &&
+                rows.status !== "FUDZI_GAME_BREAK")
         ) {
             return socket.emit("error_response", {
                 error: { code: "WRONG_LEAGUE_STATUS" }
