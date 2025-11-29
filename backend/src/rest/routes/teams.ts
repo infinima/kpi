@@ -169,6 +169,9 @@ teamsRouter.patch(
             if (fields.members) {
                 fields.members = JSON.stringify(fields.members);
             }
+            if (fields.special_nominations !== undefined) {
+                fields.special_nominations = JSON.stringify(fields.special_nominations);
+            }
 
             await query(
                 "UPDATE teams SET ? WHERE id = ?",
