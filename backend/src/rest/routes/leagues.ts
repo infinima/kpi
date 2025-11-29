@@ -412,7 +412,7 @@ leaguesRouter.post(
                               SET place_fudzi = NULL, 
                                   place_final = NULL, 
                                   diploma = NULL, 
-                                  special_nominations = NULL 
+                                  special_nominations = '[]'
                               WHERE league_id = ?`,
                         [id]
                     );
