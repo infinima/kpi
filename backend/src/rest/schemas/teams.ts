@@ -79,7 +79,12 @@ export const CreateTeamInput = TeamSchema
     .extend({
         members: MembersSchema,
     });
-export const UpdateTeamInput = CreateTeamInput.partial();
+export const UpdateTeamInput = CreateTeamInput
+    .partial()
+    .extend({
+        diploma: TeamSchema.shape.diploma.optional(),
+        special_nominations: TeamSchema.shape.special_nominations.optional(),
+    });
 
 
 
