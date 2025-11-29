@@ -2,7 +2,7 @@ import express from "express";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../utils/database.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
-import { checkPermission } from "../middlewares/permission-check.js";
+import { checkPermission } from "../middlewares/check-permission.js";
 import { saveFile } from "../../utils/save-file.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { generatePDFBuffer } from "../../utils/generate-teams-names.js";
@@ -438,7 +438,6 @@ leaguesRouter.post(
                     }
                     break;
                 case "GAMES_ENDED": {
-                    const kv = await getKvartalyTable(id);
                     const fud = await getFudziTable(id);
 
                     // ---------- 1. place_fudzi ----------

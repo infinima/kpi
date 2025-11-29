@@ -1,12 +1,22 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
+import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getKvartalyTable } from "../services/kvartaly-table.js";
 
 export function registerKvartalyFinish(socket: Socket, io: Server): void {
     socket.on("kvartaly_finish", async (data) => {
-        if (!socket.handshake.query.token) {
-            return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
+        const hasRight = await checkSocketPermission(
+            socket.data.user_id,
+            "leagues",
+            "edit_answers",
+            socket.data.league_id
+        );
+        if (!hasRight) {
+            return socket.emit("error_response", {
+                error: { code: "FORBIDDEN" }
+            });
         }
+
         if (socket.handshake.query.type !== "kvartaly") {
             return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
         }

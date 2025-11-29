@@ -1,10 +1,17 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
+import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getFudziTable } from "../services/fudzi-table.js";
 
 export function registerFudziSetCard(socket: Socket, io: Server): void {
     socket.on("fudzi_set_card", async (data) => {
-        if (!socket.handshake.query.token) {
+        const hasRight = await checkSocketPermission(
+            socket.data.user_id,
+            "leagues",
+            "edit_answers",
+            socket.data.league_id
+        );
+        if (!hasRight) {
             return socket.emit("error_response", {
                 error: { code: "FORBIDDEN" }
             });

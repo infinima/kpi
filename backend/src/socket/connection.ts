@@ -3,6 +3,7 @@ import { query } from "../utils/database.js";
 import { getKvartalyTable } from "./services/kvartaly-table.js";
 import { getFudziTable } from "./services/fudzi-table.js";
 import { getShowState } from "./services/show.js";
+import { checkSocketPermission } from "./services/check-socket-permission.js";
 
 export function registerConnection(
     io: Server,
@@ -19,6 +20,21 @@ export function registerConnection(
                 error: {
                     code: "INVALID_LEAGUE_ID",
                     message: "league_id must be a number"
+                }
+            });
+            return socket.disconnect(true);
+        }
+
+        const leagueExists = await query(
+            `SELECT 1 FROM leagues WHERE id = ? AND deleted_at IS NULL LIMIT 1`,
+            [league_id]
+        );
+
+        if (leagueExists.length === 0) {
+            socket.emit("error_response", {
+                error: {
+                    code: "LEAGUE_NOT_FOUND",
+                    message: "League does not exist"
                 }
             });
             return socket.disconnect(true);
@@ -61,20 +77,31 @@ export function registerConnection(
             }
 
             user_id = rows[0].user_id;
-        } else {
-            socket.emit("error_response", {
-                error: {
-                    code: "NO_TOKEN",
-                    message: "Token missing"
-                }
-            });
-            return socket.disconnect(true);
         }
 
         socket.data.league_id = league_id;
         socket.data.type = String(type);
         socket.data.token = token;
         socket.data.user_id = user_id;
+
+        if (type === "show") {
+            const allowed = await checkSocketPermission(
+                user_id,
+                "leagues",
+                "get_show",
+                league_id
+            );
+
+            if (!allowed) {
+                socket.emit("error_response", {
+                    error: {
+                        code: "FORBIDDEN",
+                        message: "No permission: get_show"
+                    }
+                });
+                return socket.disconnect(true);
+            }
+        }
 
         socket.join(`league:${league_id}`);
         socket.join(`league:${league_id}:${type}`);

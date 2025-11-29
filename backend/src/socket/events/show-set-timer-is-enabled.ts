@@ -1,11 +1,20 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
+import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getShowState } from "../services/show.js";
 
 export function showSetTimerIsEnabled(socket: Socket, io: Server) {
     socket.on("show_set_timer_is_enabled", async (data) => {
-        if (!socket.handshake.query.token) {
-            return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
+        const hasRight = await checkSocketPermission(
+            socket.data.user_id,
+            "leagues",
+            "control_show",
+            socket.data.league_id
+        );
+        if (!hasRight) {
+            return socket.emit("error_response", {
+                error: { code: "FORBIDDEN" }
+            });
         }
 
         if (socket.handshake.query.type !== "show") {

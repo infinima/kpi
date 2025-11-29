@@ -4,7 +4,7 @@ import { query } from "../../utils/database.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { savePhoto } from "../../utils/save-photo.js";
 import { checkNotDeleted } from "../middlewares/check-not-deleted.js";
-import { checkPermission } from "../middlewares/permission-check.js";
+import { checkPermission } from "../middlewares/check-permission.js";
 
 import { GetOneUserInput, CreateUserInput, UpdateUserInput } from "../schemas/users.js";
 import bcrypt from "bcrypt";

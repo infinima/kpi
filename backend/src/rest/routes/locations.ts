@@ -2,7 +2,7 @@ import express from "express";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../utils/database.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
-import { checkPermission } from "../middlewares/permission-check.js";
+import { checkPermission } from "../middlewares/check-permission.js";
 
 import {
     GetOneLocationInput,

@@ -70,7 +70,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       transports: ["websocket"],
       query: {
         league_id: String(leagueId),
-        table_type: tableType,
+        type: tableType,
         ...(token ? {token} : {}),
       },
     });

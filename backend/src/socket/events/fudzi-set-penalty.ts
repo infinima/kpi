@@ -1,14 +1,25 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
+import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getFudziTable } from "../services/fudzi-table.js";
 
 export function registerFudziSetPenalty(socket: Socket, io: Server): void {
     socket.on("fudzi_set_penalty", async (data) => {
-        if (!socket.handshake.query.token)
-            return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
+        const hasRight = await checkSocketPermission(
+            socket.data.user_id,
+            "leagues",
+            "edit_penalties",
+            socket.data.league_id
+        );
+        if (!hasRight) {
+            return socket.emit("error_response", {
+                error: { code: "FORBIDDEN" }
+            });
+        }
 
-        if (socket.handshake.query.type !== "fudzi")
+        if (socket.handshake.query.type !== "fudzi") {
             return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
+        }
 
         const league_id: number = socket.data.league_id;
         const [leagues] = await db.query(

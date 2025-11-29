@@ -1,10 +1,17 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
+import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getKvartalyTable } from "../services/kvartaly-table.js";
 
 export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
     socket.on("kvartaly_add_answer", async (data) => {
-        if (!socket.handshake.query.token) {
+        const hasRight = await checkSocketPermission(
+            socket.data.user_id,
+            "leagues",
+            "edit_answers",
+            socket.data.league_id
+        );
+        if (!hasRight) {
             return socket.emit("error_response", {
                 error: { code: "FORBIDDEN" }
             });

@@ -6,7 +6,7 @@ import {
     UpdatePermissionInput,
     GetPermissionsTargetInput
 } from "../schemas/permissions.js";
-import { checkPermission } from "../middlewares/permission-check.js";
+import { checkPermission } from "../middlewares/check-permission.js";
 
 export const permissionsRouter = express.Router();
 
