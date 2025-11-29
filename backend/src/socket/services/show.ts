@@ -24,7 +24,7 @@ export async function getShowState(league_id: number): Promise<ShowState> {
 
     return {
         status: row.show_status,
-        slide_num: row.slide_num,
-        timer_is_enabled: row.timer_is_enabled === 1
+        slide_num: row.show_slide_num,
+        timer_is_enabled: row.show_timer_is_enabled === 1
     };
 }
