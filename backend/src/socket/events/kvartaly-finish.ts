@@ -22,11 +22,11 @@ export function registerKvartalyFinish(socket: Socket, io: Server): void {
         }
 
         const league_id: number = socket.data.league_id;
-        const [rows] = await db.query(
+        const rows = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
             [league_id]
         );
-        if (!rows.length || rows.status !== "KVARTALY_GAME") {
+        if (!rows.length || rows[0].status !== "KVARTALY_GAME") {
             return socket.emit("error_response", {
                 error: { code: "WRONG_LEAGUE_STATUS" }
             });
