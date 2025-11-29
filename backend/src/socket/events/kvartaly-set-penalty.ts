@@ -11,13 +11,23 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
             return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
 
         const league_id: number = socket.data.league_id;
+        const [leagues] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!leagues.length || leagues[0].status !== "KVARTALY_GAME") {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
+
         const { team_id, penalty } = data;
-
-        if (typeof team_id !== "number")
+        if (typeof team_id !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_TEAM_ID" } });
-
-        if (typeof penalty !== "number")
+        }
+        if (typeof penalty !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_PENALTY" } });
+        }
 
         const [rows] = await db.query(
             `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,

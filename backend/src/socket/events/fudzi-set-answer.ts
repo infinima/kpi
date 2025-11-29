@@ -17,14 +17,25 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
         }
 
         const league_id = socket.data.league_id;
-        const { team_id, question_num, status } = data;
+        const [leagues] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!leagues.length ||
+            (leagues[0].status !== "FUDZI_GAME" &&
+                leagues[0].status !== "FUDZI_GAME_BREAK")
+        ) {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
 
+        const { team_id, question_num, status } = data;
         if (!question_num || question_num < 1 || question_num > 16) {
             return socket.emit("error_response", {
                 error: { code: "INVALID_QUESTION_NUM" }
             });
         }
-
         const allowed = ["not_submitted", "correct", "incorrect"];
         if (!allowed.includes(status)) {
             return socket.emit("error_response", {

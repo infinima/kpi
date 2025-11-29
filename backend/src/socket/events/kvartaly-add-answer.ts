@@ -17,8 +17,17 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         }
 
         const league_id: number = socket.data.league_id;
-        const { team_id, question_num, delta_correct = 0, delta_incorrect = 0 } = data;
+        const [rows] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!rows.length || rows[0].status !== "KVARTALY_GAME") {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
 
+        const { team_id, question_num, delta_correct = 0, delta_incorrect = 0 } = data;
         if (!question_num || question_num < 1 || question_num > 16) {
             return socket.emit("error_response", {
                 error: { code: "INVALID_QUESTION_NUM" }
