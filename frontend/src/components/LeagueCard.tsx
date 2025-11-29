@@ -169,7 +169,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
                 {canShowOverallResults && (
                     <button
-                        onClick={() => notify({type: "info", text: "Общие результаты (пока пусто)"})}
+                        onClick={() => setPage("result")}
                         className="
                             w-full py-3 rounded-lg
                             bg-surface dark:bg-dark-surface border border-border dark:border-dark-border

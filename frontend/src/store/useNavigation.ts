@@ -10,7 +10,7 @@ export type Page =
 
 interface NavigationState {
     currentPage: Page;
-    setPage: (p: Page) => void;
+    setPage: (p: string) => void;
 }
 
 export const useNavigation = create<NavigationState>((set) => ({

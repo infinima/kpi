@@ -1,9 +1,10 @@
-import { create } from "zustand";
-import { io, Socket } from "socket.io-client";
+import {create} from "zustand";
+import {io, Socket} from "socket.io-client";
 
-import { useUser, useNotifications, useEventsNav} from "@/store";
+import {useEventsNav, useNotifications, useUser} from "@/store";
 
-const SOCKET_URL = "https://test.kpiturnir.ru";
+const SOCKET_URL = "localhost:3000";
+
 
 interface SocketState {
   socket: Socket | null;
@@ -21,11 +22,27 @@ interface SocketState {
 
   fudziSetCard: (team_id: number, has_card: boolean) => void;
 
-  kvartalyAddAnswer: (
+  fudziSetPenalty : (
+    team_id: number,
+    penalty: number
+  ) => void;
+
+  kvartalAddAnswer: (
     team_id: number,
     question_num: number,
     delta_correct: number,
     delta_incorrect: number
+  ) => void;
+
+  kvartalFinish : (
+    team_id: number,
+    kvartal: number,
+    finished: boolean
+  ) => void;
+
+  kvartalSetPenalty : (
+    team_id: number,
+    penalty: number
   ) => void;
 }
 
@@ -37,15 +54,15 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   connect: () => {
     const notify = useNotifications.getState().addMessage;
 
-    const {leagueId , tableType} = useEventsNav.getState()
+    const {leagueId, tableType} = useEventsNav.getState();
+    // console.log(leagueId, tableType);
     const token = useUser.getState().token;
 
     if (!leagueId || !tableType) {
-      notify({ type: "warning", text: "Нет данных для подключения к таблице" });
+      notify({type: "warning", text: "Нет данных для подключения к таблице"});
       return;
     }
 
-    // закрываем старый сокет
     const oldSocket = get().socket;
     if (oldSocket) oldSocket.close();
 
@@ -54,11 +71,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       query: {
         league_id: String(leagueId),
         table_type: tableType,
-        ...(token ? { token } : {}),
+        ...(token ? {token} : {}),
       },
     });
 
-    set({ socket });
+    set({socket});
 
     socket.on("connection_error", (err: any) => {
       notify({
@@ -66,36 +83,35 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         text: err?.message ?? "Ошибка подключения к таблице",
       });
       socket.close();
-      set({ isConnected: false });
+      set({isConnected: false});
     });
 
     socket.on("connect", () => {
-      set({ isConnected: true });
-      notify({ type: "success", text: "Подключено к таблице" });
+      set({isConnected: true});
+      notify({type: "success", text: "Подключено к таблице"});
 
       socket.emit("get_table");
     });
 
     socket.on("table_data", (t: any) => {
-      set({ tableData: t });
+      set({tableData: t});
     });
 
     socket.on("error", (err: any) => {
       const msg = err?.error?.message ?? err?.message ?? "Неизвестная ошибка";
-      notify({ type: "error", text: msg });
+      notify({type: "error", text: msg});
     });
   },
 
   disconnect: () => {
     const s = get().socket;
     if (s) s.close();
-    set({ socket: null, isConnected: false,  tableData: null });
+    set({socket: null, isConnected: false, tableData: null});
   },
 
-  // ------ ДЕЙСТВИЯ ДЛЯ ФУДЗИ ------
 
   fudziSetAnswer: (team_id, question_num, status) => {
-    const { socket } = get();
+    const {socket} = get();
     if (!socket) return;
 
     socket.emit("fudzi_set_answer", {
@@ -106,16 +122,22 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   },
 
   fudziSetCard: (team_id, has_card) => {
-    const { socket } = get();
+    const {socket} = get();
     if (!socket) return;
 
-    socket.emit("fudzi_set_card", { team_id, has_card });
+    socket.emit("fudzi_set_card", {team_id, has_card});
   },
 
-  // ------ ДЕЙСТВИЯ ДЛЯ КВАРТАЛОВ ------
+  fudziSetPenalty: (team_id, penalty) => {
+    const {socket} = get();
+    if (!socket) return;
 
-  kvartalyAddAnswer: (team_id, question_num, delta_correct, delta_incorrect) => {
-    const { socket } = get();
+    socket.emit("fudzi_set_penalty", {team_id, penalty});
+  },
+
+
+  kvartalAddAnswer: (team_id, question_num, delta_correct, delta_incorrect) => {
+    const {socket} = get();
     if (!socket) return;
 
     socket.emit("kvartaly_add_answer", {
@@ -125,4 +147,22 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       delta_incorrect,
     });
   },
+
+
+  kvartalFinish: (team_id, kvartal, finished) => {
+    const {socket} = get();
+    if (!socket) return;
+
+    socket.emit("kvartaly_finish", {team_id, kvartal, finished});
+  },
+
+
+  kvartalSetPenalty: (team_id, penalty) => {
+    const {socket} = get();
+    if (!socket) return;
+
+    socket.emit("kvartaly_set_penalty", {team_id, penalty});
+  },
+
+
 }));

@@ -15,6 +15,7 @@ import {
 import { formatDate } from "@/helpers/formatDate";
 import { teamForm } from "@/config/teamForm";
 
+// @ts-ignore
 export function TeamCard({ team, onRefresh, isDeleted = false }) {
   const [open, setOpen] = useState(false);
 

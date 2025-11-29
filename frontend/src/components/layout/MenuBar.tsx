@@ -31,6 +31,12 @@ export function MenuBar() {
       id: "teams",
       title: "Команды",
     });
+
+    menuItems.push({
+      // @ts-ignore
+      id: "result",
+      title: "Результаты",
+    });
   }
 
   if (leagueId && tableType) {
