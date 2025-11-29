@@ -7,17 +7,27 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
         if (!socket.handshake.query.token)
             return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
 
-        if (socket.handshake.query.table_type !== "kvartaly")
-            return socket.emit("error_response", { error: { code: "WRONG_TABLE_TYPE" } });
+        if (socket.handshake.query.type !== "kvartaly")
+            return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
 
         const league_id: number = socket.data.league_id;
+        const [leagues] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!leagues.length || leagues[0].status !== "KVARTALY_GAME") {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
+
         const { team_id, penalty } = data;
-
-        if (typeof team_id !== "number")
+        if (typeof team_id !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_TEAM_ID" } });
-
-        if (typeof penalty !== "number")
+        }
+        if (typeof penalty !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_PENALTY" } });
+        }
 
         const [rows] = await db.query(
             `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,
@@ -41,7 +51,7 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
             );
 
             const table = await getKvartalyTable(league_id);
-            io.to(`league:${league_id}:kvartaly`).emit("table_data", table);
+            io.to(`league:${league_id}:kvartaly`).emit("data", table);
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

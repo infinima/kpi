@@ -79,7 +79,7 @@ leaguesRouter.get(
     "/:id/fudzi_presentation",
     validate(GetOneLeagueInput, "params"),
     checkNotDeleted("league"),
-    checkPermission("leagues", "get"),
+    checkPermission("leagues", "get_show"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 

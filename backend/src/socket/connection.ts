@@ -2,6 +2,7 @@ import type { Server, Socket } from "socket.io";
 import { query } from "../utils/database.js";
 import { getKvartalyTable } from "./services/kvartaly-table.js";
 import { getFudziTable } from "./services/fudzi-table.js";
+import { getShowState } from "./services/show.js";
 
 export function registerConnection(
     io: Server,
@@ -9,7 +10,7 @@ export function registerConnection(
 ) {
     io.on("connection", async (socket: Socket) => {
         const league_id_raw = socket.handshake.query.league_id;
-        const table_type = socket.handshake.query.table_type;
+        const type = socket.handshake.query.type;
         const token = socket.handshake.query.token ?? null;
 
         const league_id = Number(league_id_raw);
@@ -23,12 +24,12 @@ export function registerConnection(
             return socket.disconnect(true);
         }
 
-        const allowedTypes = ["kvartaly", "fudzi"];
-        if (!allowedTypes.includes(String(table_type))) {
+        const allowedTypes = ["kvartaly", "fudzi", "show"];
+        if (!allowedTypes.includes(String(type))) {
             socket.emit("error_response", {
                 error: {
-                    code: "INVALID_TABLE_TYPE",
-                    message: "Table type must be 'kvartaly' or 'fudzi'"
+                    code: "INVALID_SOCKET_TYPE",
+                    message: "Table type must be 'kvartaly', 'fudzi' or 'show'"
                 }
             });
             return socket.disconnect(true);
@@ -71,22 +72,23 @@ export function registerConnection(
         }
 
         socket.data.league_id = league_id;
-        socket.data.table_type = String(table_type);
+        socket.data.type = String(type);
         socket.data.token = token;
         socket.data.user_id = user_id;
 
         socket.join(`league:${league_id}`);
-        socket.join(`league:${league_id}:${table_type}`);
-
-        console.log(`Connected: L=${league_id} T=${table_type} U=${user_id}`);
+        socket.join(`league:${league_id}:${type}`);
 
         try {
-            if (table_type === "kvartaly") {
+            if (type === "kvartaly") {
                 const table = await getKvartalyTable(league_id);
-                socket.emit("table_data", table);
-            } else {
+                socket.emit("data", table);
+            } else if (type === "fudzi") {
                 const table = await getFudziTable(league_id);
-                socket.emit("table_data", table);
+                socket.emit("data", table);
+            } else if (type === "show") {
+                const show = await getShowState(league_id);
+                socket.emit("data", show);
             }
         } catch (err) {
             console.error(err);

@@ -10,15 +10,27 @@ export function registerFudziSetCard(socket: Socket, io: Server): void {
             });
         }
 
-        if (socket.handshake.query.table_type !== "fudzi") {
+        if (socket.handshake.query.type !== "fudzi") {
             return socket.emit("error_response", {
-                error: { code: "WRONG_TABLE_TYPE" }
+                error: { code: "WRONG_SOCKET_TYPE" }
             });
         }
 
         const league_id = socket.data.league_id;
-        const { team_id, has_card } = data;
+        const [leagues] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!leagues.length ||
+            (leagues[0].status !== "FUDZI_GAME" &&
+                leagues[0].status !== "FUDZI_GAME_BREAK")
+        ) {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
 
+        const { team_id, has_card } = data;
         if (typeof has_card !== "boolean") {
             return socket.emit("error_response", {
                 error: { code: "INVALID_HAS_CARD" }
@@ -37,6 +49,6 @@ export function registerFudziSetCard(socket: Socket, io: Server): void {
         );
 
         const table = await getFudziTable(league_id);
-        io.to(`league:${league_id}:fudzi`).emit("table_data", table);
+        io.to(`league:${league_id}:fudzi`).emit("data", table);
     });
 }

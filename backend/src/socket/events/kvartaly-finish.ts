@@ -4,17 +4,28 @@ import { getKvartalyTable } from "../services/kvartaly-table.js";
 
 export function registerKvartalyFinish(socket: Socket, io: Server): void {
     socket.on("kvartaly_finish", async (data) => {
-        if (!socket.handshake.query.token)
+        if (!socket.handshake.query.token) {
             return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
-
-        if (socket.handshake.query.table_type !== "kvartaly")
-            return socket.emit("error_response", { error: { code: "WRONG_TABLE_TYPE" } });
+        }
+        if (socket.handshake.query.type !== "kvartaly") {
+            return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
+        }
 
         const league_id: number = socket.data.league_id;
-        const { team_id, kvartal, finished } = data;
+        const [rows] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!rows.length || rows[0].status !== "KVARTALY_GAME") {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
 
-        if (kvartal < 1 || kvartal > 4)
+        const { team_id, kvartal, finished } = data;
+        if (kvartal < 1 || kvartal > 4) {
             return socket.emit("error_response", { error: { code: "INVALID_KVARTAL" } });
+        }
 
         const idx = kvartal - 1;
 
@@ -34,7 +45,7 @@ export function registerKvartalyFinish(socket: Socket, io: Server): void {
             );
 
             const table = await getKvartalyTable(Number(league_id));
-            io.to(`league:${league_id}:kvartaly`).emit("table_data", table);
+            io.to(`league:${league_id}:kvartaly`).emit("data", table);
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

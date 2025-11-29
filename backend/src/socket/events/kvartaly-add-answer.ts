@@ -10,15 +10,24 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
             });
         }
 
-        if (socket.handshake.query.table_type !== "kvartaly") {
+        if (socket.handshake.query.type !== "kvartaly") {
             return socket.emit("error_response", {
-                error: { code: "WRONG_TABLE_TYPE" }
+                error: { code: "WRONG_SOCKET_TYPE" }
             });
         }
 
         const league_id: number = socket.data.league_id;
-        const { team_id, question_num, delta_correct = 0, delta_incorrect = 0 } = data;
+        const [rows] = await db.query(
+            `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
+            [league_id]
+        );
+        if (!rows.length || rows[0].status !== "KVARTALY_GAME") {
+            return socket.emit("error_response", {
+                error: { code: "WRONG_LEAGUE_STATUS" }
+            });
+        }
 
+        const { team_id, question_num, delta_correct = 0, delta_incorrect = 0 } = data;
         if (!question_num || question_num < 1 || question_num > 16) {
             return socket.emit("error_response", {
                 error: { code: "INVALID_QUESTION_NUM" }
@@ -58,7 +67,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
             );
 
             const table = await getKvartalyTable(Number(league_id));
-            io.to(`league:${league_id}:kvartaly`).emit("table_data", table);
+            io.to(`league:${league_id}:kvartaly`).emit("data", table);
 
         } catch (err) {
             console.error(err);
