@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useSocketStore } from "@/store";
+import React, { useEffect, useRef, useState } from "react";
+import { useSocketStore, useUI } from "@/store";
 import {
   Check,
   X,
@@ -10,10 +10,7 @@ import {
 } from "lucide-react";
 import type { FudziRow as FudziRowType } from "@/types";
 
-type Props = {
-  item: FudziRowType;
-
-};
+type Props = { item: FudziRowType };
 
 function nextStatus(s: "correct" | "incorrect" | "not_submitted") {
   if (s === "not_submitted") return "correct";
@@ -24,16 +21,48 @@ function nextStatus(s: "correct" | "incorrect" | "not_submitted") {
 export function FudziRow({ item }: Props) {
   const fudziSetAnswer = useSocketStore((s) => s.fudziSetAnswer);
   const fudziSetCard = useSocketStore((s) => s.fudziSetCard);
+  const fudziSetPenalty = useSocketStore((s) => s.fudziSetPenalty);
 
-  const [popup, setPopup] = useState<{ x: number; y: number; q: number } | null>(
-    null
-  );
+  const hoveredColumn = useUI((s) => s.hoveredColumn);
+  const setHoveredColumn = useUI((s) => s.setHoveredColumn);
+
+  const [popup, setPopup] = useState<{ x: number; y: number; q: number } | null>(null);
+  const [penaltyPopup, setPenaltyPopup] = useState<{ x: number; y: number } | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const popupRef = useRef<HTMLDivElement | null>(null);
+
+  // ====== Закрытие модалки по клику вне ======
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (
+        popupRef.current &&
+        !popupRef.current.contains(e.target as Node)
+      ) {
+        setPopup(null);
+        setPenaltyPopup(null);
+      }
+    }
+    window.addEventListener("mousedown", handle);
+    return () => window.removeEventListener("mousedown", handle);
+  }, []);
+
+  // ====== Открыть popup ответа ======
   function openPopup(e: React.MouseEvent, q: number) {
     const r = e.currentTarget.getBoundingClientRect();
+    setPenaltyPopup(null);   // закрыть штрафную, если открыта
     setPopup({
       q,
+      x: r.left,
+      y: r.bottom + 4
+    });
+  }
+
+  // ====== Открыть popup штрафа ======
+  function openPenaltyPopup(e: React.MouseEvent) {
+    const r = e.currentTarget.getBoundingClientRect();
+    setPopup(null); // закрыть попап задач
+    setPenaltyPopup({
       x: r.left,
       y: r.bottom + 4
     });
@@ -45,19 +74,21 @@ export function FudziRow({ item }: Props) {
     setPopup(null);
   }
 
-  // ---------- DESKTOP ----------
+  // ------------------------------------------------------
+  //                     DESKTOP
+  // ------------------------------------------------------
   const desktopRow = (
     <>
       <tr
         className="
-    hidden md:table-row
-    transition-colors
-    hover:bg-hover dark:hover:bg-dark-hover/60
-    border-b border-border dark:border-dark-border
-  "
+          hidden md:table-row
+          transition-colors
+          hover:bg-hover dark:hover:bg-dark-hover/60
+          border-b border-border dark:border-dark-border
+        "
       >
         {/* Команда */}
-        <td className="td text-center py--1 text-base border-r border-border dark:border-dark-border px-3">
+        <td className="td text-center py-1 text-base border-r border-border dark:border-dark-border px-3">
           {item.name}
         </td>
 
@@ -66,48 +97,54 @@ export function FudziRow({ item }: Props) {
           <button
             onClick={() => fudziSetCard(item.id, !item.has_card)}
             className={`
-            px-3  rounded-lg w-full text-sm font-medium
-            ${item.has_card
+              px-3 rounded-lg w-full text-sm font-medium
+              ${item.has_card
               ? "bg-green-600/20 text-green-500"
               : "bg-red-600/20 text-red-500"}
-          `}
+            `}
           >
             {item.has_card ? "Да" : "Нет"}
           </button>
         </td>
 
-        {/* 16 задач */}
+        {/* Вопросы 1..16 */}
         {item.answers.map((a, i) => (
           <td
             key={i}
             onClick={(e) => openPopup(e, i + 1)}
+            onMouseEnter={() => setHoveredColumn(i)}
+            onMouseLeave={() => setHoveredColumn(null)}
             className={`
-            td cursor-pointer text-center w-12 py-0
-            border-r border-border dark:border-dark-border
-            ${a.status === "correct" ? "text-green-500" : ""}
-            ${a.status === "incorrect" ? "text-red-500" : ""}
-            ${a.status === "not_submitted" ? "opacity-40" : ""}
-          `}
+              td cursor-pointer text-center w-12 py-0
+              border-r border-border dark:border-dark-border
+              ${hoveredColumn === i ? "!bg-primary/10 dark:!bg-primary/20" : ""}
+              ${a.status === "correct" ? "text-green-500" : ""}
+              ${a.status === "incorrect" ? "text-red-500" : ""}
+              ${a.status === "not_submitted" ? "opacity-40" : ""}
+            `}
           >
             {a.score}
           </td>
         ))}
 
         {/* Штраф */}
-        <td className="td text-center py-0 border-r border-border dark:border-dark-border">
+        <td
+          className="td text-center py-0 border-r border-border dark:border-dark-border cursor-pointer"
+          onClick={(e) => openPenaltyPopup(e)}
+        >
           {item.penalty}
         </td>
 
-        {/* Итог (последняя колонка → без линии) */}
+        {/* Итог */}
         <td className="td text-center py-0 font-semibold">
           {item.total}
         </td>
       </tr>
 
-
-      {/* Popup */}
+      {/* ===== Popup изменения ответа ===== */}
       {popup && (
         <div
+          ref={popupRef}
           className="
             fixed z-50 w-56 rounded-xl
             bg-surface dark:bg-dark-surface
@@ -120,132 +157,150 @@ export function FudziRow({ item }: Props) {
             <span className="text-sm font-semibold opacity-80">
               Вопрос {popup.q}
             </span>
-
             <button
               className="p-1 rounded-lg hover:bg-hover dark:hover:bg-dark-hover"
               onClick={() => setPopup(null)}
             >
-              <XCircle
-                size={18}
-                className="text-text-secondary dark:text-dark-text-secondary"
-              />
+              <XCircle size={18} className="opacity-60" />
             </button>
           </div>
 
           <button
-            className="
-              flex items-center gap-2 w-full text-left px-4 py-2
-              hover:bg-hover dark:hover:bg-dark-hover
-              text-green-500 dark:text-green-400
-            "
+            className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-hover dark:hover:bg-dark-hover text-green-500"
             onClick={() => choose("correct")}
           >
-            <Check size={18} />
-            <span>Правильно</span>
+            <Check size={18} /> Правильно
           </button>
 
           <button
-            className="
-              flex items-center gap-2 w-full text-left px-4 py-2
-              hover:bg-hover dark:hover:bg-dark-hover
-              text-red-500 dark:text-red-400
-            "
+            className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-hover dark:hover:bg-dark-hover text-red-500"
             onClick={() => choose("incorrect")}
           >
-            <X size={18} />
-            <span>Неправильно</span>
+            <X size={18} /> Неправильно
           </button>
 
           <button
-            className="
-              flex items-center gap-2 w-full text-left px-4 py-2
-              hover:bg-hover dark:hover:bg-dark-hover
-              text-text-secondary dark:text-dark-text-secondary
-            "
+            className="flex items-center gap-2 w-full text-left px-4 py-2 hover:bg-hover dark:hover:bg-dark-hover opacity-70"
             onClick={() => choose("not_submitted")}
           >
-            <MinusCircle size={18} />
-            <span>Не отправлено</span>
+            <MinusCircle size={18} /> Не отправлено
           </button>
+        </div>
+      )}
+
+      {/* ===== Popup изменения штрафа ===== */}
+      {penaltyPopup && (
+        <div
+          ref={popupRef}
+          className="
+            fixed z-50 w-40 rounded-xl
+            bg-surface dark:bg-dark-surface
+            border border-border dark:border-dark-border
+            shadow-xl py-2
+          "
+          style={{ top: penaltyPopup.y, left: penaltyPopup.x }}
+        >
+          <div className="flex items-center justify-between px-4 pb-2 border-b border-border dark:border-dark-border">
+            <span className="text-sm font-semibold opacity-80">
+              Штраф
+            </span>
+            <button
+              className="p-1 rounded-lg hover:bg-hover dark:hover:bg-dark-hover"
+              onClick={() => setPenaltyPopup(null)}
+            >
+              <XCircle size={18} className="opacity-60" />
+            </button>
+          </div>
+
+
+
+          <div className="flex items-center justify-between px-4 py-2">
+            <button
+              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+              onClick={() => fudziSetPenalty(item.id, item.penalty - 1)}
+            >
+              -1
+            </button>
+
+            <div className="w-10 text-center font-semibold">
+              {item.penalty}
+            </div>
+
+            <button
+              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+              onClick={() => fudziSetPenalty(item.id, item.penalty + 1)}
+            >
+              +1
+            </button>
+          </div>
         </div>
       )}
     </>
   );
 
-  // ---------- MOBILE ----------
+  // ------------------------------------------------------
+  //                     MOBILE
+  // ------------------------------------------------------
+
   const mobileRow = (
     <tr className="md:hidden block w-full bg-transparent">
-      <td className="block w-full p-0 bg-transparent" colSpan={999}>
+      <td className="block w-full p-0">
         <div className="w-full px-2">
           <div
             className="
-            w-full
-            rounded-xl border border-border dark:border-dark-border
-            bg-surface dark:bg-dark-surface
-            shadow-card p-4 space-y-3
-          "
+              w-full rounded-xl border border-border dark:border-dark-border
+              bg-surface dark:bg-dark-surface shadow-card p-4 space-y-3
+            "
           >
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between">
               <div>
                 <div className="font-semibold text-lg">{item.name}</div>
-
                 <div className="text-sm opacity-70">
-                  Итог: <b>{item.total}</b> · Штраф: <b>{item.penalty}</b>
+                  Итог: <b>{item.total}</b> · Штраф:{" "}
+                  <button
+                    className="underline"
+                    onClick={(e) => openPenaltyPopup(e)}
+                  >
+                    {item.penalty}
+                  </button>
                 </div>
               </div>
 
               <button
                 onClick={() => fudziSetCard(item.id, !item.has_card)}
-                className={`
-                px-3 py-1 rounded-lg text-sm
-                ${item.has_card
-                  ? "bg-green-600/20 text-green-500"
-                  : "bg-red-600/20 text-red-500"}
-              `}
+                className={`px-3 py-1 rounded-lg text-sm ${
+                  item.has_card
+                    ? "bg-green-600/20 text-green-500"
+                    : "bg-red-600/20 text-red-500"
+                }`}
               >
                 Карта: {item.has_card ? "Да" : "Нет"}
               </button>
             </div>
 
-            {/* Toggle */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="
-              w-full px-3 py-2 rounded-lg text-sm
-              flex items-center justify-between
-              bg-hover dark:bg-dark-hover
-            "
+              className="w-full px-3 py-2 rounded-lg flex items-center justify-between bg-hover dark:bg-dark-hover"
             >
               <span>Задачи</span>
               {mobileOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </button>
 
             {mobileOpen && (
-              <div className="mt-2 grid grid-cols-4 gap-3 text-xs">
-                {item.answers.map((a, i) => {
-                  const status = a.status;
-
-                  const color =
-                    status === "correct"
-                      ? "bg-green-600/10 text-green-400"
-                      : status === "incorrect"
-                        ? "bg-red-600/10 text-red-400"
-                        : "opacity-50";
-
-                  return (
-                    <button
-                      key={i}
-                      className={`flex flex-col items-center justify-center rounded-lg px-2 py-3 border border-border dark:border-dark-border ${color}`}
-                      onClick={() => {
-                        const ns = nextStatus(status);
-                        fudziSetAnswer(item.id, i + 1, ns);
-                      }}
-                    >
-                      <div className="font-semibold text-base">{i + 1}</div>
-                      <div className="text-sm">{a.score}</div>
-                    </button>
-                  );
-                })}
+              <div className="grid grid-cols-4 gap-3 text-xs mt-2">
+                {item.answers.map((a, i) => (
+                  <button
+                    key={i}
+                    onClick={(e) => openPopup(e, i + 1)}
+                    className="
+                      p-3 rounded-lg border border-border dark:border-dark-border
+                      bg-surface dark:bg-dark-surface text-center
+                    "
+                  >
+                    <div className="font-semibold text-base">{i + 1}</div>
+                    <div className="text-sm">{a.score}</div>
+                  </button>
+                ))}
               </div>
             )}
           </div>

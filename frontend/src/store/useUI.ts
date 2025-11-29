@@ -30,6 +30,9 @@ interface UIState {
   rightsUserName: string | null;
   openRightsModal: (userId: number, userName: string ) => void;
   closeRightsModal: () => void;
+
+  hoveredColumn: number | null;
+  setHoveredColumn: (col: number | null) => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -95,4 +98,7 @@ export const useUI = create<UIState>((set, get) => ({
       rightsUserId: null,
       rightsUserName: null,
     }),
+
+  hoveredColumn: null,
+  setHoveredColumn: (col) => set({ hoveredColumn: col }),
 }));
