@@ -10,9 +10,9 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
             });
         }
 
-        if (socket.handshake.query.table_type !== "fudzi") {
+        if (socket.handshake.query.type !== "fudzi") {
             return socket.emit("error_response", {
-                error: { code: "WRONG_TABLE_TYPE" }
+                error: { code: "WRONG_SOCKET_TYPE" }
             });
         }
 
@@ -46,6 +46,6 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
         );
 
         const table = await getFudziTable(league_id);
-        io.to(`league:${league_id}:fudzi`).emit("table_data", table);
+        io.to(`league:${league_id}:fudzi`).emit("data", table);
     });
 }

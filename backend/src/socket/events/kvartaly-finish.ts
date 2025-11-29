@@ -7,8 +7,8 @@ export function registerKvartalyFinish(socket: Socket, io: Server): void {
         if (!socket.handshake.query.token)
             return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
 
-        if (socket.handshake.query.table_type !== "kvartaly")
-            return socket.emit("error_response", { error: { code: "WRONG_TABLE_TYPE" } });
+        if (socket.handshake.query.type !== "kvartaly")
+            return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
 
         const league_id: number = socket.data.league_id;
         const { team_id, kvartal, finished } = data;
@@ -34,7 +34,7 @@ export function registerKvartalyFinish(socket: Socket, io: Server): void {
             );
 
             const table = await getKvartalyTable(Number(league_id));
-            io.to(`league:${league_id}:kvartaly`).emit("table_data", table);
+            io.to(`league:${league_id}:kvartaly`).emit("data", table);
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

@@ -10,7 +10,7 @@ export function registerConnection(
 ) {
     io.on("connection", async (socket: Socket) => {
         const league_id_raw = socket.handshake.query.league_id;
-        const table_type = socket.handshake.query.table_type;
+        const type = socket.handshake.query.type;
         const token = socket.handshake.query.token ?? null;
 
         const league_id = Number(league_id_raw);
@@ -25,10 +25,10 @@ export function registerConnection(
         }
 
         const allowedTypes = ["kvartaly", "fudzi", "show"];
-        if (!allowedTypes.includes(String(table_type))) {
+        if (!allowedTypes.includes(String(type))) {
             socket.emit("error_response", {
                 error: {
-                    code: "INVALID_TABLE_TYPE",
+                    code: "INVALID_SOCKET_TYPE",
                     message: "Table type must be 'kvartaly', 'fudzi' or 'show'"
                 }
             });
@@ -72,25 +72,25 @@ export function registerConnection(
         }
 
         socket.data.league_id = league_id;
-        socket.data.table_type = String(table_type);
+        socket.data.type = String(type);
         socket.data.token = token;
         socket.data.user_id = user_id;
 
         socket.join(`league:${league_id}`);
-        socket.join(`league:${league_id}:${table_type}`);
+        socket.join(`league:${league_id}:${type}`);
 
-        console.log(`Connected: L=${league_id} T=${table_type} U=${user_id}`);
+        console.log(`Connected: L=${league_id} T=${type} U=${user_id}`);
 
         try {
-            if (table_type === "kvartaly") {
+            if (type === "kvartaly") {
                 const table = await getKvartalyTable(league_id);
-                socket.emit("table_data", table);
-            } else if (table_type === "fudzi") {
+                socket.emit("data", table);
+            } else if (type === "fudzi") {
                 const table = await getFudziTable(league_id);
-                socket.emit("table_data", table);
-            } else if (table_type === "show") {
+                socket.emit("data", table);
+            } else if (type === "show") {
                 const show = await getShowState(league_id);
-                socket.emit("show_data", show);
+                socket.emit("data", show);
             }
         } catch (err) {
             console.error(err);

@@ -11,7 +11,7 @@ interface ShowState {
 export async function getShowState(league_id: number): Promise<ShowState> {
     const rows = await query(
         `
-            SELECT show_status, slide_num, timer_is_enabled
+            SELECT show_status, show_slide_num, show_timer_is_enabled
             FROM leagues
             WHERE id = ?
         `,

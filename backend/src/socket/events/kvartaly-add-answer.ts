@@ -10,9 +10,9 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
             });
         }
 
-        if (socket.handshake.query.table_type !== "kvartaly") {
+        if (socket.handshake.query.type !== "kvartaly") {
             return socket.emit("error_response", {
-                error: { code: "WRONG_TABLE_TYPE" }
+                error: { code: "WRONG_SOCKET_TYPE" }
             });
         }
 
@@ -58,7 +58,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
             );
 
             const table = await getKvartalyTable(Number(league_id));
-            io.to(`league:${league_id}:kvartaly`).emit("table_data", table);
+            io.to(`league:${league_id}:kvartaly`).emit("data", table);
 
         } catch (err) {
             console.error(err);

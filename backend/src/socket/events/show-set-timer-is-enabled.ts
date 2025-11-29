@@ -2,8 +2,8 @@ import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
 import { getShowState } from "../services/show.js";
 
-export function registerShowSetSlideNum(socket: Socket, io: Server) {
-    socket.on("show_set_slide_num", async (data) => {
+export function showSetTimerIsEnabled(socket: Socket, io: Server) {
+    socket.on("show_set_timer_is_enabled", async (data) => {
         if (!socket.handshake.query.token) {
             return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
         }
@@ -13,25 +13,30 @@ export function registerShowSetSlideNum(socket: Socket, io: Server) {
         }
 
         const league_id: number = socket.data.league_id;
-        const { slide_num } = data;
+        const { enabled: is_enabled } = data;
 
-        if (typeof slide_num !== "number" || slide_num < 1) {
-            return socket.emit("error_response", {
-                error: { code: "INVALID_SLIDE_NUM" }
-            });
+        if (typeof is_enabled !== "boolean") {
+            return socket.emit("error_response", { error: { code: "INVALID_TIMER_VALUE" } });
         }
 
         try {
             await db.query(
-                `UPDATE leagues SET show_slide_num = ? WHERE id = ?`,
-                [slide_num, league_id]
+                `
+                UPDATE leagues
+                SET show_timer_is_enabled = ?
+                WHERE id = ?
+                `,
+                [is_enabled ? 1 : 0, league_id]
             );
 
             const show = await getShowState(league_id);
-            io.to(`league:${league_id}:show`).emit("data", show);
+            io.to(`league:${league_id}:show`).emit("show_data", show);
+
         } catch (err) {
             console.error(err);
-            socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });
+            socket.emit("error_response", {
+                error: { code: "INTERNAL_ERROR" }
+            });
         }
     });
 }

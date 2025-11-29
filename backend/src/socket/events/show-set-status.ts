@@ -8,8 +8,8 @@ export function registerShowSetStatus(socket: Socket, io: Server) {
             return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
         }
 
-        if (socket.handshake.query.table_type !== "show") {
-            return socket.emit("error_response", { error: { code: "WRONG_TABLE_TYPE" } });
+        if (socket.handshake.query.type !== "show") {
+            return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
         }
 
         const league_id: number = socket.data.league_id;
@@ -35,7 +35,7 @@ export function registerShowSetStatus(socket: Socket, io: Server) {
             );
 
             const show = await getShowState(league_id);
-            io.to(`league:${league_id}:show`).emit("show_data", show);
+            io.to(`league:${league_id}:show`).emit("data", show);
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

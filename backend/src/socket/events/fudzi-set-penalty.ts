@@ -7,8 +7,8 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
         if (!socket.handshake.query.token)
             return socket.emit("error_response", { error: { code: "FORBIDDEN" } });
 
-        if (socket.handshake.query.table_type !== "fudzi")
-            return socket.emit("error_response", { error: { code: "WRONG_TABLE_TYPE" } });
+        if (socket.handshake.query.type !== "fudzi")
+            return socket.emit("error_response", { error: { code: "WRONG_SOCKET_TYPE" } });
 
         const league_id: number = socket.data.league_id;
         const { team_id, penalty } = data;
@@ -41,7 +41,7 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
             );
 
             const table = await getFudziTable(league_id);
-            io.to(`league:${league_id}:fudzi`).emit("table_data", table);
+            io.to(`league:${league_id}:fudzi`).emit("data", table);
 
         } catch (err) {
             console.error(err);
