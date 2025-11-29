@@ -1,6 +1,6 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
-import { getKvartalyTable } from "../services/kvartaly.js";
+import { getKvartalyTable } from "../services/kvartaly-table.js";
 
 export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
     socket.on("kvartaly_set_penalty", async (data) => {

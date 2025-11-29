@@ -1,6 +1,6 @@
 import type { Socket, Server } from "socket.io";
-import { getKvartalyTable } from "../services/kvartaly.js";
-import { getFudziTable } from "../services/fudzi.js";
+import { getKvartalyTable } from "../services/kvartaly-table.js";
+import { getFudziTable } from "../services/fudzi-table.js";
 
 export function registerGetTable(socket: Socket, io: Server): void {
     socket.on("get_table", async () => {

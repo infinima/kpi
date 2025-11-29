@@ -88,7 +88,7 @@ export async function getFudziTable(league_id: number) {
             answers.push({ score, status });
         }
 
-        total += t.penalty;
+        total -= t.penalty;
 
         result.push({
             name: t.name,

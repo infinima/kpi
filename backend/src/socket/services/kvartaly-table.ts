@@ -111,7 +111,7 @@ export async function getKvartalyTable(league_id: number) {
             });
         }
 
-        total += t.penalty_kvartaly ?? 0;
+        total -= t.penalty_kvartaly ?? 0;
 
         result.push({
             name: t.name,

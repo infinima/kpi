@@ -1,7 +1,7 @@
 import type { Server, Socket } from "socket.io";
 import { query } from "../utils/database.js";
-import { getKvartalyTable } from "./services/kvartaly.js";
-import { getFudziTable } from "./services/fudzi.js";
+import { getKvartalyTable } from "./services/kvartaly-table.js";
+import { getFudziTable } from "./services/fudzi-table.js";
 
 export function registerConnection(
     io: Server,

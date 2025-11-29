@@ -1,6 +1,6 @@
 import type { Socket, Server } from "socket.io";
 import db from "../../utils/database.js";
-import { getFudziTable } from "../services/fudzi.js";
+import { getFudziTable } from "../services/fudzi-table.js";
 
 export function registerFudziSetCard(socket: Socket, io: Server): void {
     socket.on("fudzi_set_card", async (data) => {
