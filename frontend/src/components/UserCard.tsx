@@ -67,6 +67,7 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
   const canDelete = can("users", "delete", user.id);
   const canRestore = can("users", "restore", user.id);
   const canHistory = can("users", "access_history", user.id);
+  const canActionsHistory = can("users", "access_actions_history", user.id);
   const canGetPermissions = can("permissions", "get");
   const canEditPermissions = can("permissions", "create");
 
@@ -160,7 +161,6 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
 
             {canHistory && (
               <div className="flex flex-col gap-3 w-full">
-
                 <button
                   onClick={handleHistoryView}
                   className="
@@ -172,20 +172,23 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
                 >
                   <History size={16}/> История изменений
                 </button>
+              </div>
+            )}
 
-                <button
-                  onClick={handleChangesView}
-                  className="
+            {canActionsHistory && (
+                <div className="flex flex-col gap-3 w-full">
+                  <button
+                      onClick={handleChangesView}
+                      className="
                 w-full px-3 py-2 flex items-center gap-2 rounded-lg
                 bg-surface dark:bg-dark-surface
                 border border-border dark:border-dark-border
                 hover:bg-hover dark:hover:bg-dark-hover
             "
-                >
-                  <ListTree size={16}/> Журнал действий
-                </button>
-
-              </div>
+                  >
+                    <ListTree size={16}/> Журнал действий
+                  </button>
+                </div>
             )}
           </div>
         </div>

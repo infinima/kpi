@@ -18,6 +18,7 @@ export type PermissionAction =
   "delete" |
   "restore" |
   "access_history" |
+  "access_actions_history" |
   "print_documents" |
   "edit_answers" |
   "get_show" |

@@ -21,6 +21,7 @@ export const PermissionActionsEnum = z.enum([
     "delete",
     "restore",
     "access_history",
+    "access_actions_history",
     "print_documents",
     "edit_answers",
     "get_show",
