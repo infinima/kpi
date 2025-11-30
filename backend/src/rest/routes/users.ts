@@ -23,7 +23,7 @@ usersRouter.get(
                 tg_id, tg_username, tg_full_name,
                 created_at, updated_at, deleted_at
              FROM users
-             WHERE deleted_at IS NULL`
+             WHERE deleted_at IS NULL`, [], (req as any).user_id
         );
 
         res.json(users);
@@ -40,7 +40,7 @@ usersRouter.get(
                     tg_id, tg_username, tg_full_name,
                     created_at, updated_at, deleted_at
              FROM users
-             WHERE deleted_at IS NOT NULL`
+             WHERE deleted_at IS NOT NULL`, [], (req as any).user_id
         );
         res.json(users);
     }
@@ -63,7 +63,7 @@ usersRouter.get(
                 created_at, updated_at, deleted_at
              FROM users
              WHERE id = ?`,
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json(user);
@@ -80,7 +80,7 @@ usersRouter.get(
 
         const [user] = await query(
             "SELECT photo FROM users WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         try {
@@ -118,7 +118,7 @@ usersRouter.post(
         try {
             const [exists] = await query(
                 "SELECT id FROM users WHERE email = ? LIMIT 1",
-                [data.email]
+                [data.email], (req as any).user_id
             );
 
             if (exists) {
@@ -144,7 +144,7 @@ usersRouter.post(
                     data.first_name,
                     data.patronymic || null,
                     photoPath
-                ]
+                ], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
@@ -189,7 +189,7 @@ usersRouter.patch(
             if (fields.email) {
                 const [exists] = await query(
                     "SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1",
-                    [fields.email, id]
+                    [fields.email, id], (req as any).user_id
                 );
 
                 if (exists) {
@@ -206,7 +206,7 @@ usersRouter.patch(
                 fields.photo = await savePhoto(String(fields.photo));
             }
 
-            await query("UPDATE users SET ? WHERE id = ?", [fields, id]);
+            await query("UPDATE users SET ? WHERE id = ?", [fields, id], (req as any).user_id);
             res.json({ success: true });
         } catch (e: any) {
             console.error(e);
@@ -231,7 +231,7 @@ usersRouter.delete(
 
         await query(
             "UPDATE users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
@@ -248,7 +248,7 @@ usersRouter.post(
 
         const [row] = await query(
             "SELECT deleted_at FROM users WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!row) {
@@ -271,7 +271,7 @@ usersRouter.post(
 
         await query(
             "UPDATE users SET deleted_at = NULL WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });

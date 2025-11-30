@@ -17,7 +17,7 @@ authRouter.post(
 
         const [user] = await query(
             "SELECT id, password_hash FROM users WHERE email = ? AND deleted_at IS NULL",
-            [email]
+            [email], (req as any).user_id
         );
 
         if (!user) {
@@ -45,7 +45,7 @@ authRouter.post(
         await query(
             `INSERT INTO sessions (token, user_id, is_deactivated, expires_at)
              VALUES (?, ?, 0, DATE_ADD(NOW(), INTERVAL 1 DAY))`,
-            [token, user.id]
+            [token, user.id], (req as any).user_id
         );
 
         res.json({ token });
@@ -67,7 +67,7 @@ authRouter.get(
              WHERE token = ?
                AND is_deactivated = 0
                AND expires_at > NOW()`,
-            [token]
+            [token], (req as any).user_id
         );
 
         if (!session) {
@@ -89,7 +89,7 @@ authRouter.get(
                      created_at, updated_at, deleted_at
                  FROM users
                  WHERE id = ?`,
-                [session.user_id]
+                [session.user_id], (req as any).user_id
             );
         }
 
@@ -117,7 +117,7 @@ authRouter.post(
               AND user_id = ?
               AND is_deactivated = 0
             `,
-            [token, userId]
+            [token, userId], (req as any).user_id
         );
 
         if (result.affectedRows === 0) {

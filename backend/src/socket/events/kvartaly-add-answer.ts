@@ -26,7 +26,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         const league_id: number = socket.data.league_id;
         const rows = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
-            [league_id]
+            [league_id], socket.data.user_id
         );
         if (!rows.length || rows[0].status !== "KVARTALY_GAME") {
             return socket.emit("error_response", {
@@ -38,6 +38,19 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         if (!question_num || question_num < 1 || question_num > 16) {
             return socket.emit("error_response", {
                 error: { code: "INVALID_QUESTION_NUM" }
+            });
+        }
+
+        if (typeof team_id !== "number") {
+            return socket.emit("error_response", { error: { code: "INVALID_TEAM_ID" } });
+        }
+        const [rows2] = await db.query(
+            `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,
+            [team_id, league_id], socket.data.user_id
+        );
+        if (rows2.length === 0) {
+            return socket.emit("error_response", {
+                error: { code: "TEAM_NOT_FOUND" }
             });
         }
 
@@ -70,7 +83,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
                     kvartal, q, kvartal, q, delta_correct,
                     kvartal, q, kvartal, q, delta_incorrect,
                     team_id, league_id
-                ]
+                ], socket.data.user_id
             );
 
             const table = await getKvartalyTable(Number(league_id));

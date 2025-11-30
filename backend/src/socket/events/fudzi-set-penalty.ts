@@ -24,7 +24,7 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
         const league_id: number = socket.data.league_id;
         const rows = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
-            [league_id]
+            [league_id], socket.data.user_id
         );
         if (!rows.length || (rows[0].status !== "FUDZI_GAME" && rows[0].status !== "FUDZI_GAME_BREAK")) {
             return socket.emit("error_response", {
@@ -41,7 +41,7 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
         }
         const [rows2] = await db.query(
             `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,
-            [team_id, league_id]
+            [team_id, league_id], socket.data.user_id
         );
         if (rows2.length === 0) {
             return socket.emit("error_response", {
@@ -56,7 +56,7 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
                     SET penalty_fudzi = ?
                     WHERE id = ? AND league_id = ?
                 `,
-                [penalty, team_id, league_id]
+                [penalty, team_id, league_id], socket.data.user_id
             );
 
             const table = await getFudziTable(league_id);

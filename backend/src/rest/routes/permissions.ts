@@ -28,7 +28,7 @@ permissionsRouter.get(
 
         const rows = await query(
             `SELECT * FROM permissions WHERE user_id = ?`,
-            [user_id]
+            [user_id], (req as any).user_id
         );
 
         return res.json(normalize(rows));
@@ -48,7 +48,7 @@ permissionsRouter.get(
         if (!object_id) {
             rows = await query(
                 `SELECT * FROM permissions WHERE object=? AND object_id IS NULL AND scope_object IS NULL`,
-                [object]
+                [object], (req as any).user_id
             );
             return res.json(normalize(rows));
         }
@@ -57,7 +57,7 @@ permissionsRouter.get(
         rows = await query(
             `SELECT * FROM permissions
              WHERE object=? AND object_id=?`,
-            [object, object_id]
+            [object, object_id], (req as any).user_id
         );
 
         if (rows.length > 0) return res.json(normalize(rows));
@@ -66,7 +66,7 @@ permissionsRouter.get(
         rows = await query(
             `SELECT * FROM permissions
              WHERE scope_object=? AND scope_object_id=?`,
-            [object, object_id]
+            [object, object_id], (req as any).user_id
         );
 
         res.json(normalize(rows));
@@ -103,7 +103,7 @@ permissionsRouter.post(
                 data.object_id ?? null,
                 data.scope_object ?? null,
                 data.scope_object_id ?? null
-            ]
+            ], (req as any).user_id
         );
 
         res.json({ id: result.insertId });
@@ -134,7 +134,7 @@ permissionsRouter.patch(
             data.permission = data.permission.join(",");
         }
 
-        await query("UPDATE permissions SET ? WHERE id=?", [data, id]);
+        await query("UPDATE permissions SET ? WHERE id=?", [data, id], (req as any).user_id);
         res.json({ success: true });
     }
 );
@@ -144,7 +144,7 @@ permissionsRouter.delete(
     "/:id",
     checkPermission("permissions", "delete"),
     async (req, res) => {
-        await query("DELETE FROM permissions WHERE id=?", [req.params.id]);
+        await query("DELETE FROM permissions WHERE id=?", [req.params.id], (req as any).user_id);
         res.json({ success: true });
     }
 );

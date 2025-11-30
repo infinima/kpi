@@ -35,7 +35,7 @@ export function registerShowSetTimerIsEnabled(socket: Socket, io: Server) {
                 SET show_timer_is_enabled = ?
                 WHERE id = ?
                 `,
-                [is_enabled ? 1 : 0, league_id]
+                [is_enabled ? 1 : 0, league_id], socket.data.user_id
             );
 
             const show = await getShowState(league_id);

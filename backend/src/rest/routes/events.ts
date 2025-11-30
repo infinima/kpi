@@ -12,7 +12,8 @@ export const eventsRouter = express.Router();
 // GET /api/events
 eventsRouter.get("/", async (req, res) => {
     const events = await query(
-        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL"
+        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL",
+        [], (req as any).user_id
     );
     res.json(events);
 });
@@ -22,7 +23,8 @@ eventsRouter.get("/deleted",
     checkPermission("events", "restore"),
     async (req, res) => {
     const events = await query(
-        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NOT NULL"
+        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NOT NULL",
+        [], (req as any).user_id
     );
     res.json(events);
 });
@@ -37,7 +39,7 @@ eventsRouter.get(
 
         const [event] = await query(
             "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json(event);
@@ -54,7 +56,7 @@ eventsRouter.get(
 
         const [event] = await query(
             "SELECT photo FROM events WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         try {
@@ -94,7 +96,7 @@ eventsRouter.post(
 
             const result = await query(
                 "INSERT INTO events (name, date, photo) VALUES (?, ?, ?)",
-                [data.name, data.date, photoPath]
+                [data.name, data.date, photoPath], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
@@ -139,7 +141,7 @@ eventsRouter.patch(
                 fields.photo = await savePhoto(String(fields.photo));
             }
 
-            await query("UPDATE events SET ? WHERE id = ?", [fields, id]);
+            await query("UPDATE events SET ? WHERE id = ?", [fields, id], (req as any).user_id);
             res.json({ success: true });
         } catch (e: any) {
             console.error(e);
@@ -167,7 +169,7 @@ eventsRouter.delete(
         if (!force) {
             const [locRow] = await query(
                 `SELECT COUNT(*) AS c FROM locations WHERE event_id = ? AND deleted_at IS NULL`,
-                [id]
+                [id], (req as any).user_id
             );
             const [leagueRow] = await query(
                 `SELECT COUNT(*) AS c
@@ -176,7 +178,7 @@ eventsRouter.delete(
                  WHERE loc.event_id = ?
                    AND l.deleted_at IS NULL
                    AND loc.deleted_at IS NULL`,
-                [id]
+                [id], (req as any).user_id
             );
             const [teamRow] = await query(
                 `SELECT COUNT(*) AS c
@@ -187,7 +189,7 @@ eventsRouter.delete(
                    AND t.deleted_at IS NULL
                    AND l.deleted_at IS NULL
                    AND loc.deleted_at IS NULL`,
-                [id]
+                [id], (req as any).user_id
             );
 
             const nested =
@@ -212,7 +214,7 @@ eventsRouter.delete(
 
         await query(
             "UPDATE events SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
@@ -229,7 +231,7 @@ eventsRouter.post(
 
         const [row] = await query(
             "SELECT deleted_at FROM events WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!row) {
@@ -252,7 +254,7 @@ eventsRouter.post(
 
         await query(
             "UPDATE events SET deleted_at = NULL WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });

@@ -10,9 +10,18 @@ export const pool: Pool = mysql.createPool({
     namedPlaceholders: true,
 });
 
-export async function query<T = any>(sql: string, params?: any[]): Promise<T> {
-    const [rows] = await pool.query(sql, params);
-    return rows as T;
+export async function query<T = any>(sql: string, params?: any[], userId?: number): Promise<T> {
+    const conn = await pool.getConnection();
+    try {
+        await conn.query("SET @current_user_id = ?", [userId ?? null]);
+        await conn.query("SET @current_sql = ?", [sql]);
+        await conn.query("SET @current_params = ?", [params]);
+
+        const [rows] = await conn.query(sql, params);
+        return rows as T;
+    } finally {
+        conn.release();
+    }
 }
 
 export async function transaction<T>(fn: (conn: PoolConnection) => Promise<T>): Promise<T> {

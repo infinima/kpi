@@ -37,7 +37,7 @@ leaguesRouter.get(
             `SELECT id, location_id, name, status, created_at, updated_at, deleted_at
              FROM leagues
              WHERE location_id = ? AND deleted_at IS NULL`,
-            [location_id]
+            [location_id], (req as any).user_id
         );
 
         res.json(rows);
@@ -57,7 +57,7 @@ leaguesRouter.get(
             `SELECT id, location_id, name, status, created_at, updated_at, deleted_at
              FROM leagues
              WHERE location_id = ? AND deleted_at IS NOT NULL`,
-            [location_id]
+            [location_id], (req as any).user_id
         );
 
         res.json(rows);
@@ -74,7 +74,7 @@ leaguesRouter.get(
 
         const [row] = await query(
             "SELECT id, location_id, name, status, created_at, updated_at, deleted_at FROM leagues WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json(row);
@@ -92,7 +92,7 @@ leaguesRouter.get(
 
         const [league] = await query(
             "SELECT fudzi_presentation FROM leagues WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!league) {
@@ -149,7 +149,7 @@ leaguesRouter.get(
 
         const [league] = await query(
             "SELECT name FROM leagues WHERE id = ? AND deleted_at IS NULL",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!league) {
@@ -171,7 +171,7 @@ leaguesRouter.get(
              FROM teams
              WHERE league_id = ? AND deleted_at IS NULL
              ORDER BY id`,
-            [id]
+            [id], (req as any).user_id
         );
 
         if (rows.length === 0) {
@@ -232,7 +232,7 @@ leaguesRouter.get(
             FROM teams t
             WHERE t.league_id = ? AND t.deleted_at IS NULL
             ORDER BY t.id
-        `, [id]);
+        `, [id], (req as any).user_id);
 
         res.json(rows);
     }
@@ -279,7 +279,7 @@ leaguesRouter.post(
 
             const result = await query(
                 "INSERT INTO leagues (location_id, name, fudzi_presentation) VALUES (?, ?, ?)",
-                [data.location_id, data.name, fudziPath]
+                [data.location_id, data.name, fudziPath], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
@@ -346,7 +346,7 @@ leaguesRouter.patch(
                 fields.fudzi_presentation = await saveFile(buffer, "pdf");
             }
 
-            await query("UPDATE leagues SET ? WHERE id = ?", [fields, id]);
+            await query("UPDATE leagues SET ? WHERE id = ?", [fields, id], (req as any).user_id);
 
             res.json({ success: true });
         } catch (e: any) {
@@ -387,7 +387,7 @@ leaguesRouter.post(
 
         const [league] = await query(
             "SELECT status FROM leagues WHERE id = ? AND deleted_at IS NULL",
-            [id]
+            [id], (req as any).user_id
         );
 
         const currentIndex = statuses.indexOf(league.status);
@@ -407,7 +407,7 @@ leaguesRouter.post(
                 case "KVARTALY_GAME":
                     await query(
                         `UPDATE teams SET place_kvartaly = NULL WHERE league_id = ?`,
-                        [id]
+                        [id], (req as any).user_id
                     );
                     break;
                 case "FUDZI_GAME_BREAK":
@@ -418,7 +418,7 @@ leaguesRouter.post(
                                   diploma = NULL, 
                                   special_nominations = '[]'
                               WHERE league_id = ?`,
-                        [id]
+                        [id], (req as any).user_id
                     );
                     break;
                 case "LUNCH":
@@ -437,7 +437,7 @@ leaguesRouter.post(
                     for (const r of ranking) {
                         await query(
                             `UPDATE teams SET place_kvartaly = ? WHERE id = ?`,
-                            [r.place, r.id]
+                            [r.place, r.id], (req as any).user_id
                         );
                     }
                     break;
@@ -456,7 +456,7 @@ leaguesRouter.post(
                     for (const r of fudRank) {
                         await query(
                             `UPDATE teams SET place_fudzi = ? WHERE id = ?`,
-                            [r.place, r.id]
+                            [r.place, r.id], (req as any).user_id
                         );
                     }
 
@@ -473,7 +473,7 @@ leaguesRouter.post(
                     for (const r of finalRank) {
                         await query(
                             `UPDATE teams SET place_final = ? WHERE id = ?`,
-                            [r.place, r.id]
+                            [r.place, r.id], (req as any).user_id
                         );
                     }
 
@@ -481,7 +481,7 @@ leaguesRouter.post(
                     const sortedFinal = [...finalRank].sort((a,b) => a.place - b.place);
 
                     const setDiploma = (id: number, d: string) =>
-                        query(`UPDATE teams SET diploma = ? WHERE id = ?`, [d,id]);
+                        query(`UPDATE teams SET diploma = ? WHERE id = ?`, [d,id], (req as any).user_id);
 
                     if (sortedFinal.length >= 1)
                         await setDiploma(sortedFinal[0].id, 'FIRST_DEGREE');
@@ -517,7 +517,7 @@ leaguesRouter.post(
 
         await query(
             "UPDATE leagues SET status = ? WHERE id = ?",
-            [new_status, id]
+            [new_status, id], (req as any).user_id
         );
 
         res.json({ success: true, new_status });
@@ -538,7 +538,7 @@ leaguesRouter.delete(
         if (!force) {
             const [teamCount] = await query(
                 `SELECT COUNT(*) AS c FROM teams WHERE league_id = ? AND deleted_at IS NULL`,
-                [id]
+                [id], (req as any).user_id
             );
 
             if (Number(teamCount.c) > 0) {
@@ -554,7 +554,7 @@ leaguesRouter.delete(
 
         await query(
             "UPDATE leagues SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
@@ -571,7 +571,7 @@ leaguesRouter.post(
 
         const [row] = await query(
             "SELECT deleted_at FROM leagues WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!row) {
@@ -594,7 +594,7 @@ leaguesRouter.post(
 
         await query(
             "UPDATE leagues SET deleted_at = NULL WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
@@ -644,7 +644,7 @@ leaguesRouter.post(
         for (const t of teams) {
             const [existing] = await query(
                 `SELECT id FROM teams WHERE import_id = ? AND league_id = ? AND deleted_at IS NULL`,
-                [t.id, id]
+                [t.id, id], (req as any).user_id
             );
 
             const members = JSON.stringify(t.members);
@@ -675,7 +675,7 @@ leaguesRouter.post(
                                 status: "not_submitted"
                             }))
                         })
-                    ]
+                    ], (req as any).user_id
                 );
                 created++;
             } else {
@@ -683,7 +683,7 @@ leaguesRouter.post(
                     `UPDATE teams
                      SET name = ?, members = ?
                      WHERE id = ?`,
-                    [t.name, members, existing.id]
+                    [t.name, members, existing.id], (req as any).user_id
                 );
                 updated++;
             }

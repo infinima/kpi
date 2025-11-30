@@ -26,7 +26,7 @@ locationsRouter.get(
             `SELECT id, event_id, name, address, created_at, updated_at, deleted_at
              FROM locations
              WHERE event_id = ? AND deleted_at IS NULL`,
-            [event_id]
+            [event_id], (req as any).user_id
         );
 
         res.json(rows);
@@ -46,7 +46,7 @@ locationsRouter.get(
             `SELECT id, event_id, name, address, created_at, updated_at, deleted_at
              FROM locations
              WHERE event_id = ? AND deleted_at IS NOT NULL`,
-            [event_id]
+            [event_id], (req as any).user_id
         );
 
         res.json(rows);
@@ -63,7 +63,7 @@ locationsRouter.get(
 
         const [row] = await query(
             "SELECT id, event_id, name, address, created_at, updated_at, deleted_at FROM locations WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json(row);
@@ -82,7 +82,7 @@ locationsRouter.post(
         try {
             const result = await query(
                 "INSERT INTO locations (event_id, name, address) VALUES (?, ?, ?)",
-                [data.event_id, data.name, data.address]
+                [data.event_id, data.name, data.address], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
@@ -124,7 +124,7 @@ locationsRouter.patch(
         }
 
         try {
-            await query("UPDATE locations SET ? WHERE id = ?", [fields, id]);
+            await query("UPDATE locations SET ? WHERE id = ?", [fields, id], (req as any).user_id);
             res.json({ success: true });
         } catch (e: any) {
             console.error(e);
@@ -153,7 +153,7 @@ locationsRouter.delete(
             const [leagueRow] = await query(
                 `SELECT COUNT(*) AS c FROM leagues 
                  WHERE location_id = ? AND deleted_at IS NULL`,
-                [id]
+                [id], (req as any).user_id
             );
 
             const [teamRow] = await query(
@@ -163,7 +163,7 @@ locationsRouter.delete(
                  WHERE l.location_id = ?
                    AND t.deleted_at IS NULL
                    AND l.deleted_at IS NULL`,
-                [id]
+                [id], (req as any).user_id
             );
 
             const nested = Number(leagueRow.c) + Number(teamRow.c);
@@ -184,7 +184,7 @@ locationsRouter.delete(
 
         await query(
             "UPDATE locations SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
@@ -201,7 +201,7 @@ locationsRouter.post(
 
         const [row] = await query(
             "SELECT deleted_at FROM locations WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!row) {
@@ -224,7 +224,7 @@ locationsRouter.post(
 
         await query(
             "UPDATE locations SET deleted_at = NULL WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });

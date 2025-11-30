@@ -26,7 +26,7 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
         const league_id = socket.data.league_id;
         const rows = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
-            [league_id]
+            [league_id], socket.data.user_id
         );
         if (!rows.length || (rows[0].status !== "FUDZI_GAME" && rows[0].status !== "FUDZI_GAME_BREAK")) {
             return socket.emit("error_response", {
@@ -57,7 +57,7 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
                              ?
                      )
              WHERE id = ? AND league_id = ?`,
-            [q, status, team_id, league_id]
+            [q, status, team_id, league_id], socket.data.user_id
         );
 
         const table = await getFudziTable(league_id);

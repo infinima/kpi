@@ -24,7 +24,7 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
         const league_id: number = socket.data.league_id;
         const rows = await db.query(
             `SELECT status FROM leagues WHERE id = ? LIMIT 1`,
-            [league_id]
+            [league_id], socket.data.user_id
         );
         if (!rows.length || rows[0].status !== "KVARTALY_GAME") {
             return socket.emit("error_response", {
@@ -33,18 +33,17 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
         }
 
         const { team_id, penalty } = data;
-        if (typeof team_id !== "number") {
-            return socket.emit("error_response", { error: { code: "INVALID_TEAM_ID" } });
-        }
         if (typeof penalty !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_PENALTY" } });
         }
 
+        if (typeof team_id !== "number") {
+            return socket.emit("error_response", { error: { code: "INVALID_TEAM_ID" } });
+        }
         const [rows2] = await db.query(
             `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,
-            [team_id, league_id]
+            [team_id, league_id], socket.data.user_id
         );
-
         if (rows2.length === 0) {
             return socket.emit("error_response", {
                 error: { code: "TEAM_NOT_FOUND" }
@@ -58,7 +57,7 @@ export function registerKvartalySetPenalty(socket: Socket, io: Server): void {
                     SET penalty_kvartaly = ?
                     WHERE id = ? AND league_id = ?
                 `,
-                [penalty, team_id, league_id]
+                [penalty, team_id, league_id], socket.data.user_id
             );
 
             const table = await getKvartalyTable(league_id);

@@ -29,7 +29,7 @@ teamsRouter.get(
                     created_at, updated_at, deleted_at
              FROM teams
              WHERE league_id = ? AND deleted_at IS NULL`,
-            [league_id]
+            [league_id], (req as any).user_id
         );
 
         res.json(rows);
@@ -52,7 +52,7 @@ teamsRouter.get(
                     created_at, updated_at, deleted_at
              FROM teams
              WHERE league_id = ? AND deleted_at IS NOT NULL`,
-            [league_id]
+            [league_id], (req as any).user_id
         );
 
         res.json(rows);
@@ -75,7 +75,7 @@ teamsRouter.get(
                     created_at, updated_at, deleted_at
              FROM teams
              WHERE id = ?`,
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json(row);
@@ -124,7 +124,7 @@ teamsRouter.post(
                     answers_kvartaly,
                     answers_fudzi,
                     special_nominations,
-                ]
+                ], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
@@ -175,7 +175,7 @@ teamsRouter.patch(
 
             await query(
                 "UPDATE teams SET ? WHERE id = ?",
-                [fields, id]
+                [fields, id], (req as any).user_id
             );
 
             res.json({ success: true });
@@ -202,7 +202,7 @@ teamsRouter.delete(
 
         await query(
             "UPDATE teams SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
@@ -219,7 +219,7 @@ teamsRouter.post(
 
         const [row] = await query(
             "SELECT deleted_at FROM teams WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         if (!row) {
@@ -242,7 +242,7 @@ teamsRouter.post(
 
         await query(
             "UPDATE teams SET deleted_at = NULL WHERE id = ?",
-            [id]
+            [id], (req as any).user_id
         );
 
         res.json({ success: true });
