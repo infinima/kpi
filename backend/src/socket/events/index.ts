@@ -8,6 +8,7 @@ import { registerFudziSetCard } from "./fudzi-set-card.js";
 import { registerFudziSetAnswer } from "./fudzi-set-answer.js";
 import { registerFudziSetPenalty } from "./fudzi-set-penalty.js";
 
+import { registerShowSetColorScheme } from "./show-set-color-scheme.js";
 import { registerShowSetStatus } from "./show-set-status.js";
 import { registerShowSetSlideNum } from "./show-set-slide-num.js";
 import { registerShowSetTimerIsEnabled } from "./show-set-timer-is-enabled.js";
@@ -21,7 +22,9 @@ export function registerAllEvents(socket: Socket, io: Server): void {
     registerFudziSetAnswer(socket, io);
     registerFudziSetPenalty(socket, io);
 
+    registerShowSetColorScheme(socket, io);
     registerShowSetStatus(socket, io);
     registerShowSetSlideNum(socket, io);
     registerShowSetTimerIsEnabled(socket, io);
+
 }
