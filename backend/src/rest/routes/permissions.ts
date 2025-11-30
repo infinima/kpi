@@ -39,7 +39,7 @@ permissionsRouter.get(
 permissionsRouter.get(
     "/:object/:object_id?",
     validate(GetPermissionsTargetInput, "params"),
-    checkPermission("permissions", "get"),
+    (req, res, next) => checkPermission((req as any).params.object, "access_history")(req, res, next),
     async (req, res) => {
         const { object, object_id } = (req as any).validated.params;
 
