@@ -18,6 +18,7 @@ export const actions = [
   "delete",
   "restore",
   "access_history",
+  "access_actions_history",
   "print_documents",
   "edit_answers",
   "get_show",
@@ -65,6 +66,7 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   delete: "Удаление",
   restore: "Восстановление",
   access_history: "История изменений",
+  access_actions_history: "История действий",
   print_documents: "Печать документов",
   edit_answers: "Внесение ответов команд",
   get_show: "Получение показа",
@@ -280,6 +282,10 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
                 }
 
                 if (data.object === "permissions" && ["restore", "access_history"].includes(a)) {
+                  return false;
+                }
+
+                if (data.object !== "users" && a === "access_actions_history") {
                   return false;
                 }
 

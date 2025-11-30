@@ -11,7 +11,12 @@ export const ALL_ACTIONS = [
   "delete",
   "restore",
   "access_history",
+  "access_actions_history",
   "print_documents",
+  "edit_answers",
+  "get_show",
+  "control_show",
+  "edit_penalties"
 ] as const;
 
 export type PermissionAction = typeof ALL_ACTIONS[number];

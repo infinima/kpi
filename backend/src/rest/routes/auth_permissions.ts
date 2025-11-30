@@ -17,6 +17,7 @@ export type KPIPermission =
     | "delete"
     | "restore"
     | "access_history"
+    | "access_actions_history"
     | "print_documents"
     | "edit_answers"
     | "get_show"
@@ -40,7 +41,7 @@ export interface PermissionOutput {
 
 // правила глобальных
 const GLOBAL_ONLY: KPIPermission[] = ["create"];
-const GLOBAL_AND_IDS: KPIPermission[] = ["get", "restore", "access_history"];
+const GLOBAL_AND_IDS: KPIPermission[] = ["get", "restore", "access_history", "access_actions_history"];
 
 // -----------------------------------------------------
 // Утилиты: получение дочерних объектов
