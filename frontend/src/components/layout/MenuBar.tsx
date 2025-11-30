@@ -43,6 +43,12 @@ export function MenuBar() {
       id: "show",
       title: "Показ",
     });
+
+    menuItems.push({
+      // @ts-ignore
+      id: "showControl",
+      title: "Управление показом",
+    });
   }
 
   if (leagueId && tableType) {

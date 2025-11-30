@@ -1,19 +1,22 @@
-import { create } from "zustand";
+import {create} from "zustand";
 
 export type Page =
-    "home" |
-    "events" |
-    "tables" |
-    "logs" |
-    "users" |
-  "teams";
+  "home" |
+  "events" |
+  "tables" |
+  "logs" |
+  "users" |
+  "teams" |
+  "result" |
+  "showControl" |
+  "show";
 
 interface NavigationState {
-    currentPage: Page;
-    setPage: (p: string) => void;
+  currentPage: Page;
+  setPage: (p: Page) => void;
 }
 
 export const useNavigation = create<NavigationState>((set) => ({
-    currentPage: "home",
-    setPage: (p) => set({ currentPage: p }),
+  currentPage: "home",
+  setPage: (p) => set({currentPage: p}),
 }));

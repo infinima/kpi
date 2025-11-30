@@ -5,10 +5,7 @@ import {useEventsNav, useNotifications, useUser} from "@/store";
 
 const SOCKET_URL = "localhost:3000";
 
-type showStatus = "WALLPAPER" |
-  "KVARTALY-RESULTS" |
-  "FUDZI-PRESENTATION" |
-  "FUDZI-RESULTS";
+
 
 
 interface SocketState {
@@ -50,18 +47,6 @@ interface SocketState {
     penalty: number
   ) => void;
 
-
-  showSetStatus : (
-    status: showStatus
-  ) => void;
-
-  showSetSlideNum:(
-    slide_num: number,
-  )=> void;
-
-  showSetTimerIsEnabled:(
-    enabled: boolean,
-  ) => void;
 }
 
 export const useSocketStore = create<SocketState>((set, get) => ({
@@ -73,8 +58,6 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     const notify = useNotifications.getState().addMessage;
 
     let {leagueId, tableType} = useEventsNav.getState();
-    // console.log(leagueId, tableType);
-    tableType="show";
     const token = useUser.getState().token;
 
     if (!leagueId || !tableType) {
@@ -114,6 +97,7 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
     socket.on("data", (t: any) => {
       set({tableData: t});
+      console.log(t)
     });
 
     socket.on("error_response", (err: any) => {
@@ -182,33 +166,6 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     if (!socket) return;
 
     socket.emit("kvartaly_set_penalty", {team_id, penalty});
-  },
-
-  showSetStatus : (
-    status: showStatus
-  ) => {
-    const {socket} = get();
-    if (!socket) return;
-    socket.emit("show_set_status", {status});
-
-  },
-
-  showSetSlideNum:(
-    slide_num: number,
-  )=> {
-    const {socket} = get();
-    if (!socket) return;
-    socket.emit("show_set_slide_num", {slide_num});
-
-  },
-
-  showSetTimerIsEnabled:(
-    enabled: boolean,
-  ) => {
-    const {socket} = get();
-    if (!socket) return;
-    socket.emit("show_set_timer_is_enabled", {enabled});
-
   },
 
 

@@ -1,29 +1,28 @@
 import { useEffect } from "react";
-import { useSocketStore } from "@/store";
+import { useSocketStore, useShowStore } from "@/store";
 import {
   ChevronLeft,
   ChevronRight,
   Timer,
   Monitor
 } from "lucide-react";
+import {ShowPage} from "@/pages/ShowPage";
 
 export function ShowControlPage() {
   const {
     connect,
     disconnect,
-    tableData,
+    show,
     isConnected,
     showSetStatus,
     showSetSlideNum,
     showSetTimerIsEnabled,
-  } = useSocketStore();
+  } = useShowStore();
 
   useEffect(() => {
     connect();
     return () => disconnect();
   }, []);
-
-  const show = tableData; // Вся информация приходит из сокета
 
   function changeSlide(delta: number) {
     let n = (show?.slide_num ?? 1) + delta;
@@ -35,10 +34,10 @@ export function ShowControlPage() {
   return (
     <div className="flex flex-col gap-6 pb-20">
 
-      {/* Заголовок */}
-      <h2 className="text-2xl font-bold flex items-center gap-2">
-        <Monitor size={24}/> Управление показом
-      </h2>
+      {/*/!* Заголовок *!/*/}
+      {/*<h2 className="text-2xl font-bold flex items-center gap-2">*/}
+      {/*  <Monitor size={24}/> Управление показом*/}
+      {/*</h2>*/}
 
       {!isConnected && (
         <div className="p-3 rounded-lg bg-hover dark:bg-dark-hover text-center opacity-70">
@@ -48,9 +47,6 @@ export function ShowControlPage() {
 
       {isConnected && show && (
         <>
-          {/* ---------------------------------------------------
-             РЕЖИМ + (мини-слайдер + мини-таймер)
-             --------------------------------------------------- */}
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
             {/* SELECT — статус показа */}
@@ -65,16 +61,14 @@ export function ShowControlPage() {
               onChange={(e) => showSetStatus(e.target.value as any)}
             >
               <option value="WALLPAPER">Заставка</option>
-              <option value="KVARTALY-RESULTS">Кварталы — результаты</option>
-              <option value="FUDZI-PRESENTATION">Фудзи — презентация</option>
-              <option value="FUDZI-RESULTS">Фудзи — результаты</option>
+              <option value="KVARTALY-RESULTS">Таблица Кварталов</option>
+              <option value="FUDZI-PRESENTATION">Презентация Фудзи</option>
+              <option value="FUDZI-RESULTS">Таблица Фудзи</option>
             </select>
 
-            {/* Если презентация — вывести мини-контролы */}
             {show.status === "FUDZI-PRESENTATION" && (
               <div className="flex items-center gap-2">
 
-                {/* Таймер */}
                 <button
                   onClick={() =>
                     showSetTimerIsEnabled(!show.timer_is_enabled)
@@ -134,10 +128,7 @@ export function ShowControlPage() {
              IFRAME — предпросмотр экрана
              --------------------------------------------------- */}
           <div className="mt-4 rounded-xl overflow-hidden shadow-card border border-border dark:border-dark-border">
-            <iframe
-              src="/show-screen"
-              className="w-full aspect-video bg-black"
-            />
+              <ShowPage iframe/>
           </div>
         </>
       )}
