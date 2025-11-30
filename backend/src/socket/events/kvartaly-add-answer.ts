@@ -35,6 +35,13 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         }
 
         const { team_id, question_num, delta_correct = 0, delta_incorrect = 0 } = data;
+        if (![ -1, 0, 1 ].includes(delta_correct)) {
+            return socket.emit("error_response", { error: { code: "INVALID_CORRECT_DELTA" } });
+        }
+        if (delta_incorrect < 0) {
+            return socket.emit("error_response", { error: { code: "INVALID_INCORRECT_DELTA" } });
+        }
+
         if (!question_num || question_num < 1 || question_num > 16) {
             return socket.emit("error_response", {
                 error: { code: "INVALID_QUESTION_NUM" }
@@ -44,6 +51,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         if (typeof team_id !== "number") {
             return socket.emit("error_response", { error: { code: "INVALID_TEAM_ID" } });
         }
+
         const [rows2] = await db.query(
             `SELECT id FROM teams WHERE id = ? AND league_id = ? LIMIT 1`,
             [team_id, league_id], socket.data.user_id
@@ -60,35 +68,44 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         try {
             await db.query(
                 `
-                UPDATE teams
-                SET answers_kvartaly =
-                    JSON_SET(
-                        answers_kvartaly,
-                        CONCAT('$[', ?, '].questions[', ?, '].correct'),
-                        JSON_EXTRACT(answers_kvartaly,
-                            CONCAT('$[', ?, '].questions[', ?, '].correct')
-                        ) + ?
-                    ),
-                    answers_kvartaly =
-                    JSON_SET(
-                        answers_kvartaly,
-                        CONCAT('$[', ?, '].questions[', ?, '].incorrect'),
-                        JSON_EXTRACT(answers_kvartaly,
-                            CONCAT('$[', ?, '].questions[', ?, '].incorrect')
-                        ) + ?
-                    )
-                WHERE id = ? AND league_id = ?;
+                    UPDATE teams
+                    SET answers_kvartaly =
+                            JSON_SET(
+                                    answers_kvartaly,
+                                    CONCAT('$[', ?, '].questions[', ?, '].correct'),
+                                    LEAST(
+                                            1,
+                                            GREATEST(
+                                                    0,
+                                                    JSON_EXTRACT(answers_kvartaly,
+                                                                 CONCAT('$[', ?, '].questions[', ?, '].correct')
+                                                    ) + ?
+                                            )
+                                    )
+                            ),
+                        answers_kvartaly =
+                            JSON_SET(
+                                    answers_kvartaly,
+                                    CONCAT('$[', ?, '].questions[', ?, '].incorrect'),
+                                    GREATEST(
+                                            0,
+                                            JSON_EXTRACT(answers_kvartaly,
+                                                         CONCAT('$[', ?, '].questions[', ?, '].incorrect')
+                                            ) + ?
+                                    )
+                            )
+                    WHERE id = ? AND league_id = ?;
                 `,
                 [
                     kvartal, q, kvartal, q, delta_correct,
                     kvartal, q, kvartal, q, delta_incorrect,
                     team_id, league_id
-                ], socket.data.user_id
+                ],
+                socket.data.user_id
             );
 
             const table = await getKvartalyTable(Number(league_id));
             io.to(`league:${league_id}:kvartaly`).emit("data", table);
-
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

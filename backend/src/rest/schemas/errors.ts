@@ -78,6 +78,14 @@ registry.registerComponent(
             "INVALID_QUESTION_NUM",
             "INVALID_PENALTY",
             "INVALID_TEAM_ID",
+            "INVALID_CORRECT_DELTA",
+            "INVALID_INCORRECT_DELTA",
+            "INVALID_KVARTAL",
+
+            // ===== SOCKET — SHOW =====
+            "INVALID_COLOR_SCHEME",
+            "INVALID_SLIDE_NUM",
+            "INVALID_TIMER_VALUE",
 
             // ===== SOCKET — FUDZI =====
             "INVALID_STATUS",

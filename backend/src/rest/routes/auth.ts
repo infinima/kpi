@@ -137,14 +137,12 @@ authRouter.post("/tg-login", async (req, res) => {
     const data = req.body;
     const botToken = process.env.TG_BOT_TOKEN;
 
-    // 1. формируем check string
     const entries = Object.keys(data)
         .filter(k => k !== "hash")
         .sort()
         .map(k => `${k}=${data[k]}`)
         .join("\n");
 
-    // 2. считаем hash
     const secret = crypto.createHash("sha256").update(botToken!).digest();
     const hmac = crypto.createHmac("sha256", secret)
         .update(entries)
@@ -154,29 +152,15 @@ authRouter.post("/tg-login", async (req, res) => {
         return res.status(401).json({ error: "INVALID_TELEGRAM_DATA" });
     }
 
-    // auth_date check
     if (Date.now() / 1000 - data.auth_date > 60 * 5) {
         return res.status(401).json({ error: "EXPIRED_AUTH" });
     }
 
-    // 3. ищем юзера
     let [user] = await query(
         "SELECT id FROM users WHERE tg_id = ?",
         [data.id]
     );
 
-    // 4. если нет — создаём
-    if (!user) {
-        const fullName = `${data.first_name ?? ""} ${data.last_name ?? ""}`.trim();
-        const result = await query(
-            `INSERT INTO users (tg_id, tg_username, tg_full_name)
-             VALUES (?, ?, ?)`,
-            [data.id, data.username, fullName]
-        );
-        user = { id: result.insertId };
-    }
-
-    // 5. создаём сессию как в обычном логине
     const token = crypto.randomBytes(32).toString("hex");
     await query(
         `INSERT INTO sessions (token, user_id, is_deactivated, expires_at)
