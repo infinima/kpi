@@ -145,7 +145,7 @@ authRouter.post("/tg-login", async (req, res) => {
         .join("\n");
 
     // 2. считаем hash
-    const secret = crypto.createHash("sha256").update(botToken).digest();
+    const secret = crypto.createHash("sha256").update(botToken!).digest();
     const hmac = crypto.createHmac("sha256", secret)
         .update(entries)
         .digest("hex");
