@@ -3,7 +3,7 @@ import {io, Socket} from "socket.io-client";
 
 import {useEventsNav, useNotifications, useUser} from "@/store";
 
-const SOCKET_URL = "localhost:3000";
+const SOCKET_URL = "test.kpiturnir.ru";
 
 type showStatus = "WALLPAPER" |
   "KVARTALY-RESULTS" |
