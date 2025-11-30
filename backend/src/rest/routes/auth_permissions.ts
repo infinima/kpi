@@ -19,7 +19,7 @@ export type KPIPermission =
     | "access_history"
     | "print_documents"
     | "edit_answers"
-    | "get-show"
+    | "get_show"
     | "control_show"
     | "edit_penalties";
 
