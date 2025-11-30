@@ -9,6 +9,8 @@ const EnvSchema = z.object({
     MYSQL_USER: z.string().min(1),
     MYSQL_PASSWORD: z.string().min(1),
     MYSQL_DATABASE: z.string().min(1),
+
+    TG_BOT_TOKEN: z.string().min(1),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
