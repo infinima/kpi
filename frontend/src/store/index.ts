@@ -4,3 +4,4 @@ export * from "./useUI";
 export * from "./useNavigation";
 export * from "./useEventsNavigation"
 export * from "./useTableSocket";
+export * from "./useShowSocket";

@@ -24,5 +24,8 @@
   },
   "devDependencies": {
     "concurrently": "^9.0.1"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^3.11.174"
   }
 }
