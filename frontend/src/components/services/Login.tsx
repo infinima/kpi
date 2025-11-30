@@ -125,7 +125,17 @@ export function LoginModal() {
                     {loading ? "Входим..." : "Войти"}
                 </button>
 
-                <TelegramButton />
+                <div className="my-6 flex items-center">
+                    <div className="flex-grow border-t border-border dark:border-dark-border"></div>
+                    <span className="mx-3 text-sm text-text-secondary dark:text-dark-text-secondary">
+                        или
+                    </span>
+                    <div className="flex-grow border-t border-border dark:border-dark-border"></div>
+                </div>
+
+                <div className="flex justify-center mb-2">
+                    <TelegramButton onSuccess={closeLoginModal} />
+                </div>
             </div>
         </div>
     );
