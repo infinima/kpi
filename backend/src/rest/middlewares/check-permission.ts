@@ -54,7 +54,12 @@ export function checkPermission(
     return async function (req, res, next) {
         await authRequired(req, res, async () => {
             const userId = req.user_id;
-            const objectId = req.params.id ? Number(req.params.id) : null;
+            const rawId =
+                req.params.id ??
+                req.params.object_id ??
+                null;
+
+            const objectId = rawId ? Number(rawId) : null;
 
             const chain = objectId ? await getScopeChain(object, objectId) : {};
 

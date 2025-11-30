@@ -13,6 +13,7 @@ import { leaguesRouter } from "./routes/leagues.js";
 import { teamsRouter } from "./routes/teams.js";
 import { usersRouter } from "./routes/users.js";
 import { permissionsRouter } from "./routes/permissions.js";
+import { logsRouter } from "./routes/logs.js";
 import {dirname, join} from "path";
 
 export function createApp() {
@@ -39,6 +40,7 @@ export function createApp() {
     app.use("/api/teams", teamsRouter);
     app.use("/api/users", usersRouter);
     app.use("/api/permissions", permissionsRouter);
+    app.use("/api/logs", logsRouter);
 
     // Swagger
     const openApiSpec = generateOpenApiSpec();
