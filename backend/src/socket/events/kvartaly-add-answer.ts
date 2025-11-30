@@ -38,9 +38,6 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         if (![ -1, 0, 1 ].includes(delta_correct)) {
             return socket.emit("error_response", { error: { code: "INVALID_CORRECT_DELTA" } });
         }
-        if (delta_incorrect < 0) {
-            return socket.emit("error_response", { error: { code: "INVALID_INCORRECT_DELTA" } });
-        }
 
         if (!question_num || question_num < 1 || question_num > 16) {
             return socket.emit("error_response", {
