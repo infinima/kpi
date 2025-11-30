@@ -14,8 +14,8 @@ export async function query<T = any>(sql: string, params?: any[], userId?: numbe
     const conn = await pool.getConnection();
     try {
         await conn.query("SET @current_user_id = ?", [userId ?? null]);
-        await conn.query("SET @current_sql = ?", [sql]);
-        await conn.query("SET @current_params = ?", [params]);
+        await conn.query("SET @current_query = ?", [sql]);
+        await conn.query("SET @current_params = ?", [JSON.stringify(params ?? null)]);
 
         const [rows] = await conn.query(sql, params);
         return rows as T;
