@@ -10,7 +10,8 @@ import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { generatePDFBuffer } from "../../utils/generate-teams-names.js";
 import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
 import { getFudziTable } from "../../socket/services/fudzi-table.js";
-import { rankTeams } from "../../utils/rankTeams.js";
+import { rankTeams } from "../../utils/rank-teams.js";
+import { rankFinal } from "../../utils/rank-teams-final.js";
 
 import {
     GetOneLeagueInput,
@@ -444,7 +445,7 @@ leaguesRouter.post(
                 case "GAMES_ENDED": {
                     const fud = await getFudziTable(id);
 
-                    // ---------- 1. place_fudzi ----------
+                    // ---------- 1. Ставим place_fudzi по баллам ----------
                     const fudRank = rankTeams(
                         fud.map(t => ({
                             id: t.id,
@@ -460,15 +461,18 @@ leaguesRouter.post(
                         );
                     }
 
-                    // ---------- 2. place_final ----------
-                    // правила те же, только ранжируем по Фудзи
-                    const finalRank = rankTeams(
-                        fud.map(t => ({
-                            id: t.id,
-                            total: t.total,
-                            scores: t.answers.map(a => a.score)
-                        }))
-                    );
+                    // ---------- 2. Берем кварталы и фудзи ----------
+                    const teams = await query(`
+                                                    SELECT id,
+                                                           place_kvartaly as kvartaly,
+                                                           place_fudzi as fudzi,
+                                                           place_final as final
+                                                    FROM teams
+                                                    WHERE league_id = ?
+                                                `, [id], (req as any).user_id);
+
+                    // ---------- 3. Новый финальный рейтинг ----------
+                    const finalRank = rankFinal(teams);
 
                     for (const r of finalRank) {
                         await query(
@@ -477,11 +481,15 @@ leaguesRouter.post(
                         );
                     }
 
-                    // ---------- 3. дипломы ----------
+                    // ---------- 4. Дипломы считаем по НОВОМУ рейтингу ----------
                     const sortedFinal = [...finalRank].sort((a,b) => a.place - b.place);
 
-                    const setDiploma = (id: number, d: string) =>
-                        query(`UPDATE teams SET diploma = ? WHERE id = ?`, [d,id], (req as any).user_id);
+                    const setDiploma = (id: number, d: 'FIRST_DEGREE' | 'SECOND_DEGREE' | 'THIRD_DEGREE' | 'PARTICIPANT') =>
+                        query(
+                            `UPDATE teams SET diploma = ? WHERE id = ?`,
+                            [d, id],
+                            (req as any).user_id
+                        );
 
                     if (sortedFinal.length >= 1)
                         await setDiploma(sortedFinal[0].id, 'FIRST_DEGREE');
