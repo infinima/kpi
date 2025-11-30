@@ -37,6 +37,7 @@ const errorMessages: Record<string, string> = {
     LEAGUE_NOT_FOUND: "Лига не найдена.",
     LEAGUE_DELETED: "Лига удалена.",
     LEAGUE_HAS_RELATED_OBJECTS: "Лига содержит вложенные объекты.",
+    NO_TEAMS: "В лиге нет команд.",
     INVALID_PRESENTATION_FORMAT: "Неверный формат файла презентации.",
     INVALID_PDF_SIGNATURE: "Загруженный файл не является PDF.",
     NO_FUDZI_PRESENTATION: "У лиги нет презентации Fudzi.",
@@ -45,7 +46,6 @@ const errorMessages: Record<string, string> = {
     INVALID_IMPORT_DATA: "Неверный формат импортируемых данных.",
     ILLEGAL_STATUS_TRANSITION: "Переход в этот статус невозможен.",
     STATUS_SIDE_EFFECT_FAILED: "Ошибка обработки смены статуса.",
-    NO_TEAMS: "В лиге нет команд.",
 
     TEAM_NOT_FOUND: "Команда не найдена.",
     TEAM_DELETED: "Команда удалена.",
@@ -58,11 +58,19 @@ const errorMessages: Record<string, string> = {
 
     WRONG_SOCKET_TYPE: "Неверный тип Socket.IO-соединения.",
     WRONG_LEAGUE_STATUS: "Нельзя выполнить действие при текущем статусе лиги.",
+
     INVALID_QUESTION_NUM: "Некорректный номер вопроса.",
     INVALID_STATUS: "Недопустимый статус ответа.",
     INVALID_PENALTY: "Недопустимое значение штрафа.",
     INVALID_TEAM_ID: "Неверный идентификатор команды.",
     INVALID_HAS_CARD: "Недопустимое значение признака карточки.",
+
+    INVALID_COLOR_SCHEME: "Неверная цветовая схема.",
+    INVALID_SLIDE_NUM: "Некорректный номер слайда.",
+    INVALID_TIMER_VALUE: "Некорректное значение таймера.",
+    INVALID_CORRECT_DELTA: "Некорректное изменение баллов за правильный ответ.",
+    INVALID_INCORRECT_DELTA: "Некорректное изменение баллов за неправильный ответ.",
+    INVALID_KVARTAL: "Некорректный квартал.",
 };
 
 export function showApiError(error: any) {

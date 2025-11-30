@@ -25,6 +25,13 @@ export const LogSchema = z.object({
 });
 registry.register("Log", LogSchema);
 
+const IncludeUserQuery = z.object({
+    include: z.string().optional().openapi({
+        description: "Укажи `include=user`, чтобы вернуть данные пользователя",
+        example: "user"
+    })
+});
+
 export const GetLogsByUserInput = z.object({
     user_id: z.coerce.number().int(),
 });
@@ -49,6 +56,7 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     request: {
         params: GetLogsByUserInput,
+        query: IncludeUserQuery,
     },
     responses: {
         200: {
@@ -71,6 +79,7 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     request: {
         params: GetLogsByObjectInput,
+        query: IncludeUserQuery,
     },
     responses: {
         200: {
@@ -93,6 +102,7 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     request: {
         params: GetLogsByRecordInput,
+        query: IncludeUserQuery,
     },
     responses: {
         200: {
@@ -105,4 +115,3 @@ registry.registerPath({
         },
     },
 });
-
