@@ -2,7 +2,6 @@ import { useState } from "react";
 import { X, Eye, EyeOff } from "lucide-react";
 import { apiPost } from "@/api";
 import { useUser, useUI, useNotifications } from "@/store";
-import { TelegramLoginButton } from "./TelegramLoginButton";
 
 export function LoginModal() {
     const { loginModalOpen, closeLoginModal } = useUI();
@@ -124,7 +123,6 @@ export function LoginModal() {
                 >
                     {loading ? "Входим..." : "Войти"}
                 </button>
-                <TelegramLoginButton />
             </div>
         </div>
     );
