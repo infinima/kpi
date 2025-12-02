@@ -186,6 +186,11 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
             {/* ---------- управление статусом ---------- */}
             {!isDeleted && canUpdate && (
+<>
+  <p className="text-text-secondary dark:text-dark-text-secondary">
+    Управление статусами
+  </p>
+
                 <div className="flex flex-col gap-2">
 
                     <button
@@ -218,6 +223,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                         <ArrowRight size={16} />
                     </button>
                 </div>
+                </>
             )}
 
             {/* ---------- раскрытие блока деталей ---------- */}
@@ -319,7 +325,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                                     "
                                 >
                                     <FileDown size={18}/>
-                                    Скачать бланки
+                                    Скачать таблички
                                 </button>
                             </>
                         )}

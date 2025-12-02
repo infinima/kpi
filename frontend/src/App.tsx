@@ -101,7 +101,8 @@ export function App() {
         <>
           <MenuBar />
 
-          <main className="max-w-8xl mx-auto px-20 py-6">
+
+          <main className={`${currentPage === "tables" ? "max-w-8xl mx-auto px-20 py-6" : "max-w-6xl mx-auto px-6 py-6"}`}>
             {pages[currentPage]}
           </main>
         </>

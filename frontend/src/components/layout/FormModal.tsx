@@ -296,22 +296,11 @@ export function FormModal({
       if (field.type === "file") {
         return (
           <div key={field.name} className="space-y-2 flex-col">
-            <label className="text-sm text-text-secondary dark:text-dark-text-secondary">
-              {field.label}
-            </label>
+            {/*<label className="text-sm text-text-secondary dark:text-dark-text-secondary">*/}
+            {/*  {field.label}*/}
+            {/*</label>*/}
 
-            {/* Превью PDF (если есть) */}
-            {form[field.name] ? (
-              <a
-                href={form[field.name]}
-                target="_blank"
-                className="text-sm text-primary underline"
-              >
-                Открыть загруженный PDF
-              </a>
-            ) : (
-              <div className="text-sm opacity-70">Файл не загружен</div>
-            )}
+
 
             <label
               className="
@@ -319,7 +308,7 @@ export function FormModal({
           bg-primary text-white hover:bg-primary-dark inline-block
         "
             >
-              Загрузить PDF
+              Загрузить презентацию Фудзи
               <input
                 type="file"
                 accept="application/pdf"

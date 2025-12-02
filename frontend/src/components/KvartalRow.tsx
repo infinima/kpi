@@ -169,7 +169,7 @@ export function KvartalRow({ item }: Props) {
 
         {/* Штраф */}
         <td
-          className="td text-center cursor-pointer  border-r border-border dark:border-dark-border"
+          className={`td text-center cursor-pointer  border-r border-border dark:border-dark-border ${item.penalty > 0 ? "text-red-500" : ""}`}
           onClick={openPenaltyPopup}
         >
           {item.penalty}
@@ -211,26 +211,22 @@ export function KvartalRow({ item }: Props) {
                 <div className="px-4 pt-3">
                   <div className="text-xs opacity-70 mb-1">Правильных</div>
                   <div className="flex items-center justify-between">
-                    {ans.correct > 0 && (
                       <button
-                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border"
+                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border  ${ans.correct > 0 ? "" : "invisible pointer-events-none"}`}
                         onClick={() => changeScore(popup.q, -1, 0)}
                       >
                         -1
                       </button>
-                    )}
 
                     <div className="w-10 text-center font-semibold">
                       {ans.correct}
                     </div>
-                    {ans.correct < 1 && (
                       <button
-                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border  ${ans.correct <1 ? "" : "invisible pointer-events-none"}`}
                         onClick={() => changeScore(popup.q, +1, 0)}
                       >
                         +1
                       </button>
-                    )}
 
                   </div>
                 </div>
@@ -239,27 +235,24 @@ export function KvartalRow({ item }: Props) {
                 <div className="px-4 pt-3 pb-2">
                   <div className="text-xs opacity-70 mb-1">Неправильных</div>
                   <div className="flex items-center justify-between">
-                    {ans.incorrect > 0 && (
                       <button
-                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border  ${ans.incorrect > 0 ? "" : "invisible pointer-events-none"}`}
                         onClick={() => changeScore(popup.q, 0, -1)}
                       >
                         -1
                       </button>
-                    )}
 
                     <div className="w-10 text-center font-semibold">
                       {ans.incorrect}
                     </div>
 
-                    {ans.incorrect < 1 && (
+
                       <button
                         className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
                         onClick={() => changeScore(popup.q, 0, +1)}
                       >
                         +1
                       </button>
-                    )}
 
                   </div>
                 </div>
