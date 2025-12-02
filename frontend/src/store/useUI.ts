@@ -33,6 +33,9 @@ interface UIState {
 
   hoveredColumn: number | null;
   setHoveredColumn: (col: number | null) => void;
+
+  dualMode: boolean;
+  toggleDualMode: () => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -101,4 +104,7 @@ export const useUI = create<UIState>((set, get) => ({
 
   hoveredColumn: null,
   setHoveredColumn: (col) => set({ hoveredColumn: col }),
+
+  dualMode: false,
+  toggleDualMode: () => set((state) => ({ dualMode: !state.dualMode })),
 }));

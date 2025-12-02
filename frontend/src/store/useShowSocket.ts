@@ -3,7 +3,7 @@ import {io, Socket} from "socket.io-client";
 
 import {useEventsNav, useNotifications, useUser} from "@/store";
 
-const SOCKET_URL = "test.kpiturnir.ru";
+const SOCKET_URL = "wss://test.kpiturnir.ru";
 
 type showStatus = "WALLPAPER" |
   "KVARTALY-RESULTS" |
@@ -51,57 +51,53 @@ export const useShowStore = create<SocketState>((set, get) => ({
   connect: () => {
     const notify = useNotifications.getState().addMessage;
 
-    let {leagueId} = useEventsNav.getState();
+    let { leagueId } = useEventsNav.getState();
     const token = useUser.getState().token;
 
     if (!leagueId) {
-      notify({type: "warning", text: "Нет данных для подключения к показу"});
+      notify({ type: "warning", text: "Нет данных для подключения к показу" });
       return;
     }
 
-    const oldSocket = get().socket;
-    if (oldSocket) oldSocket.close();
+    if ( get().socket) {
+      return;
+    }
 
     const socket = io(SOCKET_URL, {
       transports: ["websocket"],
       query: {
         league_id: String(leagueId),
         type: "show",
-        ...(token ? {token} : {}),
+        ...(token ? { token } : {}),
       },
     });
 
-    set({socket});
+    set({ socket });
+
 
     socket.on("connection_error", (err: any) => {
       notify({
         type: "error",
         text: err?.message ?? "Ошибка подключения к показу",
       });
+
       socket.close();
-      set({isConnected: false});
+      set({ isConnected: false, socket: null });
     });
 
     socket.on("connect", () => {
-      set({isConnected: true});
-      notify({type: "success", text: "Подключено к показу"});
+      set({ isConnected: true });
+      notify({ type: "success", text: "Подключено к показу" });
     });
 
     socket.on("data", (t: any) => {
-      set({show: t});
-      const goToTables = useEventsNav.getState().goToTables;
-      if (t.status === "KVARTALY-RESULTS") {
-        goToTables("kvartaly");
-      } else if (t.status === "FUDZI-RESULTS") {
-        goToTables("fudzi");
-      } else {
-        goToTables(null);
-      }
+      set({ show: t });
     });
 
     socket.on("error_response", (err: any) => {
-      notify({type: "error", text: err});
+      notify({ type: "error", text: err });
     });
+
   },
 
   disconnect: () => {

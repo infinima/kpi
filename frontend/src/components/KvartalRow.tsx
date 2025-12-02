@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {useSocketStore, useUI} from "@/store";
+import {useEventsNav, useSocketStore, useUI, useUser} from "@/store";
 import {XCircle, Check, X, MinusCircle, ChevronUp, ChevronDown} from "lucide-react";
 import type { KvartalRow as KvartalRowType } from "@/types";
 
@@ -14,6 +14,11 @@ export function KvartalRow({ item }: Props) {
 
   const hoveredColumn = useUI((s) => s.hoveredColumn);
   const setHoveredColumn = useUI((s) => s.setHoveredColumn);
+
+  const {guest, can} = useUser();
+
+  const canPenalty = !guest && can("leagues", "edit_penalties", useEventsNav().leagueId);
+  const canEditAnswers = !guest && can("leagues", "edit_answers", useEventsNav().leagueId);
 
   const [popup, setPopup] = useState<{
     q: number;
@@ -65,24 +70,30 @@ export function KvartalRow({ item }: Props) {
   // Открытие попапов
   // ───────────────────────────────────────────────
   function openPopupAnswer(e: React.MouseEvent, q: number) {
+    if(!canEditAnswers){
+      return;
+    }
     const r = e.currentTarget.getBoundingClientRect();
     setPopup({ q, x: r.left, y: r.bottom + 4 });
   }
 
   function openPenaltyPopup(e: React.MouseEvent) {
+    if(!canPenalty){
+      return;
+    }
     const r = e.currentTarget.getBoundingClientRect();
     setPenaltyPopup({ x: r.left, y: r.bottom + 4 });
   }
 
-  // ───────────────────────────────────────────────
-  // Обновление данных
-  // ───────────────────────────────────────────────
+
   function changeScore(q: number, dc: number, di: number) {
-    console.log(item.id, q, dc, di);
     kvartalAddAnswer(item.id, q, dc, di);
   }
 
   function toggleQuarter(qi: number) {
+    if(!canEditAnswers) {
+      return;
+    }
     kvartalFinish(item.id, qi + 1, !item.quarters[qi].finished);
   }
 
@@ -115,7 +126,7 @@ export function KvartalRow({ item }: Props) {
                 return (
                   <td
                     key={i}
-                    onClick={(e) => openPopupAnswer(e, qNum)}
+                    onClick={(e) => !q.finished && openPopupAnswer(e, qNum)}
                     className={`td text-center cursor-pointer
                       border-r border-border
                       hover:bg-hover dark:hover:bg-dark-hover  dark:border-dark-border
@@ -200,21 +211,27 @@ export function KvartalRow({ item }: Props) {
                 <div className="px-4 pt-3">
                   <div className="text-xs opacity-70 mb-1">Правильных</div>
                   <div className="flex items-center justify-between">
-                    <button
-                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border"
-                      onClick={() => changeScore(popup.q, -1, 0)}
-                    >
-                      -1
-                    </button>
+                    {ans.correct > 0 && (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border"
+                        onClick={() => changeScore(popup.q, -1, 0)}
+                      >
+                        -1
+                      </button>
+                    )}
+
                     <div className="w-10 text-center font-semibold">
                       {ans.correct}
                     </div>
-                    <button
-                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
-                      onClick={() => changeScore(popup.q, +1, 0)}
-                    >
-                      +1
-                    </button>
+                    {ans.correct < 1 && (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                        onClick={() => changeScore(popup.q, +1, 0)}
+                      >
+                        +1
+                      </button>
+                    )}
+
                   </div>
                 </div>
 
@@ -222,21 +239,28 @@ export function KvartalRow({ item }: Props) {
                 <div className="px-4 pt-3 pb-2">
                   <div className="text-xs opacity-70 mb-1">Неправильных</div>
                   <div className="flex items-center justify-between">
-                    <button
-                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
-                      onClick={() => changeScore(popup.q, 0, -1)}
-                    >
-                      -1
-                    </button>
+                    {ans.incorrect > 0 && (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                        onClick={() => changeScore(popup.q, 0, -1)}
+                      >
+                        -1
+                      </button>
+                    )}
+
                     <div className="w-10 text-center font-semibold">
                       {ans.incorrect}
                     </div>
-                    <button
-                      className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
-                      onClick={() => changeScore(popup.q, 0, +1)}
-                    >
-                      +1
-                    </button>
+
+                    {ans.incorrect < 1 && (
+                      <button
+                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                        onClick={() => changeScore(popup.q, 0, +1)}
+                      >
+                        +1
+                      </button>
+                    )}
+
                   </div>
                 </div>
               </>
@@ -265,12 +289,15 @@ export function KvartalRow({ item }: Props) {
           </div>
 
           <div className="flex items-center justify-between px-4 py-2">
-            <button
-              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
-              onClick={() => changePenalty(-1)}
-            >
-              -1
-            </button>
+            {item.penalty > 0 && (
+              <button
+                className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                onClick={() => changePenalty(-1)}
+              >
+                -1
+              </button>
+            )}
+
             <div className="w-10 text-center font-semibold">
               {item.penalty}
             </div>

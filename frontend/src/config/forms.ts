@@ -6,7 +6,8 @@ export type FieldType =
     | "select"
     | "number"
     | "image"
-    | "date";
+    | "date"
+  | "file";
 
 export interface FormField {
     name: string;

@@ -237,7 +237,7 @@ export function TablesPage() {
       </div>
 
       {/* ====== SCROLLABLE CONTENT ====== */}
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 md:px-6 lg:px-8 py-4">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar  py-4 w-full">
 
         {!isConnected && (
           <div className="p-3 rounded-lg bg-hover dark:bg-dark-hover text-sm opacity-75 text-center">
@@ -256,6 +256,7 @@ export function TablesPage() {
                 rounded-xl
                 border border-border dark:border-dark-border
                 shadow-card
+                w-full
               "
             >
               <table className="w-full border-collapse text-sm">
@@ -274,7 +275,6 @@ export function TablesPage() {
             </div>
 
             {/* 📱 MOBILE CARDS */}
-            {console.log(filteredData)}
             <div className="md:hidden space-y-3">
               {filteredData.map((team: TFudzi | TKvartal) =>
                 tableType === "fudzi"

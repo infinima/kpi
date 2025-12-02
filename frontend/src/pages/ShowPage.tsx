@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useShowStore } from "@/store/useShowSocket";
-import { useEventsNav, useUser } from "@/store";
+import {useEventsNav, useSocketStore, useUser} from "@/store";
 
 import { Document, Page, pdfjs } from "react-pdf";
 import {KvartalRow} from "@/components/KvartalRow";
@@ -10,30 +10,23 @@ import {ShowTable} from "@/components/ShowTable";
 pdfjs.GlobalWorkerOptions.workerSrc =
   `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export function ShowPage({ iframe = false }: { iframe?: boolean }) {
+export function ShowPage() {
   const { show, isConnected, connect, disconnect } = useShowStore();
   const { leagueId, goToTables } = useEventsNav();
 
-  console.log(show, isConnected);
-
-  if(!iframe){
-    useEffect(() => {
-      connect();
-      return () => disconnect();
-    }, []);
-  }
-
+  useEffect(() => {
+    connect();
+    // return () => disconnect();
+  }, []);
 
 
   const [pdfData, setPdfData] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
   const [timeLeft, setTimeLeft] = useState(120);
 
-  // контейнер для масштабирования PDF
   const containerRef = useRef<HTMLDivElement>(null);
   const [pageWidth, setPageWidth] = useState<number | null>(null);
 
-  // ========= LOAD PDF ============
   useEffect(() => {
     async function loadPdf() {
       try {
@@ -49,7 +42,7 @@ export function ShowPage({ iframe = false }: { iframe?: boolean }) {
         const url = window.URL.createObjectURL(blob);
         setPdfData(url);
       } catch (err) {
-        console.error("Ошибка загрузки PDF:", err);
+        // console.error("Ошибка загрузки PDF:", err);
       }
     }
 
@@ -58,7 +51,6 @@ export function ShowPage({ iframe = false }: { iframe?: boolean }) {
     }
   }, [show?.status, leagueId]);
 
-  // ========= TIMER ============
   useEffect(() => {
     if (!show?.timer_is_enabled) {
       setTimeLeft(120);
@@ -75,7 +67,6 @@ export function ShowPage({ iframe = false }: { iframe?: boolean }) {
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const ss = String(timeLeft % 60).padStart(2, "0");
 
-  // ========= PDF PAGE LOAD ============
   function handlePageLoad(page: any) {
     const container = containerRef.current;
     if (!container) return;
@@ -92,12 +83,14 @@ export function ShowPage({ iframe = false }: { iframe?: boolean }) {
     setPageWidth(pdfW * scale);
   }
 
-  // ========= CONTENT ============
   function renderContent() {
     if (!show) return null;
+    useSocketStore.getState().disconnect();
+
 
     switch (show.status) {
       case "WALLPAPER":
+
         return (
           <div className="w-full h-full flex items-center justify-center bg-black">
             <img src="../../public/wallpaper.jpg" className="max-w-full max-h-full" />
@@ -105,16 +98,20 @@ export function ShowPage({ iframe = false }: { iframe?: boolean }) {
         );
 
       case "KVARTALY-RESULTS":
+        useSocketStore.getState().connect("kvartaly");
+
         return (
           <ShowTable tableType={"kvartaly"} />
         );
 
       case "FUDZI-RESULTS":
+        useSocketStore.getState().connect("fudzi");
         return (
           <ShowTable tableType={"fudzi"} />
         );
 
       case "FUDZI-PRESENTATION":
+
         if (!pdfData) {
           return (
             <div className="w-full h-full flex items-center justify-center opacity-70">

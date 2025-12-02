@@ -61,6 +61,8 @@ export function App() {
     }
   };
 
+  const toggleDualMode = useUI(s => s.toggleDualMode)
+
   // ======= РЕНДЕР =======
 
   return (
@@ -81,6 +83,14 @@ export function App() {
           />
 
           <div
+            className="absolute top-0 left-1/4 w-1/2 h-1/4 cursor-pointer"
+            onClick={() => {
+              console.log("меню")
+              toggleDualMode();
+            }}
+          />
+
+          <div
             className="absolute top-0 right-0 w-1/4 h-1/4 cursor-pointer"
             onClick={toggleFullscreen}
           />
@@ -91,7 +101,7 @@ export function App() {
         <>
           <MenuBar />
 
-          <main className="max-w-6xl mx-auto px-6 py-6">
+          <main className="max-w-8xl mx-auto px-20 py-6">
             {pages[currentPage]}
           </main>
         </>

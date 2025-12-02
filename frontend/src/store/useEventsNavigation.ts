@@ -1,5 +1,5 @@
 import {create} from "zustand";
-import { useSocketStore } from "@/store";
+import {useShowStore, useSocketStore} from "@/store";
 
 export type EventsPage =
   | "events"
@@ -46,7 +46,8 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
 
   goEvents: () =>
     set(() => {
-      useSocketStore.getState().disconnect();   // ← корректный вызов
+      useSocketStore.getState().disconnect();
+      useShowStore.getState().disconnect();
       return {
         page: "events",
         eventId: null,
@@ -62,6 +63,8 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
   goLocations: (eventId, eventName) =>
     set(() => {
       useSocketStore.getState().disconnect();
+      useShowStore.getState().disconnect();
+
       return {
         page: "locations",
         eventId,
@@ -77,6 +80,8 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
   goLeagues: (locationId, locationName) =>
     set(() => {
       useSocketStore.getState().disconnect();
+      useShowStore.getState().disconnect();
+
       return {
         page: "leagues",
         locationId,
@@ -88,6 +93,8 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
   goInLeagues: (leagueId, leagueName) =>
     set(() => {
       useSocketStore.getState().disconnect();
+      useShowStore.getState().disconnect();
+
       return {
         leagueId,
         leagueName,
@@ -98,6 +105,7 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
   goToTables: (tableType) =>
     set(()=> {
       useSocketStore.getState().disconnect();
+      useShowStore.getState().disconnect();
       return {
 
       tableType};
@@ -109,6 +117,8 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
     if (page === "leagues") {
       return set(() => {
         useSocketStore.getState().disconnect();
+        useShowStore.getState().disconnect();
+
         return {
           page: "locations",
           locationId: null,
@@ -123,6 +133,8 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
     if (page === "locations") {
       return set(() => {
         useSocketStore.getState().disconnect();
+        useShowStore.getState().disconnect();
+
         return {
           page: "events",
           eventId: null,

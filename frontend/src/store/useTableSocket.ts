@@ -3,7 +3,7 @@ import {io, Socket} from "socket.io-client";
 
 import {useEventsNav, useNotifications, useUser} from "@/store";
 
-const SOCKET_URL = "test.kpiturnir.ru";
+const SOCKET_URL = "wss://test.kpiturnir.ru";
 
 
 
@@ -13,7 +13,7 @@ interface SocketState {
   tableData: any | null;
   isConnected: boolean;
 
-  connect: () => void;
+  connect: (passedTableType: string) => void;
   disconnect: () => void;
 
   fudziSetAnswer: (
@@ -54,14 +54,17 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   tableData: null,
   isConnected: false,
 
-  connect: () => {
+  connect: ( passedTableType?: string) => {
     const notify = useNotifications.getState().addMessage;
 
-    let {leagueId, tableType} = useEventsNav.getState();
+    const store = useEventsNav.getState();
+    const leagueId =  store.leagueId;
+    const tableType = passedTableType ?? store.tableType;
+
     const token = useUser.getState().token;
 
     if (!leagueId || !tableType) {
-      notify({type: "warning", text: "Нет данных для подключения к таблице"});
+      notify({ type: "warning", text: "Нет данных для подключения к таблице" });
       return;
     }
 
@@ -73,11 +76,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       query: {
         league_id: String(leagueId),
         type: tableType,
-        ...(token ? {token} : {}),
+        ...(token ? { token } : {}),
       },
     });
 
-    set({socket});
+    set({ socket });
 
     socket.on("connection_error", (err: any) => {
       notify({
@@ -85,25 +88,23 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         text: err?.message ?? "Ошибка подключения к таблице",
       });
       socket.close();
-      set({isConnected: false});
+      set({ isConnected: false });
     });
 
     socket.on("connect", () => {
-      set({isConnected: true});
-      notify({type: "success", text: "Подключено к таблице"});
+      set({ isConnected: true });
+      notify({ type: "success", text: "Подключено к таблице" });
 
       socket.emit("get_table");
     });
 
     socket.on("data", (t: any) => {
-      set({tableData: t});
-      console.log(t)
+      set({ tableData: t });
     });
 
     socket.on("error_response", (err: any) => {
-      console.error(err);
-      // const msg = err?.error?.message ?? err?.message ?? "Неизвестная ошибка";
-      // notify({type: "error", text: msg});
+      notify({ type: "error", text: err });
+      // console.error(err);
     });
   },
 

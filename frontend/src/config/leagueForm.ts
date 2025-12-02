@@ -19,6 +19,13 @@ export const leagueForm: FormConfig = {
             type: "text",
             required: true,
             placeholder: "Название лиги"
-        }
+        },
+      {
+        name: "fudzi_presentation",
+        label: "Презентация Фудзи",
+        type: "file",
+        required: true,
+        placeholder: "Файл"
+      }
     ]
 };

@@ -8,7 +8,7 @@ import {
   ArrowLeft,
   ArrowRight,
   FileDown,
-  History, Baby
+  History, Baby, TvMinimal, WifiCog
 } from "lucide-react";
 
 import {useUI, useNotifications, useUser, useEventsNav, useNavigation} from "@/store";
@@ -40,6 +40,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
     const canHistory = can("leagues", "access_history", league.id);
     const canPrint = can("leagues", "print_documents", league.id);
     const canGetShow = can("leagues", "get_show", league.id);
+  const canControlShow = can("leagues", "control_show", league.id);
     const canTeams = can("teams", "get")
 
     // можно ли раскрывать детали
@@ -80,7 +81,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
     const canShowKvartalyResults = statusIndex >= STATUS_ORDER.indexOf("KVARTALY_GAME");
     const canShowFudziResults = statusIndex >= STATUS_ORDER.indexOf("FUDZI_GAME");
-    const canShowOverallResults = statusIndex >= STATUS_ORDER.indexOf("GAMES_ENDED");
+    const canShowOverallResults = guest ? statusIndex >= STATUS_ORDER.indexOf("ENDED") : statusIndex >= STATUS_ORDER.indexOf("GAMES_ENDED");
 
     // ---------- переходы статусов ----------
     const prevStatus =
@@ -195,7 +196,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                             bg-surface dark:bg-dark-surface
                             hover:bg-hover dark:hover:bg-dark-hover
                             disabled:opacity-40 disabled:cursor-not-allowed
-                            flex items-center justify-center gap-2
+                            flex items-center justify-center gap-2 dark:border-dark-border
                         "
                     >
                         <ArrowLeft size={16} />
@@ -210,7 +211,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                             bg-surface dark:bg-dark-surface
                             hover:bg-hover dark:hover:bg-dark-hover
                             disabled:opacity-40 disabled:cursor-not-allowed
-                            flex items-center justify-center gap-2
+                            flex items-center justify-center gap-2 dark:border-dark-border
                         "
                     >
                         {nextStatus ? translateStatus(nextStatus) : "Следующий статус"}
@@ -342,6 +343,42 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                         </>
                       )}
 
+                      {/* история */}
+                      {canGetShow && (
+                        <button
+                          onClick={() =>
+                            setPage("show")
+                          }
+                          className="
+                                    w-full py-3 rounded-lg border border-border
+                                    bg-surface dark:bg-dark-surface
+                                    hover:bg-hover dark:hover:bg-dark-hover
+                                    flex items-center justify-center gap-2 dark:border-dark-border
+                                "
+                        >
+                          <TvMinimal size={16}/> Показ
+                        </button>
+                      )}
+
+
+                      {/* история */}
+                      {canControlShow && (
+                        <button
+                          onClick={() =>
+                            setPage("showControl")
+                          }
+                          className="
+                                    w-full py-3 rounded-lg border border-border
+                                    bg-surface dark:bg-dark-surface
+                                    hover:bg-hover dark:hover:bg-dark-hover
+                                    flex items-center justify-center gap-2 dark:border-dark-border
+                                "
+                        >
+
+                          <WifiCog size={16}/> Управление показом
+                        </button>
+                      )}
+
 
 
                         {/* история */}
@@ -354,10 +391,10 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                                     })
                                 }
                                 className="
-                                    w-full py-2 rounded-lg border border-border
+                                    w-full py-3 rounded-lg border border-border
                                     bg-surface dark:bg-dark-surface
                                     hover:bg-hover dark:hover:bg-dark-hover
-                                    flex items-center justify-center gap-2
+                                    flex items-center justify-center gap-2 dark:border-dark-border
                                 "
                             >
                                 <History size={16}/> История изменений

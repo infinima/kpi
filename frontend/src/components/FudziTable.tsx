@@ -17,13 +17,13 @@ interface FudziTeam {
 export function FudziTable({ data }: { data: FudziTeam[] }) {
   return (
     <div className="w-full h-full overflow-y-auto">
-    <table className="w-full table-fixed border-collapse">
+    <table className="w-full table-fixed border-collapse border-b-[6px] border-[#1364b3] bg-white ">
 
     {/* === COLUMN SIZES === */}
     <colgroup>
-    <col className="w-[20%]" />   {/* Команда */}
+    <col className="w-[10%]" />   {/* Команда */}
       <col className="w-[8%]" />    {/* Карточка */}
-    <col className="w-[8%]" />    {/* Штраф */}
+    <col className="w-[5%]" />    {/* Штраф */}
     <col className="w-[8%]" />    {/* Итог */}
   {Array.from({ length: 16 }).map((_, i) => (
     <col key={i} className="min-w-[40px]" />
@@ -59,7 +59,7 @@ export function FudziTable({ data }: { data: FudziTeam[] }) {
               `}
   >
   {/* === TEAM NAME === */}
-  <td className="px-2 py-1 whitespace-normal break-words text-left">
+  <td className="px-2 py-1 whitespace-normal break-words text-left text-black">
     {team.name}
     </td>
 
@@ -74,12 +74,12 @@ export function FudziTable({ data }: { data: FudziTeam[] }) {
   </td>
 
   {/* === PENALTY === */}
-  <td className="text-center font-semibold">
+  <td className="text-center font-semibold text-black">
     {team.penalty > 0 ? `-${team.penalty}` : ""}
     </td>
 
   {/* === TOTAL === */}
-  <td className="text-center font-bold">
+  <td className="text-center font-bold text-black">
     {team.total}
     </td>
 

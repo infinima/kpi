@@ -21,7 +21,7 @@ export function ShowControlPage() {
 
   useEffect(() => {
     connect();
-    return () => disconnect();
+    // return () => disconnect();
   }, []);
 
   function changeSlide(delta: number) {
@@ -128,7 +128,7 @@ export function ShowControlPage() {
              IFRAME — предпросмотр экрана
              --------------------------------------------------- */}
           <div className="mt-4 rounded-xl overflow-hidden shadow-card border border-border dark:border-dark-border">
-              <ShowPage iframe/>
+              <ShowPage/>
           </div>
         </>
       )}

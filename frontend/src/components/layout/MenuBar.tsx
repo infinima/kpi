@@ -31,12 +31,9 @@ export function MenuBar() {
       id: "teams",
       title: "Команды",
     });
+  }
 
-    menuItems.push({
-      // @ts-ignore
-      id: "result",
-      title: "Результаты",
-    });
+  if (leagueId && can("leagues", "get_show", leagueId)) {
 
     menuItems.push({
       // @ts-ignore
@@ -44,12 +41,18 @@ export function MenuBar() {
       title: "Показ",
     });
 
+  }
+  if (leagueId && can("leagues", "control_show", leagueId)) {
+
+
     menuItems.push({
       // @ts-ignore
       id: "showControl",
       title: "Управление показом",
     });
   }
+
+
 
   if (leagueId && tableType) {
 

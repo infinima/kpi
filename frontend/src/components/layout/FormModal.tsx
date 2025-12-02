@@ -7,6 +7,23 @@ import { BaseImage } from "@/components/BaseImage";
 
 import type { FormConfig, FormField } from "@/config/forms";
 
+async function convertFileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const result = reader.result as string;
+
+      // result выглядит как: data:application/pdf;base64,ABCD…
+      resolve(result);
+    };
+
+    reader.onerror = reject;
+
+    reader.readAsDataURL(file);
+  });
+}
+
 interface FormModalProps {
     config: FormConfig;
     initialData: Record<string, any> | null;
@@ -275,6 +292,61 @@ export function FormModal({
                 </div>
             );
         }
+
+      if (field.type === "file") {
+        return (
+          <div key={field.name} className="space-y-2 flex-col">
+            <label className="text-sm text-text-secondary dark:text-dark-text-secondary">
+              {field.label}
+            </label>
+
+            {/* Превью PDF (если есть) */}
+            {form[field.name] ? (
+              <a
+                href={form[field.name]}
+                target="_blank"
+                className="text-sm text-primary underline"
+              >
+                Открыть загруженный PDF
+              </a>
+            ) : (
+              <div className="text-sm opacity-70">Файл не загружен</div>
+            )}
+
+            <label
+              className="
+          px-3 py-2 rounded-lg cursor-pointer
+          bg-primary text-white hover:bg-primary-dark inline-block
+        "
+            >
+              Загрузить PDF
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  // проверка
+                  if (file.type !== "application/pdf") {
+                    notify({type: "warning", text: "Поддерживаются только PDF файлы"});
+                    return;
+                  }
+
+                  // конвертируем
+                  const base64 = await convertFileToBase64(file);
+
+                  // сохраняем
+                  updateField(field.name, base64);
+
+                  notify({type: "success", text: "Файл загружен"});
+                }}
+              />
+            </label>
+          </div>
+        );
+      }
 
         return (
             <div key={field.name} className="space-y-2">
