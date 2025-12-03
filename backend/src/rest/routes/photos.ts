@@ -35,6 +35,7 @@ photosRouter.get(
     "/location/:location_id",
     validate(GetPhotosByLocationInput, "params"),
     checkParentNotDeleted("photo", "location_id"),
+    checkPermission("locations", "edit_photos"),
     async (req, res) => {
         const { location_id } = (req as any).validated.params;
 
