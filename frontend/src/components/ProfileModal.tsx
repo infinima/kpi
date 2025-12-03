@@ -8,7 +8,7 @@ import { BaseImage } from "@/components/BaseImage";
 export function ProfileModal() {
     const { profileModalOpen, closeProfileModal } = useUI();
     const notify = useNotifications((s) => s.addMessage);
-    const { user, fetchUser, logout } = useUser();
+    const { user, fetchUser, logout, can } = useUser();
 
     const [form, setForm] = useState({
         first_name: "",
@@ -16,6 +16,7 @@ export function ProfileModal() {
         patronymic: "",
         email: "",
         photo: "",
+      tg_id: "",
     });
 
     const [original, setOriginal] = useState(form);
@@ -23,12 +24,15 @@ export function ProfileModal() {
 
     useEffect(() => {
         if (profileModalOpen && user) {
-            const base = {
+            // @ts-ignore
+          // @ts-ignore
+          const base = {
                 first_name: user.first_name,
                 last_name: user.last_name,
                 patronymic: user.patronymic || "",
                 email: user.email,
                 photo: user.photo || "",
+            tg_id: user.tg_id || "",
             };
 
             setForm(base);
@@ -37,6 +41,8 @@ export function ProfileModal() {
     }, [profileModalOpen, user]);
 
     if (!profileModalOpen) return null;
+
+    const canEdit = can("users", "update", user?.id)
 
     // 🔥 Собираем только изменённые поля
     function getChangedFields() {
@@ -104,56 +110,77 @@ export function ProfileModal() {
                             />
                         )}
 
+                      {canEdit && (
                         <label className="px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark cursor-pointer">
-                            Сменить фото
-                            <input
-                                type="file"
-                                accept="image/*"
-                                className="hidden"
-                                onChange={(e) => setCropFile(e.target.files?.[0] ?? null)}
-                            />
+                          Сменить фото
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => setCropFile(e.target.files?.[0] ?? null)}
+                          />
                         </label>
+                      )}
                     </div>
 
                     {/* INPUTS */}
                     <div className="space-y-3">
                         <input
-                            value={form.last_name}
+                          disabled={!canEdit}
+
+                          value={form.last_name}
                             onChange={(e) => setForm({ ...form, last_name: e.target.value })}
                             placeholder="Фамилия"
                             className="w-full px-3 py-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
                         />
 
                         <input
-                            value={form.first_name}
+                          disabled={!canEdit}
+
+                          value={form.first_name}
                             onChange={(e) => setForm({ ...form, first_name: e.target.value })}
                             placeholder="Имя"
                             className="w-full px-3 py-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
                         />
 
                         <input
-                            value={form.patronymic}
+                          disabled={!canEdit}
+
+                          value={form.patronymic}
                             onChange={(e) => setForm({ ...form, patronymic: e.target.value })}
                             placeholder="Отчество"
                             className="w-full px-3 py-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
                         />
 
                         <input
-                            type="email"
+                          disabled={!canEdit}
+
+                          type="email"
                             value={form.email}
                             onChange={(e) => setForm({ ...form, email: e.target.value })}
                             placeholder="Почта"
                             className="w-full px-3 py-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
                         />
+
+                      <input
+                        disabled={!canEdit}
+
+                        value={form.tg_id}
+                        onChange={(e) => setForm({ ...form, tg_id: e.target.value })}
+                        placeholder="Телеграм ID"
+                        className="w-full px-3 py-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface"
+                      />
                     </div>
 
                     {/* SAVE */}
+                  {canEdit && (
                     <button
-                        onClick={save}
-                        className="w-full py-2 rounded-lg bg-primary text-white hover:bg-primary-dark"
+                      onClick={save}
+                      className="w-full py-2 rounded-lg bg-primary text-white hover:bg-primary-dark"
                     >
-                        Сохранить изменения
+                      Сохранить изменения
                     </button>
+                  )}
 
                     {/* LOGOUT */}
                     <button

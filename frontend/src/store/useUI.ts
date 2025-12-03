@@ -36,6 +36,17 @@ interface UIState {
 
   dualMode: boolean;
   toggleDualMode: () => void;
+
+  logModal: boolean;
+  logModalId: number | null;
+  logModalName: string | null;
+  openLogModal: (id: number, name: string) => void;
+  closeLogModal: () => void;
+
+  logUserModal: boolean;
+  logUserModalId: number | null;
+  openUserLogModal: (id: number) => void;
+  closeUserLogModal: () => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -107,4 +118,23 @@ export const useUI = create<UIState>((set, get) => ({
 
   dualMode: false,
   toggleDualMode: () => set((state) => ({ dualMode: !state.dualMode })),
+
+  logModal: false,
+  logModalId: null,
+  logModalName: null,
+  openLogModal: (id: number, name: string) => {
+    set({ logModal: true, logModalId: id, logModalName: name, logUserModal: false  });
+  },
+  closeLogModal: () => {
+    set({ logModal: false, logModalId: null, logModalName: null });
+  },
+
+  logUserModal: false,
+  logUserModalId: null,
+  openUserLogModal: (id: number) => {
+    set({ logUserModal: true, logUserModalId: id, logModal: false });
+  },
+  closeUserLogModal: () => {
+    set({ logUserModal: false, logModalId: null });
+  },
 }));

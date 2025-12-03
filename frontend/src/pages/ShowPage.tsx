@@ -93,7 +93,7 @@ export function ShowPage() {
 
         return (
           <div className="w-full h-full flex items-center justify-center bg-black">
-            <img src="../../public/wallpaper.jpg" className="max-w-full max-h-full" />
+            <img src="public/wallpaper.jpg" className="max-w-full max-h-full" />
           </div>
         );
 

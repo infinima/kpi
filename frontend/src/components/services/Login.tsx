@@ -118,7 +118,7 @@ export function LoginModal() {
                     disabled={loading}
                     className="
                         w-full py-2 rounded-lg text-white font-medium
-                        bg-primary hover:bg-primary-dark
+                        bg-primary hover:bg-primary-dark mb-0
                         disabled:opacity-50
                     "
                 >

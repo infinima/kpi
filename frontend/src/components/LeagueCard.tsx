@@ -187,7 +187,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
             {/* ---------- управление статусом ---------- */}
             {!isDeleted && canUpdate && (
 <>
-  <p className="text-text-secondary dark:text-dark-text-secondary">
+  <p className="text-text-secondary dark:text-dark-text-secondary mb-0">
     Управление статусами
   </p>
 
@@ -391,10 +391,8 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                         {canHistory && (
                             <button
                                 onClick={() =>
-                                    notify({
-                                        type: "info",
-                                        text: "История изменений пока не реализована"
-                                    })
+                                  useUI.getState().openLogModal(league.id, "leagues")
+
                                 }
                                 className="
                                     w-full py-3 rounded-lg border border-border

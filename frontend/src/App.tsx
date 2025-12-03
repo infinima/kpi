@@ -12,6 +12,8 @@ import {LoginModal} from "@/components/services/Login";
 import {NotificationCenter} from "@/components/services/NotificationCenter";
 import {ProfileModal} from "@/components/ProfileModal";
 import {MenuBar} from "@/components/layout/MenuBar";
+import {LogModal} from "@/components/layout/LogModal";
+import {UserLogModal} from "@/components/layout/UserLogModal";
 
 export function App() {
   const { currentPage, setPage } = useNavigation();
@@ -72,6 +74,8 @@ export function App() {
       <LoginModal />
       <NotificationCenter />
       <ProfileModal />
+      <LogModal />
+      <UserLogModal />
 
 
       {currentPage === "show" ? (

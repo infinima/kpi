@@ -55,10 +55,7 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
     }
 
     function handleHistoryView() {
-        notify({
-            type: "info",
-            text: "История изменений пока не реализована"
-        });
+      useUI.getState().openLogModal(location.id, "locations");
     }
 
     function handleChangesView() {
@@ -75,7 +72,7 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
             rounded-xl shadow-card p-4 space-y-3
         ">
             <h2 className="text-xl font-semibold">{location.name}</h2>
-            <p className="text-text-secondary">
+            <p className="text-text-secondary dark:text-dark-text-secondary">
                 Адрес: <b>{location.address}</b>
             </p>
 

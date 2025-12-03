@@ -36,6 +36,7 @@ export interface PermissionsResponse {
 }
 
 interface User {
+  tg_id: string;
   photo: string;
   patronymic: string;
   id: number;

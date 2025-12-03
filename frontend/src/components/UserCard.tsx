@@ -50,17 +50,13 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
   }
 
   function handleHistoryView() {
-    notify({
-      type: "info",
-      text: "История пользователя пока не реализована",
-    });
+    useUI.getState().openLogModal(user.id, "users");
+
   }
 
   function handleChangesView() {
-    notify({
-      type: "info",
-      text: "Просмотр изменений пользователя пока не реализован",
-    });
+    useUI.getState().openUserLogModal(user.id);
+
   }
 
   const canUpdate = can("users", "update", user.id);

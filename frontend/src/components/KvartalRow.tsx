@@ -17,8 +17,8 @@ export function KvartalRow({ item }: Props) {
 
   const {guest, can} = useUser();
 
-  const canPenalty = !guest && can("leagues", "edit_penalties", useEventsNav().leagueId);
-  const canEditAnswers = !guest && can("leagues", "edit_answers", useEventsNav().leagueId);
+  const canPenalty = !guest && can("leagues", "edit_penalties", useEventsNav().leagueId || undefined);
+  const canEditAnswers = !guest && can("leagues", "edit_answers", useEventsNav().leagueId || undefined);
 
   const [popup, setPopup] = useState<{
     q: number;
@@ -38,7 +38,10 @@ export function KvartalRow({ item }: Props) {
     function handle(e: MouseEvent) {
       if (
         popupRef.current &&
-        !popupRef.current.contains(e.target as Node)
+        !popupRef.current.contains(e.target as Node) ||
+        penaltyRef.current &&
+        !penaltyRef.current.contains(e.target as Node)
+
       ) {
         setPopup(null);
         setPenaltyPopup(null);
@@ -126,11 +129,11 @@ export function KvartalRow({ item }: Props) {
                 return (
                   <td
                     key={i}
-                    onClick={(e) => !q.finished && openPopupAnswer(e, qNum)}
+                    onClick={(e) => openPopupAnswer(e, qNum)}
                     className={`td text-center cursor-pointer
                       border-r border-border
                       hover:bg-hover dark:hover:bg-dark-hover  dark:border-dark-border
-                      ${a.correct ? a.incorrect ? "text-yellow-500"  : "text-green-500": a.incorrect ? "text-red-500"  : "opacity-40"}
+                      ${a.correct ? a.incorrect ? "text-yellow-500"  : "text-green-500": a.incorrect ? "text-red-500"  : "text-gray-500"}
                                   ${hoveredColumn === (qi-1) * 5 + i+5 ? "!bg-primary/10 dark:!bg-primary/20" : ""}\`}
 `}
 
@@ -323,7 +326,7 @@ export function KvartalRow({ item }: Props) {
                 Итог: {item.total} · Штраф:{" "}
                 <button
                   onClick={openPenaltyPopup}
-                  className=""
+                  className={`${item.penalty ? "text-red-500" : ""}`}
                 >
                   {item.penalty}
                 </button>
