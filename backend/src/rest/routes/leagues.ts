@@ -1,5 +1,6 @@
 import express from "express";
 import fetch from "node-fetch";
+import https from "node:https";
 import { z } from "../../utils/zod-openapi-init.js";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../utils/database.js";
@@ -627,11 +628,14 @@ leaguesRouter.post(
             members: z.infer<typeof MembersSchema>;
         }>;
         try {
-            const r = await fetch(url);
+            const agent = new https.Agent({
+                rejectUnauthorized: false
+            });
+            const r = await fetch(url, { agent });
             const raw = await r.json();
 
             const SingleTeamSchema = z.object({
-                id: z.number().int().positive(),
+                id: z.coerce.number().int().positive(),
                 name: z.string().min(1),
                 members: MembersSchema
             });
