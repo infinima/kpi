@@ -54,7 +54,6 @@ photosRouter.get(
 photosRouter.get(
     "/:id",
     validate(GetPhotoInput, "params"),
-    checkNotDeleted("photo"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -82,7 +81,6 @@ photosRouter.get(
 photosRouter.get(
     "/:id/file",
     validate(GetPhotoInput, "params"),
-    checkNotDeleted("photo"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
