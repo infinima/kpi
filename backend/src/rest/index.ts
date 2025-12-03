@@ -2,6 +2,7 @@ import express from "express";
 import swaggerUi from "swagger-ui-express";
 import cors from "cors";
 import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { generateOpenApiSpec } from "../utils/openapi.js";
 
 import "./schemas/errors.js";
@@ -14,7 +15,7 @@ import { teamsRouter } from "./routes/teams.js";
 import { usersRouter } from "./routes/users.js";
 import { permissionsRouter } from "./routes/permissions.js";
 import { logsRouter } from "./routes/logs.js";
-import {dirname, join} from "path";
+import { photosRouter } from "./routes/photos.js";
 
 export function createApp() {
     const __filename = fileURLToPath(import.meta.url);
@@ -41,6 +42,7 @@ export function createApp() {
     app.use("/api/users", usersRouter);
     app.use("/api/permissions", permissionsRouter);
     app.use("/api/logs", logsRouter);
+    app.use("/api/photos", photosRouter);
 
     // Swagger
     const openApiSpec = generateOpenApiSpec();

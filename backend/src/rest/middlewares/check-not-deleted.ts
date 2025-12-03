@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { query } from "../../utils/database.js";
 
-export type ObjectType = "event" | "location" | "league" | "team" | "user";
+export type ObjectType = "event" | "location" | "league" | "team" | "user" | "photo";
 
 const CHAIN: Record<ObjectType, ObjectType | null> = {
     event: null,
@@ -9,6 +9,7 @@ const CHAIN: Record<ObjectType, ObjectType | null> = {
     league: "location",
     team: "league",
     user: null,
+    photo: "location",
 };
 
 const TABLE: Record<ObjectType, string> = {
@@ -17,12 +18,14 @@ const TABLE: Record<ObjectType, string> = {
     league: "leagues",
     team: "teams",
     user: "users",
+    photo: "photos",
 };
 
-const PARENT_FIELD: Record<"location" | "league" | "team", string> = {
+const PARENT_FIELD: Record<"location" | "league" | "team" | "photo", string> = {
     location: "event_id",
     league: "location_id",
-    team: "league_id"
+    team: "league_id",
+    photo: "location_id"
 };
 
 export function checkNotDeleted(type: ObjectType) {
