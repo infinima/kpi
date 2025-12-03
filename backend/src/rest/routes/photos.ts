@@ -32,7 +32,7 @@ photosRouter.get(
 
 // GET /api/photos/location/:location_id/deleted
 photosRouter.get(
-    "/location/:location_id",
+    "/location/:location_id/deleted",
     validate(GetPhotosByLocationInput, "params"),
     checkParentNotDeleted("photo", "location_id"),
     checkPermission("locations", "edit_photos"),
@@ -61,7 +61,7 @@ photosRouter.get(
         const [photo] = await query(
             `SELECT id, location_id, created_at, deleted_at
              FROM photos
-             WHERE id = ? AND deleted_at IS NULL`,
+             WHERE id = ?`,
             [id], (req as any).user_id
         );
 
@@ -88,7 +88,7 @@ photosRouter.get(
         const [photo] = await query(
             `SELECT file
              FROM photos 
-             WHERE id = ? AND deleted_at IS NULL`,
+             WHERE id = ?`,
             [id], (req as any).user_id
         );
 

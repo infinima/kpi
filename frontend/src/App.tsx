@@ -14,6 +14,7 @@ import {ProfileModal} from "@/components/ProfileModal";
 import {MenuBar} from "@/components/layout/MenuBar";
 import {LogModal} from "@/components/layout/LogModal";
 import {UserLogModal} from "@/components/layout/UserLogModal";
+import {PhotosModal} from "@/components/layout/PhotosModal";
 
 export function App() {
   const { currentPage, setPage } = useNavigation();
@@ -76,10 +77,11 @@ export function App() {
       <ProfileModal />
       <LogModal />
       <UserLogModal />
+      <PhotosModal/>
 
 
       {currentPage === "show" ? (
-        <div className="relative w-full h-screen bg-black overflow-hidden">
+        <div className="relative w-full h-screen  bg-[#1364b3] overflow-hidden">
 
           <div
             className="absolute top-0 left-0 w-1/4 h-1/4 cursor-pointer"

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import {PhotosModal} from "@/components/layout/PhotosModal";
 
 interface UIState {
   mobileMenuOpen: boolean;
@@ -51,6 +52,10 @@ interface UIState {
   importZuevaOpen: boolean,
   openImportZueva: () => void,
   closeImportZueva: () => void,
+
+  PhotosModal: boolean,
+  openPhotoModal: () => void,
+  closePhotoModal: () => void,
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -145,4 +150,8 @@ export const useUI = create<UIState>((set, get) => ({
   importZuevaOpen: false,
   openImportZueva: () => set({ importZuevaOpen: true }),
   closeImportZueva: () => set({ importZuevaOpen: false }),
+
+  PhotosModal: false,
+  openPhotoModal: () => set({ PhotosModal: true }),
+  closePhotoModal: () => set({ PhotosModal: false }),
 }));

@@ -22,6 +22,7 @@ interface EventsNavState {
 
   goEvents: () => void;
   goLocations: (eventId: number, eventName: string) => void;
+  goInLocations: (eventId: number, eventName: string) => void;
   goLeagues: (locationId: number, locationName: string) => void;
   goInLeagues: (leagueId: number, leagueName: string) => void;
   goToTables: (tableType: "kvartaly"| "fudzi") => void;
@@ -71,6 +72,21 @@ export const useEventsNav = create<EventsNavState>()((set, get) => ({
         eventName,
         locationId: null,
         locationName: null,
+        leagueId: null,
+        leagueName: null,
+        tableType: null,
+      };
+    }),
+
+  goInLocations: (locationId, locationName) =>
+    set(() => {
+      useSocketStore.getState().disconnect();
+      useShowStore.getState().disconnect();
+
+      return {
+        page: "locations",
+        locationId,
+        locationName,
         leagueId: null,
         leagueName: null,
         tableType: null,

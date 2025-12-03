@@ -1,13 +1,13 @@
 import { useState } from "react";
 import {
-    ChevronDown,
-    ChevronUp,
-    Pencil,
-    Trash,
-    ArrowRight,
-    RotateCcw,
-    History,
-    ListTree
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Trash,
+  ArrowRight,
+  RotateCcw,
+  History,
+  ListTree, Phone, Image
 } from "lucide-react";
 
 import { BaseImage } from "@/components/BaseImage";
@@ -30,6 +30,9 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
     const openForm = useUI((s) => s.openFormModal);
 
     const { can, guest } = useUser();
+
+  const {openPhotoModal} = useUI();
+  const {goInLocations} = useEventsNav();
 
     // ---- ПРАВА ----
     const canUpdate = can("locations", "update", location.id);
@@ -58,23 +61,32 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
       useUI.getState().openLogModal(location.id, "locations");
     }
 
-    function handleChangesView() {
-        notify({
-            type: "info",
-            text: "Журнал действий пока не реализован"
-        });
-    }
 
     return (
         <div className="
             bg-surface dark:bg-dark-surface
             border border-border dark:border-dark-border
             rounded-xl shadow-card p-4 space-y-3
-        ">
+        "
+             onClickCapture={() => goInLocations(location.id, location.name)}
+
+        >
             <h2 className="text-xl font-semibold">{location.name}</h2>
             <p className="text-text-secondary dark:text-dark-text-secondary">
                 Адрес: <b>{location.address}</b>
             </p>
+
+          <button
+            onClick={() => {openPhotoModal()}}
+            className="
+                                        w-full py-2 rounded-lg bg-surface dark:bg-dark-surface
+                                        border border-border dark:border-dark-border
+                                        hover:bg-hover dark:hover:bg-dark-hover
+                                        flex items-center justify-center gap-2
+                                    "
+          >
+            <Image size={16} /> Фотографии
+          </button>
 
             {/* Переход к лигам */}
             {!isDeleted && (
@@ -90,6 +102,9 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
                     <ArrowRight size={16} />
                 </button>
             )}
+
+
+
 
             {/* кнопка раскрытия */}
             {!guest && <button
@@ -175,6 +190,8 @@ export function LocationCard({ location, onRefresh, isDeleted = false }: Props) 
                                     <History size={16} /> История изменений
                                 </button>
                         )}
+
+
                     </div>
                 </div>
             )}

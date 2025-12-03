@@ -68,7 +68,7 @@ export function ImportZuevaModal({ onSuccess }: { onSuccess: () => void }) {
       >
         {/* HEADER */}
         <div className="flex justify-between items-center">
-          <h2 className="text-xl font-semibold">Импорт Зуева</h2>
+          <h2 className="text-xl font-semibold">Импорт от Зуева</h2>
 
           <button
             className="p-2 rounded-lg hover:bg-hover dark:hover:bg-dark-hover"
@@ -82,7 +82,7 @@ export function ImportZuevaModal({ onSuccess }: { onSuccess: () => void }) {
         <textarea
           value={txt}
           onChange={(e) => setTxt(e.target.value)}
-          placeholder="Вставьте данные…"
+          placeholder="Вставьте ссылку от Зуева"
           className="
             w-full h-48 p-3 rounded-lg text-sm resize-none
             bg-surface dark:bg-dark-surface

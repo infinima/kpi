@@ -26,7 +26,9 @@ export function ShowTable({tableType} : { tableType: string }) {
   }
 
   if (tableType === "kvartaly") {
-    if (!dualMode) return <KvartalyTable data={tableData} />;
+    if (!dualMode) return (      <div className="flex w-full h-full border-none bg-[#1364b3]">
+      <KvartalyTable data={tableData} />       </div>
+    );
 
     // dual mode ON — split data
     const mid = Math.ceil(tableData.length / 2);
@@ -35,7 +37,7 @@ export function ShowTable({tableType} : { tableType: string }) {
     const right = tableData.slice(mid);
 
     return (
-      <div className="flex w-full h-full border-none">
+      <div className="flex w-full h-full border-none bg-[#1364b3]">
         <div className="w-1/2 overflow-auto border-none">
           <KvartalyTable data={left} />
         </div>
@@ -48,7 +50,9 @@ export function ShowTable({tableType} : { tableType: string }) {
   }
 
   if (tableType === "fudzi") {
-    if (!dualMode) return <FudziTable data={tableData} />;
+    if (!dualMode) return (      <div className="flex w-full h-full border-none bg-[#1364b3]">
+      <FudziTable data={tableData} />      </div>
+    );
 
     const mid = Math.ceil(tableData.length / 2);
 
@@ -56,7 +60,7 @@ export function ShowTable({tableType} : { tableType: string }) {
     const right = tableData.slice(mid);
 
     return (
-      <div className="flex w-full h-full border-none">
+      <div className="flex w-full h-full border-none bg-[#1364b3]">
         <div className="w-1/2 overflow-auto border-r-[6px] border-[#1364b3]">
           <FudziTable data={left} />
         </div>

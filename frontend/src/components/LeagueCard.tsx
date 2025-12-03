@@ -391,7 +391,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                         {canHistory && (
                             <button
                                 onClick={() =>
-                                  useUI.getState().openLogModal(league.id, "leagues")
+                                  useUI.getState().openPhotoModal()
 
                                 }
                                 className="
