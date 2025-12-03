@@ -23,7 +23,8 @@ export const actions = [
   "edit_answers",
   "get_show",
   "control_show",
-  "edit_penalties"
+  "edit_penalties",
+  "edit_photos"
 ] as const;
 
 export type PermissionAction = (typeof actions)[number];
@@ -71,7 +72,8 @@ const ACTION_LABELS: Record<PermissionAction, string> = {
   edit_answers: "Внесение ответов команд",
   get_show: "Получение показа",
   control_show: "Управление показом",
-  edit_penalties: "Изменение штрафов команд"
+  edit_penalties: "Изменение штрафов команд",
+  edit_photos: "Загрузка фотографий"
 };
 
 const SCOPE_DESCR: Record<PermissionScope, string> = {
@@ -286,6 +288,10 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
                 }
 
                 if (data.object !== "users" && a === "access_actions_history") {
+                  return false;
+                }
+
+                if (data.object !== "locations" && a === "edit_photos") {
                   return false;
                 }
 

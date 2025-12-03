@@ -130,7 +130,7 @@ photosRouter.get(
 photosRouter.post(
     "/",
     validate(CreatePhotoInput, "body"),
-    checkPermission("locations", "update"),
+    checkPermission("locations", "edit_photos"),
     async (req, res) => {
         const { location_id, file } = (req as any).validated.body;
 

@@ -26,7 +26,8 @@ export const PermissionActionsEnum = z.enum([
     "edit_answers",
     "get_show",
     "control_show",
-    "edit_penalties"
+    "edit_penalties",
+    "edit_photos"
 ]);
 
 export const PermissionSchema = z.object({

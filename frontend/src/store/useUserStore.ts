@@ -23,7 +23,8 @@ export type PermissionAction =
   "edit_answers" |
   "get_show" |
   "control_show" |
-  "edit_penalties";
+  "edit_penalties" |
+  "edit_photos";
 
 export type EntityPermissions = {
   global?: PermissionAction[];

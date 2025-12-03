@@ -38,7 +38,8 @@ export const KPIPermissionEnum = z.enum([
     "edit_answers",
     "get_show",
     "control_show",
-    "edit_penalties"
+    "edit_penalties",
+    "edit_photos"
 ]);
 export const KPIObjectEnum = z.enum([
     "events",

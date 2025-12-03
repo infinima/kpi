@@ -16,7 +16,8 @@ export const ALL_ACTIONS = [
   "edit_answers",
   "get_show",
   "control_show",
-  "edit_penalties"
+  "edit_penalties",
+  "edit_photos"
 ] as const;
 
 export type PermissionAction = typeof ALL_ACTIONS[number];
