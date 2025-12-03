@@ -231,7 +231,7 @@ photosRouter.post(
 photosRouter.delete(
     "/:id",
     validate(GetPhotoInput, "params"),
-    checkPermission("locations", "update"),
+    checkPermission("locations", "edit_photos"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -259,7 +259,7 @@ photosRouter.delete(
 photosRouter.post(
     "/:id/restore",
     validate(GetPhotoInput, "params"),
-    checkPermission("locations", "update"),
+    checkPermission("locations", "edit_photos"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
