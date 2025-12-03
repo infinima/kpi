@@ -105,7 +105,7 @@ teamsRouter.post(
             );
 
             const answers_fudzi = JSON.stringify({
-                has_card: false,
+                has_card: true,
                 questions: Array.from({ length: 16 }, () => ({
                     status: "not_submitted"
                 }))
