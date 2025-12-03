@@ -51,6 +51,29 @@ registry.registerPath({
     },
 });
 
+// GET /api/photos/location/{location_id}/deleted
+registry.registerPath({
+    method: "get",
+    path: "/api/photos/location/{location_id}/deleted",
+    summary: "Получить удаленные фотографии по location_id",
+    tags: ["Photos"],
+    request: {
+        params: GetPhotosByLocationInput
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": {
+                    schema: z.array(PhotoSchema),
+                },
+            },
+        },
+        400: { description: "The location is deleted" },
+        404: { description: "The location does not exist" },
+    },
+});
+
 // GET /api/photos/{id}
 registry.registerPath({
     method: "get",

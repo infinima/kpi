@@ -30,6 +30,26 @@ photosRouter.get(
     }
 );
 
+// GET /api/photos/location/:location_id/deleted
+photosRouter.get(
+    "/location/:location_id",
+    validate(GetPhotosByLocationInput, "params"),
+    checkParentNotDeleted("photo", "location_id"),
+    async (req, res) => {
+        const { location_id } = (req as any).validated.params;
+
+        const rows = await query(
+            `SELECT id, location_id, created_at, deleted_at
+             FROM photos
+             WHERE location_id = ? AND deleted_at IS NOT NULL
+             ORDER BY id DESC`,
+            [location_id], (req as any).user_id
+        );
+
+        res.json(rows);
+    }
+);
+
 // GET /api/photos/:id
 photosRouter.get(
     "/:id",
