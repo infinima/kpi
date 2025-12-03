@@ -19,7 +19,7 @@ export const GetPhotoInput = z.object({
 export const CreatePhotoInput = z.object({
     location_id: z.coerce.number().int().positive(),
     file: z.string().regex(
-        /^data:image\/(png|jpe?g|webp);base64,/i,
+        /^data:image\/(png|jpe?g|webp|heic|heif);base64,/i,
         "Must be base64 square image string"
     )
 });
