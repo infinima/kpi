@@ -24,7 +24,6 @@ export const CreateUserInput = UserSchema.omit({
     updated_at: true,
     deleted_at: true,
     tg_full_name: true,
-    tg_id: true,
     tg_username: true
 }).extend({
     password: z.string().min(6, "Password must be at least 6 chars"),
