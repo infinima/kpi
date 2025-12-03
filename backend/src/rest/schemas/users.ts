@@ -8,7 +8,7 @@ export const UserSchema = z.object({
     last_name: z.string().min(1),
     first_name: z.string().min(1),
     patronymic: z.string().nullable(),
-    tg_id: z.number().int().nullable(),
+    tg_id: z.coerce.number().int().nullable(),
     tg_username: z.string().nullable(),
     tg_full_name: z.string().nullable(),
     created_at: z.string(),
