@@ -39,7 +39,7 @@ export function TablesPage() {
     <tr>
       <th
         className="
-            sticky top-0 z-30 th w-24
+            sticky top-0 z-30 th w-50
             bg-surface dark:bg-dark-surface
             border-b border-border dark:border-dark-border
           "
@@ -64,7 +64,7 @@ export function TablesPage() {
               sticky top-0 z-30 th text-center w-10
               bg-surface dark:bg-dark-surface
               border-b border-border dark:border-dark-border
-              ${hoveredColumn === i ? "!bg-primary dark:!bg-primary" : ""}
+              ${hoveredColumn === i ? "!bg-primary/40 dark:!bg-primary/80" : ""}
             `}
           onMouseEnter={() => setHoveredColumn(i)}
           onMouseLeave={() => setHoveredColumn(null)}
@@ -102,7 +102,7 @@ export function TablesPage() {
     <tr>
       <th
         className="
-           z-30 th w-32
+           z-30 th w-50
           bg-surface dark:bg-dark-surface
           border-b border-border dark:border-dark-border
         "
@@ -122,7 +122,7 @@ export function TablesPage() {
             border-r
             ${hoveredColumn !== null &&
             Math.floor(hoveredColumn / 5) + 1 === q
-              ? "!bg-primary dark:!bg-primary"
+              ? "!bg-primary/40 dark:!bg-primary/80"
               : ""}`}
 
         >
@@ -171,7 +171,7 @@ export function TablesPage() {
                 bg-surface dark:bg-dark-surface
                 border border-border dark:border-dark-border
                 w-10 px-2
-            ${hoveredColumn === (q-1) * 5 + i? "!bg-primary dark:!bg-primary" : ""}`}
+            ${hoveredColumn === (q-1) * 5 + i? "!bg-primary/40 dark:!bg-primary/80": ""}`}
 
           >
 

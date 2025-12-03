@@ -51,7 +51,7 @@ export function NotificationCenter() {
                                 }[msg.type]}
                             </div>
 
-                            <div className="text-sm">
+                            <div className="text-sm whitespace-pre-line">
                                 {msg.text}
                             </div>
 

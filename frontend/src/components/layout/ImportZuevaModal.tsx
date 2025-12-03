@@ -111,7 +111,7 @@ export function ImportZuevaModal({ onSuccess }: { onSuccess: () => void }) {
               disabled:opacity-50 disabled:pointer-events-none
             "
           >
-            {loading ? "Сохранение…" : "Импортировать"}
+            {loading ? "Импортирование…" : "Импортировать"}
           </button>
         </div>
       </div>

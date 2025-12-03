@@ -1,6 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import {apiGet, apiPatch} from "@/api";
-import {useEventsNav, useNotifications} from "@/store";
+import {useEventsNav, useNotifications, useUser} from "@/store";
 
 import {ArrowUpDown, Check, Plus, Search, X,} from "lucide-react";
 
@@ -40,6 +40,8 @@ export function ResultPage() {
 
   const [editNominationsFor, setEditNominationsFor] = useState<FinalTeam | null>(null);
   const [newNom, setNewNom] = useState("");
+
+  const {can} = useUser();
 
   // ========= LOAD =========
   useEffect(() => {
@@ -136,6 +138,7 @@ export function ResultPage() {
   //                              UI
   // ============================================================
 
+  // @ts-ignore
   return (
     <div className="space-y-6 py-6 px-4 md:px-8">
 
@@ -255,7 +258,7 @@ export function ResultPage() {
 
                 {/* ДИПЛОМ */}
                 <td className={td}>
-                  <select
+                  <select disabled={!can("teams", "update", t.id)}
                     value={t.diploma}
                     onChange={(e) => updateDiploma(t, e.target.value)}
                     className="px-2 py-1 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border text-sm"
@@ -284,12 +287,12 @@ export function ResultPage() {
                     </ul>
                   )}
 
-                  <button
+                  {can("teams", "update", t.id) && (<button
                     onClick={() => setEditNominationsFor(t)}
                     className="text-primary text-sm mt-1 hover:underline"
                   >
                     Изменить
-                  </button>
+                  </button>)}
                 </td>
               </tr>
             ))}
