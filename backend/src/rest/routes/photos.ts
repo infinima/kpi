@@ -39,7 +39,35 @@ photosRouter.get(
         const { id } = (req as any).validated.params;
 
         const [photo] = await query(
-            `SELECT file 
+            `SELECT id, location_id, created_at, deleted_at
+             FROM photos
+             WHERE id = ? AND deleted_at IS NULL`,
+            [id], (req as any).user_id
+        );
+
+        if (!photo) {
+            return res.status(404).json({
+                error: {
+                    code: "PHOTO_NOT_FOUND",
+                    message: "The photo does not exist"
+                }
+            });
+        }
+
+        res.json(photo);
+    }
+);
+
+// GET /api/photos/:id/file
+photosRouter.get(
+    "/:id/file",
+    validate(GetPhotoInput, "params"),
+    checkNotDeleted("photo"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [photo] = await query(
+            `SELECT file
              FROM photos 
              WHERE id = ? AND deleted_at IS NULL`,
             [id], (req as any).user_id
@@ -59,6 +87,7 @@ photosRouter.get(
 
             res.sendFile(absolutePath, err => {
                 if (err) {
+                    console.error(err);
                     res.status(500).json({
                         error: {
                             code: "FAILED_TO_SEND_FILE",
@@ -68,6 +97,7 @@ photosRouter.get(
                 }
             });
         } catch (e: any) {
+            console.error(e);
             res.status(400).json({
                 error: {
                     code: "INVALID_FILE_PATH",
@@ -202,6 +232,50 @@ photosRouter.delete(
                 }
             });
         }
+
+        res.json({ success: true });
+    }
+);
+
+// POST /api/photos/:id/restore
+photosRouter.post(
+    "/:id/restore",
+    validate(GetPhotoInput, "params"),
+    checkPermission("locations", "update"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [row] = await query(
+            `SELECT deleted_at
+             FROM photos
+             WHERE id = ?`,
+            [id], (req as any).user_id
+        );
+
+        if (!row) {
+            return res.status(404).json({
+                error: {
+                    code: "PHOTO_NOT_FOUND",
+                    message: "The photo does not exist",
+                },
+            });
+        }
+
+        if (row.deleted_at === null) {
+            return res.status(400).json({
+                error: {
+                    code: "PHOTO_NOT_DELETED",
+                    message: "The photo is not deleted",
+                },
+            });
+        }
+
+        await query(
+            `UPDATE photos
+             SET deleted_at = NULL
+             WHERE id = ?`,
+            [id], (req as any).user_id
+        );
 
         res.json({ success: true });
     }

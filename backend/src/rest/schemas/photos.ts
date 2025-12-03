@@ -28,7 +28,7 @@ export const CreatePhotoInput = z.object({
 
 // ===== Документация =====
 
-// // GET /api/photos/location/{location_id}
+// GET /api/photos/location/{location_id}
 registry.registerPath({
     method: "get",
     path: "/api/photos/location/{location_id}",
@@ -42,14 +42,7 @@ registry.registerPath({
             description: "OK",
             content: {
                 "application/json": {
-                    schema: z.array(
-                        z.object({
-                            id: z.number(),
-                            location_id: z.number(),
-                            file: z.string(),
-                            created_at: z.string(),
-                        })
-                    ),
+                    schema: z.array(PhotoSchema),
                 },
             },
         },
@@ -62,6 +55,28 @@ registry.registerPath({
 registry.registerPath({
     method: "get",
     path: "/api/photos/{id}",
+    summary: "Получить информацию о фотографии",
+    tags: ["Photos"],
+    request: {
+        params: GetPhotoInput
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": {
+                    schema: PhotoSchema,
+                },
+            },
+        },
+        404: { description: "The photo does not exist" },
+    },
+});
+
+// GET /api/photos/{id}/file
+registry.registerPath({
+    method: "get",
+    path: "/api/photos/{id}/file",
     summary: "Получить файл фотографии",
     tags: ["Photos"],
     request: {
@@ -124,6 +139,23 @@ registry.registerPath({
     },
     responses: {
         200: { description: "OK" },
+        404: { description: "The photo does not exist" },
+    },
+});
+
+// POST /api/photos/{id}/restore
+registry.registerPath({
+    method: "post",
+    path: "/api/photos/{id}/restore",
+    summary: "Восстановить удалённую фотографию",
+    tags: ["Photos"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetPhotoInput,
+    },
+    responses: {
+        200: { description: "OK" },
+        400: { description: "The photo is not deleted" },
         404: { description: "The photo does not exist" },
     },
 });
