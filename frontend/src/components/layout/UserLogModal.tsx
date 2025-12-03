@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { X, ArrowLeftRight } from "lucide-react";
+import {
+  X,
+  ArrowLeftRight,
+  ChevronRight,
+  ChevronLeft,
+  ChevronFirst,
+  ChevronLast,
+} from "lucide-react";
 import { useUI, useNotifications } from "@/store";
 import { apiGet } from "@/api";
 import { formatDate } from "@/helpers/formatDate";
@@ -31,26 +38,54 @@ export function UserLogModal() {
   const [data, setData] = useState<LogItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // pagination
+  const [page, setPage] = useState(1);
+  const [maxPage, setMaxPage] = useState(1);
+  const [total, setTotal] = useState(0);
+
   // ===== load logs
-  useEffect(() => {
+  async function loadLogs(p: number) {
     if (!logUserModal || !logUserModalId) return;
 
     setLoading(true);
 
-    apiGet(`logs/user/${logUserModalId}`)
-      .then((res) => setData(res || []))
-      .catch(() => {
-        setData([]);
-        notify({ type: "error", text: "Ошибка загрузки логов пользователя" });
-      })
-      .finally(() => setLoading(false));
+    try {
+      const res = await apiGet(
+        `logs/user/${logUserModalId}?current_page=${p}`
+      );
+
+      setData(res.page || []);
+      setPage(res.current_page || 1);
+      setMaxPage(res.max_page || 1);
+      setTotal(res.total || 0);
+    } catch (err) {
+      setData([]);
+      notify({ type: "error", text: "Ошибка загрузки логов пользователя" });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // при открытии — грузим первую страницу
+  useEffect(() => {
+    if (!logUserModal || !logUserModalId) return;
+    loadLogs(1);
   }, [logUserModal, logUserModalId]);
 
+  // если модалка закрыта — ничего не рендерим
   if (!logUserModal) return null;
+
+  // pagination controls
+  const goFirst = () => page > 1 && loadLogs(1);
+  const goPrev = () => page > 1 && loadLogs(page - 1);
+  const goNext = () => page < maxPage && loadLogs(page + 1);
+  const goLast = () => page < maxPage && loadLogs(maxPage);
+
+  const disablePrev = page <= 1;
+  const disableNext = page >= maxPage;
 
   return (
     <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4">
-
       <div
         className="
           w-full max-w-2xl max-h-[90vh] overflow-hidden
@@ -59,7 +94,6 @@ export function UserLogModal() {
           flex flex-col
         "
       >
-
         {/* ===== HEADER ===== */}
         <div
           className="
@@ -81,7 +115,6 @@ export function UserLogModal() {
 
         {/* ===== CONTENT ===== */}
         <div className="overflow-auto p-4 space-y-4 text-sm">
-
           {loading && (
             <div className="text-center opacity-70 py-8">Загрузка…</div>
           )}
@@ -110,7 +143,9 @@ export function UserLogModal() {
                 {/* GO TO OBJECT LOGS */}
                 {item.table_name && item.record_id && (
                   <button
-                    onClick={() => openLogModal(item.record_id, item.table_name)}
+                    onClick={() =>
+                      openLogModal(item.record_id, item.table_name)
+                    }
                     className="
                       w-full text-left flex items-center gap-2 text-xs
                       px-2 py-1 rounded-lg
@@ -147,26 +182,74 @@ export function UserLogModal() {
                 {item.query_text && (
                   <DetailsBlock label="SQL" value={item.query_text} mono />
                 )}
-
               </div>
             ))}
         </div>
 
-        {/* ===== FOOTER ===== */}
+        {/* ===== PAGINATION ===== */}
         <div
           className="
             p-3 border-t border-border dark:border-dark-border
-            flex justify-end
+            flex items-center justify-between text-sm
           "
         >
-          <button
-            onClick={closeUserLogModal}
-            className="
-              px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark
-            "
-          >
-            Закрыть
-          </button>
+          <div className="opacity-70">
+            Всего: {total}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={goFirst}
+              disabled={disablePrev}
+              className={`
+                p-2 rounded-lg border border-border dark:border-dark-border
+                hover:bg-hover dark:hover:bg-dark-hover
+                ${disablePrev ? "opacity-40 cursor-not-allowed" : ""}
+              `}
+            >
+              <ChevronFirst className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={goPrev}
+              disabled={disablePrev}
+              className={`
+                p-2 rounded-lg border border-border dark:border-dark-border
+                hover:bg-hover dark:hover:bg-dark-hover
+                ${disablePrev ? "opacity-40 cursor-not-allowed" : ""}
+              `}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            <span className="px-2">
+              {page} / {maxPage}
+            </span>
+
+            <button
+              onClick={goNext}
+              disabled={disableNext}
+              className={`
+                p-2 rounded-lg border border-border dark:border-dark-border
+                hover:bg-hover dark:hover:bg-dark-hover
+                ${disableNext ? "opacity-40 cursor-not-allowed" : ""}
+              `}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={goLast}
+              disabled={disableNext}
+              className={`
+                p-2 rounded-lg border border-border dark:border-dark-border
+                hover:bg-hover dark:hover:bg-dark-hover
+                ${disableNext ? "opacity-40 cursor-not-allowed" : ""}
+              `}
+            >
+              <ChevronLast className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -210,7 +293,9 @@ function DetailsBlock({
           ${mono ? "font-mono overflow-x-auto" : ""}
         `}
       >
-        {typeof value === "string" ? value : JSON.stringify(value, null, 2)}
+        {typeof value === "string"
+          ? value
+          : JSON.stringify(value, null, 2)}
       </pre>
     </details>
   );
