@@ -46,6 +46,7 @@ export function TeamCard({ team, onRefresh, isDeleted = false }) {
   const coach = team.members?.coach;
   const participants = team.members?.participants ?? [];
 
+  // @ts-ignore
   return (
     <div className="bg-surface dark:bg-dark-surface border border-border dark:border-dark-border rounded-xl shadow-card p-4 space-y-3">
 
@@ -87,6 +88,7 @@ export function TeamCard({ team, onRefresh, isDeleted = false }) {
             {participants.length === 0 && (
               <p className="opacity-70">Нет участников</p>
             )}
+
 
             {participants.map((p, index) => (
               <div

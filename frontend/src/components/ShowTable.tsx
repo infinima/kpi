@@ -57,7 +57,7 @@ export function ShowTable({tableType} : { tableType: string }) {
 
     return (
       <div className="flex w-full h-full border-none">
-        <div className="w-1/2 overflow-auto">
+        <div className="w-1/2 overflow-auto border-r-[6px] border-[#1364b3]">
           <FudziTable data={left} />
         </div>
 

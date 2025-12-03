@@ -47,6 +47,10 @@ interface UIState {
   logUserModalId: number | null;
   openUserLogModal: (id: number) => void;
   closeUserLogModal: () => void;
+
+  importZuevaOpen: boolean,
+  openImportZueva: () => void,
+  closeImportZueva: () => void,
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -137,4 +141,8 @@ export const useUI = create<UIState>((set, get) => ({
   closeUserLogModal: () => {
     set({ logUserModal: false, logModalId: null });
   },
+
+  importZuevaOpen: false,
+  openImportZueva: () => set({ importZuevaOpen: true }),
+  closeImportZueva: () => set({ importZuevaOpen: false }),
 }));

@@ -47,6 +47,13 @@ export const userForm: FormConfig = {
             type: "text",
             required: false,             // отчество необязательно
             placeholder: "Отчество"
-        }
+        },
+      {
+        name: "tg_id",
+        label: "Телеграм ID",
+        type: "number",
+        required: false,             // отчество необязательно
+        placeholder: "Телеграм ID"
+      }
     ]
 };

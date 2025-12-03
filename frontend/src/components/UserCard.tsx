@@ -8,6 +8,7 @@ import {formatDate} from "@/helpers/formatDate";
 import {userForm} from "@/config/userForm";
 
 export interface User {
+  tg_id: number;
   id: number;
   email: string;
   last_name: string;
@@ -110,6 +111,7 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
           <p><b>Фамилия:</b> {user.last_name}</p>
           <p><b>Имя:</b> {user.first_name}</p>
           <p><b>Отчество:</b> {user.patronymic}</p>
+          <p><b>Телеграм ID:</b> {user.tg_id}</p>
           <p><b>Создан:</b> {formatDate(user.created_at)}</p>
           <p><b>Обновлен:</b> {formatDate(user.updated_at)}</p>
           {isDeleted && <p><b>Удален:</b> {formatDate(user.deleted_at)}</p>}
