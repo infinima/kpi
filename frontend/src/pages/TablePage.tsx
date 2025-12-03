@@ -171,7 +171,7 @@ export function TablesPage() {
                 bg-surface dark:bg-dark-surface
                 border border-border dark:border-dark-border
                 w-10 px-2
-            ${hoveredColumn === (q-1) * 5 + i? "!bg-primary/10 dark:!bg-primary/20" : ""}`}
+            ${hoveredColumn === (q-1) * 5 + i? "!bg-primary dark:!bg-primary" : ""}`}
 
           >
 

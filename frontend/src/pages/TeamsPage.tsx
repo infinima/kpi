@@ -3,12 +3,13 @@ import { apiGet } from "@/api";
 import { useUser } from "@/store";
 import { useEventsNav } from "@/store";
 
-import { Search, ArrowUpDown, Plus } from "lucide-react";
+import {Search, ArrowUpDown, Plus, CloudDownload} from "lucide-react";
 import { TeamCard } from "@/components/TeamCard";
 import { FormModal } from "@/components/layout/FormModal";
 
 import { useUI } from "@/store";
-import { teamForm } from "@/config/teamForm"; // создадим ниже
+import { teamForm } from "@/config/teamForm";
+import {ImportZuevaModal} from "@/components/layout/ImportZuevaModal"; // создадим ниже
 
 export function TeamsPage() {
   // @ts-ignore
@@ -134,6 +135,7 @@ export function TeamsPage() {
         )}
 
         {mode === "active" && canCreate && (
+          <>
           <button
             onClick={() =>
               openFormModal(teamForm, { league_id: leagueId })
@@ -143,6 +145,15 @@ export function TeamsPage() {
             <Plus size={18}/>
             Добавить команду
           </button>
+
+          <button
+            onClick={() => useUI.getState().openImportZueva()}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark"
+            >
+          <CloudDownload size={18}/>
+            Импорт от Зуева
+          </button>
+          </>
         )}
       </div>
 
@@ -162,6 +173,8 @@ export function TeamsPage() {
           ))}
         </div>
       )}
+
+      <ImportZuevaModal onSuccess={loadTeams} />
 
       {/* Модальное окно */}
       {formModalOpen && (

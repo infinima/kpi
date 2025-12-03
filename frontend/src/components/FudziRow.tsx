@@ -34,8 +34,8 @@ export function FudziRow({ item }: Props) {
 
   const {guest, can} = useUser();
 
-  const canPenalty = !guest && can("leagues", "edit_penalties", useEventsNav().leagueId);
-  const canEditAnswers = !guest && can("leagues", "edit_answers", useEventsNav().leagueId);
+  const canPenalty = !guest && can("leagues", "edit_penalties", useEventsNav().leagueId || undefined);
+  const canEditAnswers = !guest && can("leagues", "edit_answers", useEventsNav().leagueId || undefined);
 
   const popupRef = useRef<HTMLDivElement | null>(null);
 
