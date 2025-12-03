@@ -4,7 +4,6 @@ import { query } from "../../utils/database.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import {
     GetLogsByUserInput,
-    GetLogsByObjectInput,
     GetLogsByRecordInput
 } from "../schemas/logs.js";
 
