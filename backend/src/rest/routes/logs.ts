@@ -37,7 +37,50 @@ async function attachUserIfNeeded(req: any, rows: any[]) {
     }));
 }
 
-// GET /api/logs/user/:user_id
+async function paginateLogs(req: any, whereSql: string, params: any[]) {
+    const pageSize = 100;
+    const currentPage = Number(req.query.current_page ?? 1);
+
+    if (currentPage < 1 || isNaN(currentPage)) {
+        return {
+            error: {
+                code: "INVALID_PAGE",
+                message: "current_page must be a positive integer",
+            }
+        };
+    }
+
+    const [countRow] = await query(
+        `SELECT COUNT(*) AS c FROM logs ${whereSql}`,
+        params,
+        req.user_id
+    );
+
+    const total = Number(countRow.c);
+    const maxPage = Math.max(1, Math.ceil(total / pageSize));
+    const offset = (currentPage - 1) * pageSize;
+
+    let rows = await query(
+        `SELECT *
+         FROM logs
+                  ${whereSql}
+         ORDER BY id DESC
+         LIMIT ? OFFSET ?`,
+        [...params, pageSize, offset],
+        req.user_id
+    );
+
+    rows = await attachUserIfNeeded(req, rows);
+
+    return {
+        page: rows,
+        current_page: currentPage,
+        page_size: pageSize,
+        total,
+        max_page: maxPage
+    };
+}
+
 logsRouter.get(
     "/user/:user_id",
     validate(GetLogsByUserInput, "params"),
@@ -45,37 +88,33 @@ logsRouter.get(
     async (req: any, res) => {
         const { user_id } = req.validated.params;
 
-        let rows = await query(
-            `SELECT * FROM logs WHERE user_id = ? ORDER BY id DESC`,
-            [user_id],
-            req.user_id
+        const result = await paginateLogs(
+            req,
+            `WHERE user_id = ?`,
+            [user_id]
         );
 
-        rows = await attachUserIfNeeded(req, rows);
-        res.json(rows);
+        res.json(result);
     }
 );
 
-// GET /api/logs/object/:object
 logsRouter.get(
-    "/object/:object",
-    validate(GetLogsByObjectInput, "params"),
-    (req, res, next) => checkPermission((req as any).params.object, "access_history")(req, res, next),
+    "/user/:user_id",
+    validate(GetLogsByUserInput, "params"),
+    checkPermission("users", "access_actions_history"),
     async (req: any, res) => {
-        const { object } = req.validated.params;
+        const { user_id } = req.validated.params;
 
-        let rows = await query(
-            `SELECT * FROM logs WHERE table_name = ? ORDER BY id DESC`,
-            [object],
-            req.user_id
+        const result = await paginateLogs(
+            req,
+            `WHERE user_id = ?`,
+            [user_id]
         );
 
-        rows = await attachUserIfNeeded(req, rows);
-        res.json(rows);
+        res.json(result);
     }
 );
 
-// GET /api/logs/object/:object/:id
 logsRouter.get(
     "/object/:object/:id",
     validate(GetLogsByRecordInput, "params"),
@@ -83,16 +122,12 @@ logsRouter.get(
     async (req: any, res) => {
         const { object, id } = req.validated.params;
 
-        let rows = await query(
-            `SELECT * FROM logs
-             WHERE table_name = ? AND record_id = ?
-             ORDER BY id DESC`,
-            [object, id],
-            req.user_id
+        const result = await paginateLogs(
+            req,
+            `WHERE table_name = ? AND record_id = ?`,
+            [object, id]
         );
 
-        rows = await attachUserIfNeeded(req, rows);
-        res.json(rows);
+        res.json(result);
     }
 );
-

@@ -31,6 +31,27 @@ const IncludeUserQuery = z.object({
         example: "user"
     })
 });
+const PaginationQuery = z.object({
+    current_page: z
+        .string()
+        .regex(/^\d+$/, "Must be integer")
+        .optional()
+        .openapi({
+            description: "Номер страницы (1-based)",
+            example: "1",
+        }),
+});
+const LogsPageSchema = z.object({
+    page: z.array(LogSchema),
+    current_page: z.number(),
+    page_size: z.number(),
+    total: z.number(),
+    max_page: z.number(),
+});
+const LogsQuery = z.object({
+    ...IncludeUserQuery.shape,
+    ...PaginationQuery.shape,
+});
 
 export const GetLogsByUserInput = z.object({
     user_id: z.coerce.number().int(),
@@ -47,26 +68,24 @@ export const GetLogsByRecordInput = z.object({
 
 // ===== Документация =====
 
-// GET /api/logs/user/{user_id}
 registry.registerPath({
     method: "get",
     path: "/api/logs/user/{user_id}",
-    summary: "Получить все действия конкретного пользователя",
+    summary: "Получить действия конкретного пользователя",
     tags: ["Logs"],
     security: [{ BearerAuth: [] }],
     request: {
         params: GetLogsByUserInput,
-        query: IncludeUserQuery,
+        query: LogsQuery,
     },
     responses: {
         200: {
             description: "OK",
             content: {
-                "application/json": {
-                    schema: z.array(LogSchema),
-                },
+                "application/json": { schema: LogsPageSchema },
             },
         },
+        400: { description: "Invalid page" },
     },
 });
 
@@ -79,17 +98,16 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     request: {
         params: GetLogsByObjectInput,
-        query: IncludeUserQuery,
+        query: LogsQuery,
     },
     responses: {
         200: {
             description: "OK",
             content: {
-                "application/json": {
-                    schema: z.array(LogSchema),
-                },
+                "application/json": { schema: LogsPageSchema },
             },
         },
+        400: { description: "Invalid page" },
     },
 });
 
@@ -102,16 +120,15 @@ registry.registerPath({
     security: [{ BearerAuth: [] }],
     request: {
         params: GetLogsByRecordInput,
-        query: IncludeUserQuery,
+        query: LogsQuery,
     },
     responses: {
         200: {
             description: "OK",
             content: {
-                "application/json": {
-                    schema: z.array(LogSchema),
-                },
+                "application/json": { schema: LogsPageSchema },
             },
         },
+        400: { description: "Invalid page" },
     },
 });
