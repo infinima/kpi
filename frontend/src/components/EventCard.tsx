@@ -49,7 +49,7 @@ export function EventCard({ event, onRefresh, isDeleted = false }: Props) {
     }
 
     function handleHistoryView() {
-        notify({ type: "info", text: "История изменений (TODO)" });
+      useUI.getState().openLogModal(event.id, "events");
     }
 
     function handleChangesView() {

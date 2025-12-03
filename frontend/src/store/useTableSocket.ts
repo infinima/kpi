@@ -103,8 +103,11 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     });
 
     socket.on("error_response", (err: any) => {
-      notify({ type: "error", text: err });
-      // console.error(err);
+      if(err?.error?.code === "WRONG_LEAGUE_STATUS"){
+        notify({ type: "error", text: "Неверный статуc лиги" });
+      } else{
+        console.error(err);
+      }
     });
   },
 

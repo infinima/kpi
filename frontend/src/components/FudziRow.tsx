@@ -196,7 +196,7 @@ export function FudziRow({ item }: Props) {
                 <div className="text-sm opacity-70">
                   Итог: <b>{item.total}</b> · Штраф:{" "}
                   <button
-                    className="underline"
+                    className={`${item.penalty ? "text-red-500" : ""}`}
                     onClick={(e) => openPenaltyPopup(e)}
                   >
                     {item.penalty}

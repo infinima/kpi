@@ -64,7 +64,7 @@ export function TablesPage() {
               sticky top-0 z-30 th text-center w-10
               bg-surface dark:bg-dark-surface
               border-b border-border dark:border-dark-border
-              ${hoveredColumn === i ? "!bg-primary/10 dark:!bg-primary/20" : ""}
+              ${hoveredColumn === i ? "!bg-primary dark:!bg-primary" : ""}
             `}
           onMouseEnter={() => setHoveredColumn(i)}
           onMouseLeave={() => setHoveredColumn(null)}
@@ -122,7 +122,7 @@ export function TablesPage() {
             border-r
             ${hoveredColumn !== null &&
             Math.floor(hoveredColumn / 5) + 1 === q
-              ? "!bg-primary/10 dark:!bg-primary/20"
+              ? "!bg-primary dark:!bg-primary"
               : ""}`}
 
         >

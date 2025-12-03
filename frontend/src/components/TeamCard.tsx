@@ -40,7 +40,7 @@ export function TeamCard({ team, onRefresh, isDeleted = false }) {
   }
 
   function handleHistoryView() {
-    notify({ type: "info", text: "История пока не реализована" });
+    useUI.getState().openLogModal(team.id, "teams");
   }
 
   const coach = team.members?.coach;

@@ -308,7 +308,7 @@ export function FormModal({
           bg-primary text-white hover:bg-primary-dark inline-block
         "
             >
-              Загрузить презентацию Фудзи
+              {form[field.name] ? "Изменить презентацию" : "Загрузить презентацию Фудзи\n"}
               <input
                 type="file"
                 accept="application/pdf"
