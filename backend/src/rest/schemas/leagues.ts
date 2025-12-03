@@ -334,11 +334,10 @@ registry.registerPath({
             content: {
                 "application/json": {
                     schema: z.object({
-                        inserted: z.array(z.number())
-                    }),
-                    example: {
-                        inserted: [12, 13, 14]
-                    }
+                        success: z.boolean(),
+                        created: z.number().nullish(),
+                        updated: z.number().nullish()
+                    })
                 }
             }
         },
