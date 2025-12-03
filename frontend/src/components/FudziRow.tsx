@@ -32,18 +32,69 @@ export function FudziRow({ item }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
 
+
+  useEffect(() => {
+    const fixPosition = (ref: any, setter: any) => {
+      if (!ref.current) return;
+
+      const rect = ref.current.getBoundingClientRect();
+      const padding = 10;
+
+      const dx = (() => {
+        if (rect.right > window.innerWidth - padding)
+          return -(rect.right - (window.innerWidth - padding));
+
+        if (rect.left < padding)
+          return padding - rect.left;
+
+        return 0;
+      })();
+
+      const dy = (() => {
+        if (rect.bottom > window.innerHeight - padding)
+          return -(rect.bottom - (window.innerHeight - padding));
+
+        if (rect.top < padding)
+          return padding - rect.top;
+
+        return 0;
+      })();
+
+      if (dy !== 0) {
+        setter((p: any) => p && { ...p, x: p.x + 45, y: p.y + dy });
+      }
+
+      if (dx !== 0) {
+        setter((p: any) => p && {
+          ...p,
+          x: p.x - 210,
+          y: p.y + Math.max(dy, 0)
+        });
+      }
+    };
+
+    fixPosition(popupRef, setPopup);
+    fixPosition(popupRef, setPenaltyPopup);
+
+  }, [popup, penaltyPopup]);
+
   const {guest, can} = useUser();
 
   const canPenalty = !guest && can("leagues", "edit_penalties", useEventsNav().leagueId || undefined);
   const canEditAnswers = !guest && can("leagues", "edit_answers", useEventsNav().leagueId || undefined);
 
+// refs
   const popupRef = useRef<HTMLDivElement | null>(null);
+  const penaltyRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function handle(e: MouseEvent) {
       if (
         popupRef.current &&
-        !popupRef.current.contains(e.target as Node)
+        !popupRef.current.contains(e.target as Node) ||
+        penaltyRef.current &&
+        !penaltyRef.current.contains(e.target as Node)
+
       ) {
         setPopup(null);
         setPenaltyPopup(null);
@@ -53,58 +104,67 @@ export function FudziRow({ item }: Props) {
     return () => window.removeEventListener("mousedown", handle);
   }, []);
 
-  function openPopup(e: React.MouseEvent, q: number) {
-    if(!canEditAnswers) {
-      return;
-    }
-    const r = e.currentTarget.getBoundingClientRect();
+// auto fix positions
+  useEffect(() => {
+    const fixPosition = (ref: any, setter: any) => {
+      if (!ref.current) return;
 
-    const popupWidth = 220;
-    const popupHeight = 150;
+      const rect = ref.current.getBoundingClientRect();
+      const padding = 10;
 
-    const pos = clampPopupPosition(r.left, r.bottom + 4, popupWidth, popupHeight);
+      const dx = (() => {
+        if (rect.right > window.innerWidth - padding)
+          return -(rect.right - (window.innerWidth - padding));
 
-    setPopup({
-      q,
-      x: pos.x,
-      y: pos.y,
-    });
-  }
+        if (rect.left < padding)
+          return padding - rect.left;
+
+        return 0;
+      })();
+
+      const dy = (() => {
+        if (rect.bottom > window.innerHeight - padding)
+          return -(rect.bottom - (window.innerHeight - padding));
+
+        if (rect.top < padding)
+          return padding - rect.top;
+
+        return 0;
+      })();
+
+      if (dy !== 0) {
+        setter((p: any) => p && { ...p, x: p.x + 10, y: p.y + dy });
+      }
+
+      if (dx !== 0) {
+        setter((p: any) =>
+          p && { ...p, x: p.x - 210, y: p.y + Math.max(dy, 0) }
+        );
+      }
+    };
+
+    fixPosition(popupRef, setPopup);
+    fixPosition(penaltyRef, setPenaltyPopup);
+
+  }, [popup, penaltyPopup]);
 
   // ====== Открыть popup штрафа ======
-  function openPenaltyPopup(e: React.MouseEvent) {
-    if(!canPenalty) {
-      return;
-    }
+  function openPopup(e: React.MouseEvent, q: number) {
+    if (!canEditAnswers) return;
     const r = e.currentTarget.getBoundingClientRect();
+    setPopup({ q, x: r.left, y: r.bottom + 4 });
+  }
 
-    const popupWidth = 160;
-    const popupHeight = 110;
-
-    const pos = clampPopupPosition(r.left, r.bottom + 4, popupWidth, popupHeight);
-
-    setPenaltyPopup({
-      x: pos.x,
-      y: pos.y,
-    });
+  function openPenaltyPopup(e: React.MouseEvent) {
+    if (!canPenalty) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    setPenaltyPopup({ x: r.left, y: r.bottom + 4 });
   }
 
   function choose(status: "correct" | "incorrect" | "not_submitted") {
     if (!popup) return;
     fudziSetAnswer(item.id, popup.q, status);
     setPopup(null);
-  }
-
-  function clampPopupPosition(x: number, y: number, popupWidth: number, popupHeight: number) {
-    const padding = 8;
-
-    const maxX = window.innerWidth - popupWidth - padding;
-    const maxY = window.innerHeight - popupHeight - padding;
-
-    return {
-      x: Math.min(Math.max(x, padding), maxX),
-      y: Math.min(Math.max(y, padding), maxY),
-    };
   }
 
   const desktopRow = (
@@ -333,7 +393,7 @@ export function FudziRow({ item }: Props) {
 
             {item.penalty > 0 && (
               <button
-                className="px-3 py-1 rounded-lg "
+                className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg"
                 onClick={() => fudziSetPenalty(item.id, item.penalty - 1)}
               >
                 -1
@@ -346,7 +406,7 @@ export function FudziRow({ item }: Props) {
             </div>
 
             <button
-              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg"
               onClick={() => fudziSetPenalty(item.id, item.penalty + 1)}
             >
               +1
