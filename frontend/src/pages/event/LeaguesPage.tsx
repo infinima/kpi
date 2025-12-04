@@ -15,7 +15,6 @@ export function LeaguesPage() {
     const [search, setSearch] = useState("");
     const [mode, setMode] = useState<"active" | "deleted">("active");
 
-    const notify = useNotifications((s) => s.addMessage);
 
     const formOpen = useUI((s) => s.formModalOpen);
     const closeForm = useUI((s) => s.closeFormModal);
@@ -44,9 +43,7 @@ export function LeaguesPage() {
 
             const data = await apiGet(url);
             setLeagues(data);
-        } catch {
-            notify({ type: "error", text: "Не удалось загрузить лиги" });
-        }
+        } catch {}
     }
 
     useEffect(() => {

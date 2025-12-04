@@ -52,9 +52,6 @@ export function EventCard({ event, onRefresh, isDeleted = false }: Props) {
       useUI.getState().openLogModal(event.id, "events");
     }
 
-    function handleChangesView() {
-        notify({ type: "info", text: "Журнал действий (TODO)" });
-    }
 
     const canGoInside = !isDeleted; // гости и удалённые → не проходят
 

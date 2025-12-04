@@ -223,7 +223,6 @@ export function FormModal({
         try {
             if (isEdit) {
                 await apiPatch(`${config.endpoint}/${initialData!.id}`, payload);
-                notify({ type: "success", text: "Изменения сохранены" });
             } else {
                 await apiPost(config.endpoint, payload);
                 notify({ type: "success", text: "Создано успешно" });
@@ -329,7 +328,6 @@ export function FormModal({
                   // сохраняем
                   updateField(field.name, base64);
 
-                  notify({type: "success", text: "Файл загружен"});
                 }}
               />
             </label>
@@ -406,7 +404,6 @@ export function FormModal({
                     onCrop={(base64) => {
                         updateField("photo", base64);
                         setCropFile(null);
-                        notify({ type: "success", text: "Фото обновлено" });
                     }}
                 />
             )}

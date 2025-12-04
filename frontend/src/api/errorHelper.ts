@@ -78,6 +78,9 @@ export function showApiError(error: any) {
 
     if (error?.error?.code) {
         const code = error.error.code;
+        if(code === "INVALID_TOKEN"){
+          return;
+        }
         const message =
             errorMessages[code] || error.error.message || "Неизвестная ошибка";
 

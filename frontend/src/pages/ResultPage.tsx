@@ -138,7 +138,6 @@ export function ResultPage() {
   //                              UI
   // ============================================================
 
-  // @ts-ignore
   return (
     <div className="space-y-6 py-6 px-4 md:px-8">
 
