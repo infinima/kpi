@@ -172,40 +172,43 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
             }
 
             // --- Перевёрнутый логотип PNG во 2-й четверти ---
+// --- Перевёрнутый логотип PNG во 2-й четверти ---
             {
                 const logoPath = path.resolve(__dirname, "../static/logo_black.png");
 
-                const thirdTop = 2 * sectionHeight;
-                const mirrorLine = 2 * sectionHeight;
+                const secondTop = sectionHeight;
+                const secondHeight = sectionHeight;
 
                 const logoWidth = 56;
                 const logoHeight = 40;
 
-                // Координаты уже стоящих логотипов в 3-й четверти
-                const xLeft3 = 10;
-                const yTop3 = thirdTop + 10;
+                // Координаты как в 3-й четверти
+                const xLeft = 10;
+                const yLeftTop = secondTop + 10;
 
-                const xRight3 = pageWidth - 10 - logoWidth;
-                const yBottom3 = thirdTop + sectionHeight - 5 - logoHeight;
+                const xRight = pageWidth - 10 - logoWidth;
+                const yRightBottom = secondTop + secondHeight - 5 - logoHeight;
 
-                // Отзеркаливание по горизонтальной границе
-                const yTop2 = mirrorLine - (yTop3 - thirdTop) - logoHeight;
-                const yBottom2 = mirrorLine - (yBottom3 - thirdTop) - logoHeight;
-
-                // Левый верхний во 2-й четверти (перевёрнут)
+                // Левый верхний угол 2-й части (перевёрнут)
                 doc.save();
                 doc.rotate(180, {
-                    origin: [xLeft3 + logoWidth / 2, yTop2 + logoHeight / 2]
+                    origin: [xLeft + logoWidth / 2, yLeftTop + logoHeight / 2]
                 });
-                doc.image(logoPath, xLeft3, yTop2, { width: logoWidth, height: logoHeight });
+                doc.image(logoPath, xLeft, yLeftTop, {
+                    width: logoWidth,
+                    height: logoHeight
+                });
                 doc.restore();
 
-                // Правый нижний во 2-й четверти (перевёрнут)
+                // Правый нижний угол 2-й части (перевёрнут)
                 doc.save();
                 doc.rotate(180, {
-                    origin: [xRight3 + logoWidth / 2, yBottom2 + logoHeight / 2]
+                    origin: [xRight + logoWidth / 2, yRightBottom + logoHeight / 2]
                 });
-                doc.image(logoPath, xRight3, yBottom2, { width: logoWidth, height: logoHeight });
+                doc.image(logoPath, xRight, yRightBottom, {
+                    width: logoWidth,
+                    height: logoHeight
+                });
                 doc.restore();
             }
         });
