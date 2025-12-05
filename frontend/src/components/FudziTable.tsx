@@ -22,7 +22,6 @@ export function FudziTable({ data }: { data: FudziTeam[] }) {
     {/* === COLUMN SIZES === */}
     <colgroup>
     <col className="w-[15%]" />   {/* Команда */}
-      <col className="w-[5%]" />    {/* Карточка */}
     <col className="w-[5%]" />    {/* Штраф */}
     <col className="w-[5%]" />    {/* Итог */}
   {Array.from({ length: 16 }).map((_, i) => (
@@ -35,7 +34,6 @@ export function FudziTable({ data }: { data: FudziTeam[] }) {
   <tr className="h-6 text-sm select-none">
 
   <th className="px-1 py-0 text-left">Команда</th>
-    <th className="px-1 py-0 text-center">Карта</th>
     <th className="px-1 py-0 text-center">Штраф</th>
     <th className="px-1 py-0 text-center">Итого</th>
 
@@ -64,16 +62,7 @@ export function FudziTable({ data }: { data: FudziTeam[] }) {
     </td>
 
   {/* === CARD STATUS === */}
-          <td className="text-center p-1">
-            <div
-              className={`
-       h-full rounded-lg w-full text-sm font-small 
-      ${team.has_card ? "bg-[#44d80d]" : "bg-[#ed4242]"}
-    `}
-            >
-              {team.has_card ? "Да" : "Нет"}
-            </div>
-          </td>
+
 
   {/* === PENALTY === */}
   <td className="text-center font-semibold text-black">

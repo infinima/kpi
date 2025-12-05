@@ -47,15 +47,7 @@ export function TablesPage() {
         Команда
       </th>
 
-      <th
-        className="
-            sticky top-0 z-30 th w-16
-            bg-surface dark:bg-dark-surface
-            border-b border-border dark:border-dark-border
-          "
-      >
-        Карта
-      </th>
+
 
       {[...Array(16)].map((_, i) => (
         <th

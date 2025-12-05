@@ -181,22 +181,6 @@ export function FudziRow({ item }: Props) {
           {item.name}
         </td>
 
-        <td className="td text-center py-1 border-r border-border dark:border-dark-border px-3">
-          <button
-            onClick={() => {
-              if(canEditAnswers)
-              fudziSetCard(item.id, !item.has_card)
-            }}
-            className={`
-              px-3 rounded-lg w-full text-sm font-medium
-              ${item.has_card
-              ? "bg-green-600/20 text-green-500"
-              : "bg-red-600/20 text-red-500"}
-            `}
-          >
-            {item.has_card ? "Да" : "Нет"}
-          </button>
-        </td>
 
         {/* Вопросы 1..16 */}
         {item.answers.map((a, i) => (
@@ -264,19 +248,7 @@ export function FudziRow({ item }: Props) {
                 </div>
               </div>
 
-              <button
-                onClick={() => {
-                  if(canEditAnswers)
-                    fudziSetCard(item.id, !item.has_card)
-                }}
-                className={`px-3 py-1 rounded-lg text-sm ${
-                  item.has_card
-                    ? "bg-green-600/20 text-green-500"
-                    : "bg-red-600/20 text-red-500"
-                }`}
-              >
-                Карта: {item.has_card ? "Да" : "Нет"}
-              </button>
+
             </div>
 
             <button

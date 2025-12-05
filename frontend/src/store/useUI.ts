@@ -56,6 +56,12 @@ interface UIState {
   PhotosModal: boolean,
   openPhotoModal: () => void,
   closePhotoModal: () => void,
+
+  logTableModal: boolean;
+  logTableModalType: "fudzi" |"kvartaly" | null;
+  logTableModalId: number | null;
+  openTableLogModal: (type: "fudzi" |"kvartaly", id: number) => void;
+  closeTableLogModal: () => void;
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -154,4 +160,14 @@ export const useUI = create<UIState>((set, get) => ({
   PhotosModal: false,
   openPhotoModal: () => set({ PhotosModal: true }),
   closePhotoModal: () => set({ PhotosModal: false }),
+
+  logTableModal: false,
+  logTableModalType: null,
+  logTableModalId: null,
+  openTableLogModal: (type: "fudzi" |"kvartaly", id: number) => {
+    set({ logTableModal: true, logTableModalType: type, logTableModalId: id });
+  },
+  closeTableLogModal: () => {
+    set({ logTableModal: false, logTableModalType: null, logTableModalId: null });
+  },
 }));

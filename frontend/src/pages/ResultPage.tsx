@@ -1,5 +1,5 @@
 import {useEffect, useMemo, useState} from "react";
-import {apiGet, apiPatch} from "@/api";
+import {apiGet, apiGetFile, apiPatch} from "@/api";
 import {useEventsNav, useNotifications, useUser} from "@/store";
 
 import {ArrowUpDown, Check, Plus, Search, X,} from "lucide-react";
@@ -240,6 +240,9 @@ export function ResultPage() {
 
               <th className={th}>Диплом</th>
               <th className={th}>Специальные номинации</th>
+              <th className={th}>Благодарности</th>
+              {/*<th className={th}>Дипломы1</th>*/}
+              {/*<th className={th}>Дипломы2</th>*/}
             </tr>
             </thead>
 
@@ -293,6 +296,45 @@ export function ResultPage() {
                     Изменить
                   </button>)}
                 </td>
+                {can("teams", "get", t.id) && (<td className={`${tdCenter} `}>
+                  <button
+                    onClick={async () =>
+                      await apiGetFile(
+                        `teams/${t.id}/appreciation`,
+                        `${t.name.replace(" ", "_")}_дипломы.pdf`
+                      )
+                    }
+                    className="text-primary text-sm mt-1 hover:underline "
+                  >
+                    Скачать
+                  </button>
+                </td>)}
+                {/*<td className={td}>*/}
+                {/*  <button*/}
+                {/*    onClick={async () =>*/}
+                {/*      await apiGetFile(*/}
+                {/*        `teams/${t.id}/appreciation`,*/}
+                {/*        `${t.name.replace(" ", "_")}_дипломы.pdf`*/}
+                {/*      )*/}
+                {/*    }*/}
+                {/*    className="text-primary text-sm mt-1 hover:underline"*/}
+                {/*  >*/}
+                {/*    Дипломы*/}
+                {/*  </button>*/}
+                {/*</td>*/}
+                {/*<td className={td}>*/}
+                {/*  <button*/}
+                {/*    onClick={async () =>*/}
+                {/*      await apiGetFile(*/}
+                {/*        `teams/${t.id}/appreciation`,*/}
+                {/*        `${t.name.replace(" ", "_")}_дипломы.pdf`*/}
+                {/*      )*/}
+                {/*    }*/}
+                {/*    className="text-primary text-sm mt-1 hover:underline"*/}
+                {/*  >*/}
+                {/*    Дипломы*/}
+                {/*  </button>*/}
+                {/*</td>*/}
               </tr>
             ))}
             </tbody>

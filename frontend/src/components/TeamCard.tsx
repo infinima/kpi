@@ -43,6 +43,8 @@ export function TeamCard({ team, onRefresh, isDeleted = false }) {
     useUI.getState().openLogModal(team.id, "teams");
   }
 
+
+
   const coach = team.members?.coach;
   const participants = team.members?.participants ?? [];
 
@@ -141,6 +143,7 @@ export function TeamCard({ team, onRefresh, isDeleted = false }) {
             )}
 
             {canHistory && (
+              <>
               <button
                 onClick={handleHistoryView}
                 className="
@@ -151,6 +154,27 @@ export function TeamCard({ team, onRefresh, isDeleted = false }) {
               >
                 <History size={16}/> История изменений
               </button>
+                <button
+                  onClick={() => useUI.getState().openTableLogModal("kvartaly", team.id)}
+                  className="
+                  w-full px-3 py-2 flex items-center gap-2 rounded-lg
+                  bg-surface dark:bg-dark-surface
+                  border border-border dark:border-dark-border
+                "
+                >
+                  <History size={16}/> История Кварталов
+                </button>
+                <button
+                  onClick={() => useUI.getState().openTableLogModal("fudzi", team.id)}
+                  className="
+                  w-full px-3 py-2 flex items-center gap-2 rounded-lg
+                  bg-surface dark:bg-dark-surface
+                  border border-border dark:border-dark-border
+                "
+                >
+                  <History size={16}/> История Фудзи
+                </button>
+              </>
             )}
 
           </div>

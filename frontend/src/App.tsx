@@ -15,6 +15,7 @@ import {MenuBar} from "@/components/layout/MenuBar";
 import {LogModal} from "@/components/layout/LogModal";
 import {UserLogModal} from "@/components/layout/UserLogModal";
 import {PhotosModal} from "@/components/layout/PhotosModal";
+import {LogTableModal, TableLogsModal} from "@/components/TableLogsModal";
 
 export function App() {
   const { currentPage, setPage } = useNavigation();
@@ -78,6 +79,8 @@ export function App() {
       <LogModal />
       <UserLogModal />
       <PhotosModal/>
+      <LogTableModal/>
+
 
 
       {currentPage === "show" ? (
