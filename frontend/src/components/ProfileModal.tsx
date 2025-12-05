@@ -200,7 +200,6 @@ export function ProfileModal() {
                     onCrop={(base64) => {
                         setForm({ ...form, photo: base64 });
                         setCropFile(null);
-                        notify({ type: "success", text: "Фото обновлено" });
                     }}
                 />
             )}

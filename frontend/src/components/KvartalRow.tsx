@@ -55,18 +55,44 @@ export function KvartalRow({ item }: Props) {
   // Попапы удерживать в пределах экрана
   // ───────────────────────────────────────────────
   useEffect(() => {
-    const fix = (ref: any, setter: any) => {
+    const fixPosition = (ref: any, setter: any) => {
       if (!ref.current) return;
 
       const rect = ref.current.getBoundingClientRect();
-      const maxY = window.innerHeight - 10;
+      const padding = 10;
 
-      if (rect.bottom > maxY)
-        setter((p: any) => p && { ...p, y: p.y - (rect.bottom - maxY) - 10 });
+      const dx = (() => {
+        if (rect.right > window.innerWidth - padding)
+          return -(rect.right - (window.innerWidth - padding));
+
+        if (rect.left < padding)
+          return padding - rect.left;
+
+        return 0;
+      })();
+
+      const dy = (() => {
+        if (rect.bottom > window.innerHeight - padding)
+          return -(rect.bottom - (window.innerHeight - padding));
+
+        if (rect.top < padding)
+          return padding - rect.top;
+
+        return 0;
+      })();
+
+      if (dy !== 0) {
+        setter((p: any) => p && { ...p, x: p.x + 45, y: p.y + dy });
+      }
+      if(dx !== 0) {
+        setter((p: any) => p && { ...p, x: p.x -210, y: p.y + Math.max(dy, dy,0)  });
+
+      }
     };
 
-    fix(popupRef, setPopup);
-    fix(penaltyRef, setPenaltyPopup);
+    fixPosition(popupRef, setPopup);
+    fixPosition(penaltyRef, setPenaltyPopup);
+
   }, [popup, penaltyPopup]);
 
   // ───────────────────────────────────────────────
@@ -215,7 +241,7 @@ export function KvartalRow({ item }: Props) {
                   <div className="text-xs opacity-70 mb-1">Правильных</div>
                   <div className="flex items-center justify-between">
                       <button
-                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border  ${ans.correct > 0 ? "" : "invisible pointer-events-none"}`}
+                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg border-border dark:border-dark-border  ${ans.correct > 0 ? "" : "invisible pointer-events-none"}`}
                         onClick={() => changeScore(popup.q, -1, 0)}
                       >
                         -1
@@ -225,7 +251,7 @@ export function KvartalRow({ item }: Props) {
                       {ans.correct}
                     </div>
                       <button
-                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border  ${ans.correct <1 ? "" : "invisible pointer-events-none"}`}
+                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg border-border dark:border-dark-border  ${ans.correct <1 ? "" : "invisible pointer-events-none"}`}
                         onClick={() => changeScore(popup.q, +1, 0)}
                       >
                         +1
@@ -239,7 +265,7 @@ export function KvartalRow({ item }: Props) {
                   <div className="text-xs opacity-70 mb-1">Неправильных</div>
                   <div className="flex items-center justify-between">
                       <button
-                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover border-border dark:border-dark-border  ${ans.incorrect > 0 ? "" : "invisible pointer-events-none"}`}
+                        className={`px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg border-border dark:border-dark-border  ${ans.incorrect > 0 ? "" : "invisible pointer-events-none"}`}
                         onClick={() => changeScore(popup.q, 0, -1)}
                       >
                         -1
@@ -251,7 +277,7 @@ export function KvartalRow({ item }: Props) {
 
 
                       <button
-                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                        className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg"
                         onClick={() => changeScore(popup.q, 0, +1)}
                       >
                         +1
@@ -287,7 +313,7 @@ export function KvartalRow({ item }: Props) {
           <div className="flex items-center justify-between px-4 py-2">
             {item.penalty > 0 && (
               <button
-                className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+                className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg"
                 onClick={() => changePenalty(-1)}
               >
                 -1
@@ -298,7 +324,7 @@ export function KvartalRow({ item }: Props) {
               {item.penalty}
             </div>
             <button
-              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-hover"
+              className="px-3 py-1 rounded-lg bg-hover dark:bg-dark-bg"
               onClick={() => changePenalty(+1)}
             >
               +1

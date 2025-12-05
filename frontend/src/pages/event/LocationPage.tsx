@@ -24,7 +24,6 @@ export function LocationsPage() {
     const [search, setSearch] = useState("");
     const [mode, setMode] = useState<"active" | "deleted">("active");
 
-    const notify = useNotifications((s) => s.addMessage);
     const { can, guest } = useUser();
 
     const formOpen = useUI((s) => s.formModalOpen);
@@ -51,9 +50,7 @@ export function LocationsPage() {
 
             const data = await apiGet(url);
             setLocations(data);
-        } catch {
-            notify({ type: "error", text: "Не удалось загрузить площадки" });
-        }
+        } catch {}
     }
 
     useEffect(() => {
