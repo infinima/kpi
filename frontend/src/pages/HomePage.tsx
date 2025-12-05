@@ -44,7 +44,7 @@ export function HomePage() {
 
                 <div className="flex justify-center">
                     <a
-                        href="https://phtl.ru/storage/pages/444/pravila-igr-1.pdf"
+                        href="/rules.pdf"
                         download
                         className="
                 inline-flex items-center gap-2

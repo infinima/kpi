@@ -52,7 +52,7 @@ export interface PermissionRow {
 }
 
 const OBJECT_LABELS: Record<PermissionObject, string> = {
-  events: "События",
+  events: "Мероприятия",
   locations: "Площадки",
   leagues: "Лиги",
   teams: "Команды",
@@ -80,7 +80,7 @@ const SCOPE_DESCR: Record<PermissionScope, string> = {
   global: "Действует для всех объектов этого типа.",
   local: "Только для объекта с указанным ID.",
   nested:
-    "Действует для объектов внутри заданного родительского объекта (например, лиги конкретного события).",
+    "Действует для объектов внутри заданного родительского объекта (например, лиги конкретного мероприятия).",
 };
 
 

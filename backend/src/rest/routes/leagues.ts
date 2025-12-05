@@ -280,8 +280,8 @@ leaguesRouter.post(
             }
 
             const result = await query(
-                "INSERT INTO leagues (location_id, name, fudzi_presentation) VALUES (?, ?, ?)",
-                [data.location_id, data.name, fudziPath], (req as any).user_id
+                "INSERT INTO leagues (location_id, name, fudzi_presentation, show_color_scheme) VALUES (?, ?, ?, ?)",
+                [data.location_id, data.name, fudziPath, JSON.stringify({})], (req as any).user_id
             );
 
             res.json({ id: result.insertId });

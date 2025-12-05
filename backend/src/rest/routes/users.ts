@@ -147,7 +147,16 @@ usersRouter.post(
                 ], (req as any).user_id
             );
 
-            res.json({ id: result.insertId });
+            const newUserId = result.insertId;
+
+            await query(
+                `INSERT INTO permissions (user_id, object, permission, object_id)
+                 VALUES (?, 'users', 'get,update', ?)`,
+                [newUserId, newUserId],
+                (req as any).user_id
+            );
+
+            res.json({ id: newUserId });
         } catch (e: any) {
             console.error(e);
             res.status(400).json({

@@ -88,7 +88,7 @@ registry.registerPath({
 registry.registerPath({
     method: "get",
     path: "/api/events/{id}/photo",
-    summary: "Получить фото события",
+    summary: "Получить фото мероприятия",
     tags: ["Events"],
     request: {
         params: GetOneEventInput,
