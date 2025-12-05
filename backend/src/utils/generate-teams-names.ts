@@ -22,7 +22,7 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
         doc.registerFont("Main", fontPath);
         doc.font("Main");
 
-        function drawDashedLine(doc: PDFKit.PDFDocument, y: number) {
+        function drawDashedLine(y: number) {
             const margin = 0;
             doc.save();
             doc.moveTo(margin, y)
@@ -34,7 +34,6 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
         }
 
         function layoutTextToTwoLines(
-            doc: PDFKit.PDFDocument,
             text: string,
             boxWidth: number
         ): string[] | null {
@@ -58,7 +57,6 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
         }
 
         function fitFontSize(
-            doc: PDFKit.PDFDocument,
             text: string,
             boxWidth: number,
             boxHeight: number
@@ -72,7 +70,7 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
 
             for (let size = maxFontSize; size >= minFontSize; size--) {
                 doc.fontSize(size);
-                const lines = layoutTextToTwoLines(doc, text, boxWidth);
+                const lines = layoutTextToTwoLines(text, boxWidth);
                 if (!lines) continue;
 
                 const lineHeight = doc.currentLineHeight(true);
@@ -96,18 +94,19 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
             const pageWidth = doc.page.width;
 
             const sectionHeight = pageHeight / 4;
-            for (let i = 1; i <= 3; i++) drawDashedLine(doc, sectionHeight * i);
+            for (let i = 1; i <= 3; i++) drawDashedLine(sectionHeight * i);
 
             const padding = 20;
             const boxHeight = sectionHeight - 2 * padding;
             const boxWidth = pageWidth - 2 * padding;
 
+            // Центральный текст (3-я четверть)
             {
                 const sectionIndex = 2;
                 const sectionTop = sectionIndex * sectionHeight;
 
                 const { fontSize, lines, textHeight } =
-                    fitFontSize(doc, name, boxWidth, boxHeight);
+                    fitFontSize(name, boxWidth, boxHeight);
                 doc.fontSize(fontSize);
 
                 let currentY = sectionTop + (sectionHeight - textHeight) / 2;
@@ -120,17 +119,17 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
                 }
             }
 
+            // Перевёрнутая версия (2-я четверть)
             {
                 const sectionTop = sectionHeight;
                 const sectionBottom = sectionHeight * 2;
                 const sectionMidY = (sectionTop + sectionBottom) / 2;
 
                 const { fontSize, lines, textHeight } =
-                    fitFontSize(doc, name, boxWidth, boxHeight);
+                    fitFontSize(name, boxWidth, boxHeight);
                 doc.fontSize(fontSize);
 
                 doc.save();
-
                 doc.rotate(180, {
                     origin: [pageWidth / 2, sectionMidY]
                 });
@@ -144,6 +143,69 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
                     currentY += doc.currentLineHeight(true);
                 }
 
+                doc.restore();
+            }
+
+            // --- Логотип PNG в 3-й четверти ---
+            {
+                const logoPath = path.resolve(__dirname, "../static/logo_black.png");
+                const thirdTop = 2 * sectionHeight;
+                const thirdHeight = sectionHeight;
+                const logoWidth = 56;
+                const logoHeight = 40;
+
+                // Левый верхний угол 3-й четверти
+                doc.image(
+                    logoPath,
+                    10,
+                    thirdTop + 10,
+                    { width: logoWidth, height: logoHeight }
+                );
+
+                // Правый нижний угол 3-й четверти
+                doc.image(
+                    logoPath,
+                    pageWidth - 10 - logoWidth,
+                    thirdTop + thirdHeight - 5 - logoHeight,
+                    { width: logoWidth, height: logoHeight }
+                );
+            }
+
+            // --- Перевёрнутый логотип PNG во 2-й четверти ---
+            {
+                const logoPath = path.resolve(__dirname, "../static/logo_black.png");
+
+                const thirdTop = 2 * sectionHeight;
+                const mirrorLine = 2 * sectionHeight;
+
+                const logoWidth = 56;
+                const logoHeight = 40;
+
+                // Координаты уже стоящих логотипов в 3-й четверти
+                const xLeft3 = 10;
+                const yTop3 = thirdTop + 10;
+
+                const xRight3 = pageWidth - 10 - logoWidth;
+                const yBottom3 = thirdTop + sectionHeight - 5 - logoHeight;
+
+                // Отзеркаливание по горизонтальной границе
+                const yTop2 = mirrorLine - (yTop3 - thirdTop) - logoHeight;
+                const yBottom2 = mirrorLine - (yBottom3 - thirdTop) - logoHeight;
+
+                // Левый верхний во 2-й четверти (перевёрнут)
+                doc.save();
+                doc.rotate(180, {
+                    origin: [xLeft3 + logoWidth / 2, yTop2 + logoHeight / 2]
+                });
+                doc.image(logoPath, xLeft3, yTop2, { width: logoWidth, height: logoHeight });
+                doc.restore();
+
+                // Правый нижний во 2-й четверти (перевёрнут)
+                doc.save();
+                doc.rotate(180, {
+                    origin: [xRight3 + logoWidth / 2, yBottom2 + logoHeight / 2]
+                });
+                doc.image(logoPath, xRight3, yBottom2, { width: logoWidth, height: logoHeight });
                 doc.restore();
             }
         });
