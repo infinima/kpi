@@ -3,6 +3,7 @@ import { validate } from "../middlewares/validate.js";
 import { query } from "../../utils/database.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/check-permission.js";
+import { generateAppreciation } from "../../utils/generate-appreciation.js";
 
 import {
     GetTeamsByLeagueInput,
@@ -79,6 +80,76 @@ teamsRouter.get(
         );
 
         res.json(row);
+    }
+);
+
+// GET /api/teams/:id/appreciation
+teamsRouter.get(
+    "/:id/appreciation",
+    validate(GetOneTeamInput, "params"),
+    checkNotDeleted("team"),
+    checkPermission("teams", "get"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [row] = await query(
+            `SELECT
+                 t.members,
+                 e.name AS event_name
+             FROM teams t
+                      JOIN leagues l ON l.id = t.league_id
+                      JOIN locations lo ON lo.id = l.location_id
+                      JOIN events e ON e.id = lo.event_id
+             WHERE t.id = ?
+               AND t.deleted_at IS NULL`,
+            [id],
+            (req as any).user_id
+        );
+
+        if (!row) {
+            return res.status(404).json({
+                error: {
+                    code: "TEAM_NOT_FOUND",
+                    message: "Team does not exist"
+                }
+            });
+        }
+
+        const members = row.members;
+        const teacherName =
+            members?.coach?.full_name || "Руководитель команды";
+        const eventName = row.event_name;
+
+        try {
+            const pdf = await generateAppreciation(
+                teacherName,
+                eventName
+            );
+
+            const safeName = teacherName
+                .trim()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+
+            const fileName = `${safeName}_благодарность.pdf`;
+            const encoded = encodeURIComponent(fileName);
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(pdf);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "PDF_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
     }
 );
 

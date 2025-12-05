@@ -172,7 +172,6 @@ export function generatePDFBuffer(commands: string[]): Promise<Buffer> {
             }
 
             // --- Перевёрнутый логотип PNG во 2-й четверти ---
-// --- Перевёрнутый логотип PNG во 2-й четверти ---
             {
                 const logoPath = path.resolve(__dirname, "../static/logo_black.png");
 
