@@ -474,8 +474,7 @@ leaguesRouter.post(
                         `UPDATE teams 
                               SET place_fudzi = NULL, 
                                   place_final = NULL, 
-                                  diploma = NULL, 
-                                  special_nominations = '[]'
+                                  diploma = NULL
                               WHERE league_id = ?`,
                         [id], (req as any).user_id
                     );
