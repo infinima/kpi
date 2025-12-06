@@ -141,23 +141,23 @@ export async function generateAppreciation(
         }
     }
 
-    // ================== Draw EVENT TEXT ==================
-    const eventFullText = `за отличную математическую подготовку к мероприятию «${eventName}»`;
-    const eventLines = splitTextIntoLines(eventFullText, futuraFont, eventFontSize, maxEventWidth);
-
-    eventLines.forEach((line, i) => {
-        const y = eventY - i * (eventFontSize + 3);
-        const isLast = i === eventLines.length - 1;
-        const w = futuraFont.widthOfTextAtSize(line.replace(/π/g, ""), eventFontSize);
-
-        drawEventLine(
-            line,
-            y,
-            eventFontSize,
-            maxEventWidth,
-            !isLast && w < maxEventWidth * 0.99
-        );
-    });
+    // // ================== Draw EVENT TEXT ==================
+    // const eventFullText = `за отличную математическую подготовку к мероприятию «${eventName}»`;
+    // const eventLines = splitTextIntoLines(eventFullText, futuraFont, eventFontSize, maxEventWidth);
+    //
+    // eventLines.forEach((line, i) => {
+    //     const y = eventY - i * (eventFontSize + 3);
+    //     const isLast = i === eventLines.length - 1;
+    //     const w = futuraFont.widthOfTextAtSize(line.replace(/π/g, ""), eventFontSize);
+    //
+    //     drawEventLine(
+    //         line,
+    //         y,
+    //         eventFontSize,
+    //         maxEventWidth,
+    //         !isLast && w < maxEventWidth * 0.99
+    //     );
+    // });
 
 
     // ================== Draw YEAR ==================

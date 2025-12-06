@@ -4,6 +4,7 @@ import { query } from "../../utils/database.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import { generateAppreciation } from "../../utils/generate-appreciation.js";
+import { generateDiploma } from "../../utils/generate-diploma.js";
 
 import {
     GetTeamsByLeagueInput,
@@ -95,7 +96,8 @@ teamsRouter.get(
         const [row] = await query(
             `SELECT
                  t.members,
-                 e.name AS event_name
+                 e.name AS event_name,
+                 YEAR(e.date) AS event_year
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
                       JOIN locations lo ON lo.id = l.location_id
@@ -119,11 +121,13 @@ teamsRouter.get(
         const teacherName =
             members?.coach?.full_name || "Руководитель команды";
         const eventName = row.event_name;
+        const eventYear = String(row.event_year);
 
         try {
             const pdf = await generateAppreciation(
                 teacherName,
-                eventName
+                eventName,
+                eventYear
             );
 
             const safeName = teacherName
@@ -132,6 +136,101 @@ teamsRouter.get(
                 .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
 
             const fileName = `${safeName}_благодарность.pdf`;
+            const encoded = encodeURIComponent(fileName);
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(pdf);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "PDF_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+    }
+);
+
+// GET /api/teams/:id/diploma
+teamsRouter.get(
+    "/:id/diploma",
+    validate(GetOneTeamInput, "params"),
+    checkNotDeleted("team"),
+    checkPermission("teams", "get"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [row] = await query(
+            `SELECT
+                 t.name AS team_name,
+                 t.members,
+                 t.diploma,
+                 e.name AS event_name,
+                 YEAR(e.date) AS event_year
+             FROM teams t
+                      JOIN leagues l ON l.id = t.league_id
+                      JOIN locations lo ON lo.id = l.location_id
+                      JOIN events e ON e.id = lo.event_id
+             WHERE t.id = ?
+               AND t.deleted_at IS NULL`,
+            [id],
+            (req as any).user_id
+        );
+
+        if (!row) {
+            return res.status(404).json({
+                error: {
+                    code: "TEAM_NOT_FOUND",
+                    message: "Team does not exist"
+                }
+            });
+        }
+
+        if (!row.diploma) {
+            return res.status(400).json({
+                error: {
+                    code: "TEAM_HAS_NO_DIPLOMA",
+                    message: "Diploma type is not assigned"
+                }
+            });
+        }
+
+        const teamName = row.team_name;
+        const eventYear = String(row.event_year);
+        const membersJson = row.members || {};
+        const membersList =
+            membersJson.participants?.map((p: any) => p.full_name)?.slice(0, 4) ||
+            [];
+
+        if (membersList.length < 1) {
+            return res.status(400).json({
+                error: {
+                    code: "NO_MEMBERS",
+                    message: "Team has no members"
+                }
+            });
+        }
+
+        try {
+            const pdf = await generateDiploma(
+                teamName,
+                membersList,
+                row.diploma,
+                eventYear
+            );
+
+            const safeName = teamName
+                .trim()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+
+            const fileName = `${safeName}_диплом_${row.diploma}.pdf`;
             const encoded = encodeURIComponent(fileName);
 
             res.setHeader("Content-Type", "application/pdf");

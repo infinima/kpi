@@ -52,6 +52,7 @@ const errorMessages: Record<string, string> = {
     TEAM_NOT_DELETED: "Команда не удалена.",
     CREATE_TEAM_FAILED: "Ошибка создания команды.",
     UPDATE_TEAM_FAILED: "Ошибка обновления команды.",
+    TEAM_HAS_NO_DIPLOMA: "Команде не присвоен диплом.",
 
     FAILED_TO_SEND_FILE: "Не удалось отправить файл.",
     INVALID_FILE_PATH: "Неверный путь к файлу.",
