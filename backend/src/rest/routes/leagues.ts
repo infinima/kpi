@@ -8,7 +8,7 @@ import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not
 import { checkPermission } from "../middlewares/check-permission.js";
 import { saveFile } from "../../utils/save-file.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
-import { generatePDFBuffer } from "../../utils/generate-teams-names.js";
+import { generateTeamsNames } from "../../utils/generate-teams-names.js";
 import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
 import { getFudziTable } from "../../socket/services/fudzi-table.js";
 import { rankTeams } from "../../utils/rank-teams.js";
@@ -189,7 +189,7 @@ leaguesRouter.get(
         const teamNames = rows.map(r => r.name);
 
         try {
-            const buffer = await generatePDFBuffer(teamNames);
+            const buffer = await generateTeamsNames(teamNames);
 
             const name = `${safeName}_команды.pdf`;
             const encoded = encodeURIComponent(name);
