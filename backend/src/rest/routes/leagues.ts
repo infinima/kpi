@@ -83,6 +83,63 @@ leaguesRouter.get(
     }
 );
 
+// GET /api/leagues/:id/accounts
+leaguesRouter.get(
+    "/:id/accounts",
+    validate(GetOneLeagueInput, "params"),
+    checkNotDeleted("league"),
+    checkPermission("leagues", "update"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        if (id === 1) {
+            res.json({
+                show: {
+                    login: "league1_show@kpiturnir.ru",
+                    password: "25448779"
+                },
+                check: {
+                    login: "league1_check@kpiturnir.ru",
+                    password: "5u2D3w!Q"
+                }
+            })
+        } else if (id === 2) {
+            res.json({
+                show: {
+                    login: "league2_show@kpiturnir.ru",
+                    password: "58232559"
+                },
+                check: {
+                    login: "league2_check@kpiturnir.ru",
+                    password: "NjS%iD5n"
+                }
+            })
+        } else if (id === 3) {
+            res.json({
+                show: {
+                    login: "league3_show@kpiturnir.ru",
+                    password: "98795653"
+                },
+                check: {
+                    login: "league3_check@kpiturnir.ru",
+                    password: "%YA9S8Qu"
+                }
+            })
+        } else {
+            res.json({
+                show: {
+                    login: "league4_show@kpiturnir.ru",
+                    password: "28229955"
+                },
+                check: {
+                    login: "league4_check@kpiturnir.ru",
+                    password: "mj*9Sf4V"
+                }
+            })
+        }
+    }
+);
+
 // GET /api/leagues/:id/fudzi_presentation
 leaguesRouter.get(
     "/:id/fudzi_presentation",
