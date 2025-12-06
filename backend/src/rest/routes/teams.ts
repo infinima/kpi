@@ -5,6 +5,7 @@ import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not
 import { checkPermission } from "../middlewares/check-permission.js";
 import { generateAppreciation } from "../../utils/generate-appreciation.js";
 import { generateDiploma } from "../../utils/generate-diploma.js";
+import { generateSpecialNominations } from "../../utils/generate-special-nominations.js";
 
 import {
     GetTeamsByLeagueInput,
@@ -231,6 +232,91 @@ teamsRouter.get(
                 .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
 
             const fileName = `${safeName}_диплом_${row.diploma}.pdf`;
+            const encoded = encodeURIComponent(fileName);
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(pdf);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "PDF_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+    }
+);
+
+// GET /api/teams/:id/special-nominations
+teamsRouter.get(
+    "/:id/special-nominations",
+    validate(GetOneTeamInput, "params"),
+    checkNotDeleted("team"),
+    checkPermission("teams", "get"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [row] = await query(
+            `SELECT
+                 t.name AS team_name,
+                 t.members,
+                 t.special_nominations,
+                 YEAR(e.date) AS event_year
+             FROM teams t
+                      JOIN leagues l ON l.id = t.league_id
+                      JOIN locations lo ON lo.id = l.location_id
+                      JOIN events e ON e.id = lo.event_id
+             WHERE t.id = ?
+               AND t.deleted_at IS NULL`,
+            [id],
+            (req as any).user_id
+        );
+
+        if (!row) {
+            return res.status(404).json({
+                error: {
+                    code: "TEAM_NOT_FOUND",
+                    message: "Team does not exist"
+                }
+            });
+        }
+
+        const teamName = row.team_name;
+        const eventYear = String(row.event_year);
+        const membersJson = row.members || {};
+        const members = membersJson.participants
+            ?.map((p: any) => p.full_name)
+            ?.slice(0, 4) || [];
+
+        if (!Array.isArray(row.special_nominations) || row.special_nominations.length === 0) {
+            return res.status(400).json({
+                error: {
+                    code: "NO_SPECIAL_NOMINATIONS",
+                    message: "This team has no special nominations"
+                }
+            });
+        }
+
+        try {
+            const pdf = await generateSpecialNominations(
+                teamName,
+                members,
+                row.special_nominations,
+                eventYear
+            );
+
+            const safeName = teamName
+                .trim()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+
+            const fileName = `${safeName}_спецноминации.pdf`;
             const encoded = encodeURIComponent(fileName);
 
             res.setHeader("Content-Type", "application/pdf");

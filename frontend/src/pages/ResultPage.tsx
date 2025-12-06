@@ -242,7 +242,7 @@ export function ResultPage() {
               <th className={th}>Специальные номинации</th>
               <th className={th}>Благодарности</th>
               <th className={th}>Диплом</th>
-              {/*<th className={th}>Дипломы2</th>*/}
+              <th className={th}>Спецноминации</th>
             </tr>
             </thead>
 
@@ -309,7 +309,7 @@ export function ResultPage() {
                     Скачать
                   </button>
                 </td>)}
-                <td className={td}>
+                {can("teams", "get", t.id) && (<td className={td}>
                   {t.diploma && t.diploma !== "PARTICIPANT" && (
                       <button
                           onClick={async () =>
@@ -323,20 +323,22 @@ export function ResultPage() {
                         Скачать
                       </button>
                   )}
-                </td>
-                {/*<td className={td}>*/}
-                {/*  <button*/}
-                {/*    onClick={async () =>*/}
-                {/*      await apiGetFile(*/}
-                {/*        `teams/${t.id}/appreciation`,*/}
-                {/*        `${t.name.replace(" ", "_")}_дипломы.pdf`*/}
-                {/*      )*/}
-                {/*    }*/}
-                {/*    className="text-primary text-sm mt-1 hover:underline"*/}
-                {/*  >*/}
-                {/*    Дипломы*/}
-                {/*  </button>*/}
-                {/*</td>*/}
+                </td>)}
+                {can("teams", "get", t.id) && (<td className={td}>
+                {t.special_nominations?.length > 0 && (
+                    <button
+                        onClick={async () =>
+                            await apiGetFile(
+                                `teams/${t.id}/special-nominations`,
+                                `${t.name.replace(" ", "_")}_спецноминации.pdf`
+                            )
+                        }
+                        className="text-primary text-sm mt-1 hover:underline"
+                    >
+                      Скачать
+                    </button>
+                )}
+                </td>)}
               </tr>
             ))}
             </tbody>
