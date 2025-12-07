@@ -133,40 +133,40 @@ authRouter.post(
     }
 );
 
-authRouter.post("/tg-login", async (req, res) => {
-    const data = req.body;
-    const botToken = process.env.TG_BOT_TOKEN;
-
-    const entries = Object.keys(data)
-        .filter(k => k !== "hash")
-        .sort()
-        .map(k => `${k}=${data[k]}`)
-        .join("\n");
-
-    const secret = crypto.createHash("sha256").update(botToken!).digest();
-    const hmac = crypto.createHmac("sha256", secret)
-        .update(entries)
-        .digest("hex");
-
-    if (hmac !== data.hash) {
-        return res.status(401).json({ error: "INVALID_TELEGRAM_DATA" });
-    }
-
-    if (Date.now() / 1000 - data.auth_date > 60 * 5) {
-        return res.status(401).json({ error: "EXPIRED_AUTH" });
-    }
-
-    let [user] = await query(
-        "SELECT id FROM users WHERE tg_id = ?",
-        [data.id]
-    );
-
-    const token = crypto.randomBytes(32).toString("hex");
-    await query(
-        `INSERT INTO sessions (token, user_id, is_deactivated, expires_at)
-         VALUES (?, ?, 0, DATE_ADD(NOW(), INTERVAL 1 DAY))`,
-        [token, user.id]
-    );
-
-    res.json({ token });
-});
+// authRouter.post("/tg-login", async (req, res) => {
+//     const data = req.body;
+//     const botToken = process.env.TG_BOT_TOKEN;
+//
+//     const entries = Object.keys(data)
+//         .filter(k => k !== "hash")
+//         .sort()
+//         .map(k => `${k}=${data[k]}`)
+//         .join("\n");
+//
+//     const secret = crypto.createHash("sha256").update(botToken!).digest();
+//     const hmac = crypto.createHmac("sha256", secret)
+//         .update(entries)
+//         .digest("hex");
+//
+//     if (hmac !== data.hash) {
+//         return res.status(401).json({ error: "INVALID_TELEGRAM_DATA" });
+//     }
+//
+//     if (Date.now() / 1000 - data.auth_date > 60 * 5) {
+//         return res.status(401).json({ error: "EXPIRED_AUTH" });
+//     }
+//
+//     let [user] = await query(
+//         "SELECT id FROM users WHERE tg_id = ?",
+//         [data.id]
+//     );
+//
+//     const token = crypto.randomBytes(32).toString("hex");
+//     await query(
+//         `INSERT INTO sessions (token, user_id, is_deactivated, expires_at)
+//          VALUES (?, ?, 0, DATE_ADD(NOW(), INTERVAL 1 DAY))`,
+//         [token, user.id]
+//     );
+//
+//     res.json({ token });
+// });
