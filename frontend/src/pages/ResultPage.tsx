@@ -369,7 +369,7 @@ export function ResultPage() {
                 {/* Диплом */}
                 <div>
                   <span>Диплом: </span>
-                  <select
+                  <select disabled={!can("teams", "update", t.id)}
                     value={t.diploma}
                     onChange={(e) => updateDiploma(t, e.target.value)}
                     className="px-2 py-1 rounded-lg bg-surface border border-border  dark:bg-dark-surface dark:border-dark-border text-sm"
@@ -394,12 +394,12 @@ export function ResultPage() {
                   </div>
                 )}
 
-                <button
+                {can("teams", "update", t.id) && (<button
                   onClick={() => setEditNominationsFor(t)}
                   className="text-primary text-sm mt-1 hover:underline"
                 >
-                  Изменить номинации
-                </button>
+                  Изменить
+                </button>)}
               </div>
             </div>
           ))}
