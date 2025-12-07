@@ -44,7 +44,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
     const canTeams = can("teams", "get")
 
     // можно ли раскрывать детали
-    const canSeeDetails = canUpdate || canDelete || canRestore || canHistory || canPrint;
+    const canSeeDetails = !guest;
 
     // ---------- статусы ----------
     const STATUS_ORDER = [
