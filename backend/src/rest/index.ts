@@ -23,8 +23,8 @@ export function createApp() {
 
     const app = express();
 
-    app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-    app.use(express.json({ limit: "10mb" }));
+    app.use(express.urlencoded({ extended: true, limit: "20mb" }));
+    app.use(express.json({ limit: "20mb" }));
 
     const staticDir = join(__dirname, "../..", "public");
     app.use(express.static(staticDir));

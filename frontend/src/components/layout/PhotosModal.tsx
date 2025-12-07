@@ -433,7 +433,7 @@ export function PhotosModal() {
                     >
                       <div className="w-full aspect-video bg-black flex items-center justify-center">
                         <img
-                          src={`/api/photos/${photo.id}/file`}
+                          src={`/api/photos/${photo.id}/preview`}
                           alt={`photo ${photo.id}`}
                           className="max-w-full max-h-full object-contain"
                           loading="lazy"
@@ -500,7 +500,7 @@ export function PhotosModal() {
             </button>
 
             <img
-              src={`/api/photos/${current.id}/file`}
+              src={`/api/photos/${current.id}/preview`}
               alt={`photo ${current.id}`}
               className="max-w-[90vw] max-h-[80vh] object-contain"
             />
