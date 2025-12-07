@@ -16,6 +16,7 @@ import {LogModal} from "@/components/layout/LogModal";
 import {UserLogModal} from "@/components/layout/UserLogModal";
 import {PhotosModal} from "@/components/layout/PhotosModal";
 import {LogTableModal, TableLogsModal} from "@/components/TableLogsModal";
+import {LeagueAccountsModal} from "@/components/LeagueAccountsModal";
 
 export function App() {
   const { currentPage, setPage } = useNavigation();
@@ -80,6 +81,7 @@ export function App() {
       <UserLogModal />
       <PhotosModal/>
       <LogTableModal/>
+      <LeagueAccountsModal />
 
 
 
@@ -88,7 +90,15 @@ export function App() {
 
           <div
             className="absolute top-0 left-0 w-1/4 h-1/4 cursor-pointer"
-            onClick={() => setPage("home")}
+            onClick={() => {setPage("home");
+
+              const doc = document as any;
+
+
+              (doc.exitFullscreen ||
+                doc.webkitExitFullscreen ||
+                doc.msExitFullscreen).call(doc);
+            }}
           />
 
           <div
@@ -111,7 +121,7 @@ export function App() {
           <MenuBar />
 
 
-          <main className={`${currentPage === "tables" ? "max-w-8xl mx-auto px-6 py-6" : "max-w-6xl mx-auto px-6 py-6"}`}>
+          <main className={`${(currentPage === "tables" || currentPage === "result") ? "max-w-8xl mx-auto px-6 py-6" : "max-w-6xl mx-auto px-6 py-6"}`}>
             {pages[currentPage]}
           </main>
         </>

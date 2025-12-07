@@ -16,7 +16,7 @@ interface FudziTeam {
 
 export function FudziTable({ data }: { data: FudziTeam[] }) {
   return (
-    <div className="w-full h-full overflow-y-auto">
+    <div className="w-full h-[143%] overflow-y-auto">
     <table className="w-full table-fixed border-collapse border-b-[6px] border-[#1364b3] bg-white ">
 
     {/* === COLUMN SIZES === */}
