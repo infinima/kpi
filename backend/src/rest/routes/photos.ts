@@ -191,7 +191,7 @@ photosRouter.post(
             });
         }
 
-        let savedPath;
+        let savedPath: string;
         try {
             savedPath = await saveFile(buffer, "png");
         } catch (e) {
@@ -204,6 +204,27 @@ photosRouter.post(
             });
         }
 
+        // ----- Генерация превью с -preview.webp -----
+        try {
+            const previewPath = savedPath.replace(/\.png$/, "-preview.webp");
+
+            const previewBuffer = await sharp(buffer)
+                .resize({ width: 600 })
+                .webp({ quality: 80 })
+                .toBuffer();
+
+            await saveFile(previewBuffer, "webp", previewPath);
+        } catch (e) {
+            console.error(e);
+            return res.status(500).json({
+                error: {
+                    code: "PREVIEW_FAILED",
+                    message: "Failed to generate preview"
+                }
+            });
+        }
+
+        // ----- Запись только original file -----
         try {
             const result = await query(
                 `INSERT INTO photos (location_id, file)
@@ -220,6 +241,57 @@ photosRouter.post(
             res.status(500).json({
                 error: {
                     code: "DB_INSERT_FAILED",
+                    message: e.message
+                }
+            });
+        }
+    }
+);
+
+// GET /api/photos/:id/preview
+photosRouter.get(
+    "/:id/preview",
+    validate(GetPhotoInput, "params"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [photo] = await query(
+            `SELECT file
+             FROM photos
+             WHERE id = ?`,
+            [id],
+            (req as any).user_id
+        );
+
+        if (!photo) {
+            return res.status(404).json({
+                error: {
+                    code: "PHOTO_NOT_FOUND",
+                    message: "The photo does not exist"
+                }
+            });
+        }
+
+        try {
+            const previewPath = photo.file.replace(/\.png$/, "-preview.webp");
+            const absolutePath = resolveFilePath(previewPath);
+
+            res.sendFile(absolutePath, (err) => {
+                if (err) {
+                    console.error(err);
+                    res.status(500).json({
+                        error: {
+                            code: "FAILED_TO_SEND_PREVIEW",
+                            message: "Failed to send preview"
+                        }
+                    });
+                }
+            });
+        } catch (e: any) {
+            console.error(e);
+            res.status(400).json({
+                error: {
+                    code: "INVALID_FILE_PATH",
                     message: e.message
                 }
             });
