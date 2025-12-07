@@ -44,7 +44,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
     const canTeams = can("teams", "get")
 
     // можно ли раскрывать детали
-    const canSeeDetails = canUpdate || canDelete || canRestore || canHistory || canPrint;
+    const canSeeDetails = !guest;
 
     // ---------- статусы ----------
     const STATUS_ORDER = [
@@ -81,7 +81,7 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
 
     const canShowKvartalyResults = statusIndex >= STATUS_ORDER.indexOf("KVARTALY_GAME");
     const canShowFudziResults = statusIndex >= STATUS_ORDER.indexOf("FUDZI_GAME");
-    const canShowOverallResults = guest ? statusIndex >= STATUS_ORDER.indexOf("ENDED") : statusIndex >= STATUS_ORDER.indexOf("GAMES_ENDED");
+    const canShowOverallResults = guest ? statusIndex >= STATUS_ORDER.indexOf("ENDED") : canPrint;
 
     // ---------- переходы статусов ----------
     const prevStatus =
@@ -312,6 +312,8 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                             </>
                         )}
 
+
+
                         {/* скачать документы */}
                         {canPrint && !isDeleted && (
                             <>
@@ -329,6 +331,23 @@ export function LeagueCard({ league, onRefresh, isDeleted = false }: Props) {
                                 </button>
                             </>
                         )}
+
+                      {canUpdate && !isDeleted && (
+                        <>
+                          <button
+                            onClick={() => useUI.getState().openLeagueAccountsModal(league.id)}
+                            className="
+      w-full py-3 rounded-lg bg-surface dark:bg-dark-surface
+      border border-border dark:border-dark-border
+      hover:bg-hover dark:hover:bg-dark-hover
+      flex items-center justify-center gap-2
+    "
+                          >
+                            <WifiCog size={18}/>
+                            Аккаунты показа
+                          </button>
+                        </>
+                      )}
 
 
                       {canTeams && !isDeleted && (

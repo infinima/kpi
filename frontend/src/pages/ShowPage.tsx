@@ -160,7 +160,7 @@ export function ShowPage() {
 
         {/* TIMER — всегда сверху */}
         {show?.timer_is_enabled && (
-          <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-white/20 text-4xl font-bold backdrop-blur z-10">
+          <div className="absolute top-4 right-4 px-4 py-2 rounded-lg bg-white/20 text-8xl font-bold backdrop-blur z-10">
             {mm}:{ss}
           </div>
         )}

@@ -3,18 +3,12 @@ import React from "react";
 export function KvartalyLogRow({ change }: any) {
   if (!change) return null;
 
-  const qI = change.quarterIndex;
-  const aI = change.questionIndex;
-
-  const highlight = (qi: number, ai: number) => qi === qI && ai === aI;
-
-  const toText = (v: any) => `${v.correct}/${v.incorrect}`;
+  const team = change.record.new_data;
 
   return (
-    <table className="w-full border-collapse text-sm">
-      <thead className="sticky top-0 z-20 text-white bg-[#1364b3]">
-      <tr className="h-7 text-xs select-none">
-
+    <table className="w-full border-collapse text-sm rounded-lg overflow-hidden border border-border dark:border-dark-border bg-surface dark:bg-dark-surface">
+      <thead className="text-white bg-[#1364b3] sticky top-0 z-20">
+      <tr className="h-7 text-xs">
         <th className="px-2 text-left">Команда</th>
 
         {[1,2,3,4].map((q)=>(
@@ -28,13 +22,11 @@ export function KvartalyLogRow({ change }: any) {
       </tr>
 
       <tr className="h-6 text-xs">
-
-        {/* пустая под "Команда" */}
         <th />
 
         {[1,2,3,4].map(q =>
           [...Array(5)].map((_,i)=>(
-            <th key={`${q}-${i}`} className="px-1 text-center">
+            <th key={`${q}-${i}`} className="px-1 text-center w-10">
               {i===4 ? "Бонус" : (q-1)*4 + i + 1}
             </th>
           ))
@@ -46,52 +38,71 @@ export function KvartalyLogRow({ change }: any) {
       </thead>
 
       <tbody>
-      <tr className="bg-[#dee6ef]">
-
-        {/* Name */}
-        <td className="px-2 py-1 text-left font-medium">
-          {change.teamName ?? "—"}
+      <tr className="border-b border-border dark:border-dark-border bg-white/30">
+        {/* NAME */}
+        <td className="px-2 py-1 text-left font-medium border-r border-border dark:border-dark-border">
+          {team.name}
         </td>
 
-        {/* Кварталы */}
-        {change.oldAll.map((q: any, qi: number) => {
+        {/* QUARTERS */}
+        {team.answers_kvartaly.map((q: any, qi: number) => {
 
           return (
             <React.Fragment key={qi}>
               {q.questions.map((a: any, ai: number) => {
-                const isDiff = highlight(qi, ai);
+                const isDiff =
+                  qi === change.quarterIndex &&
+                  ai === change.questionIndex;
 
-                const val = isDiff ? change.new : change.old;
+                const color =
+                  a.correct > 0 && a.incorrect > 0
+                    ? "text-yellow-500"
+                    : a.correct > 0
+                      ? "text-green-500"
+                      : a.incorrect > 0
+                        ? "text-red-500"
+                        : "text-gray-500";
 
                 return (
                   <td
                     key={ai}
                     className={`
-                      px-1 py-1 border text-center
-                      ${isDiff ? "outline outline-2 outline-blue-500" : ""}
-                    `}
+                        text-center w-10 py-1 border-r border-border dark:border-dark-border
+                        ${color}
+                        ${isDiff ? "outline outline-2 outline-blue-500 font-bold text-blue-700 bg-blue-50" : ""}
+                      `}
                   >
-                    {toText(val)}
+                    {`${a.correct}/${a.incorrect}`}
                   </td>
                 );
               })}
 
-              {/* бонус */}
-              <td className="px-1 py-1 text-center font-semibold">
+              {/* BONUS */}
+              <td
+                className={`
+                    text-center w-10 py-1 border-r border-border dark:border-dark-border font-semibold
+                    ${q.finished ? (q.bonus ? "text-green-500" : "text-red-500") : "opacity-40"}
+                  `}
+              >
                 {q.finished ? q.bonus : ""}
               </td>
             </React.Fragment>
           );
         })}
 
-        {/* penalty */}
-        <td className="px-2 py-1 text-center">
-          {change.oldPenalty ?? ""}
+        {/* PENALTY */}
+        <td
+          className={`
+              text-center py-1 border-r border-border dark:border-dark-border
+              ${team.penalty_kvartaly > 0 ? "text-red-500" : ""}
+            `}
+        >
+          {team.penalty_kvartaly}
         </td>
 
-        {/* total */}
-        <td className="px-2 py-1 font-semibold text-center">
-          {change.oldTotal ?? ""}
+        {/* TOTAL */}
+        <td className="text-center py-1 font-semibold">
+          {team.place_kvartaly ?? ""}
         </td>
       </tr>
       </tbody>

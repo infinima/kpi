@@ -6,8 +6,6 @@ import {useEventsNav, useNotifications, useUser} from "@/store";
 const SOCKET_URL = "wss://kpiturnir.ru";
 
 
-
-
 interface SocketState {
   socket: Socket | null;
   tableData: any | null;

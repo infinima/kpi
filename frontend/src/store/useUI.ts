@@ -62,6 +62,14 @@ interface UIState {
   logTableModalId: number | null;
   openTableLogModal: (type: "fudzi" |"kvartaly", id: number) => void;
   closeTableLogModal: () => void;
+
+  // in useUI store
+  openLeagueAccountsModal: (leagueId: number) => void,
+  closeLeagueAccountsModal: () => void,
+  leagueAccountsModal: {
+    open: boolean,
+    leagueId: number | null
+  }
 }
 
 export const useUI = create<UIState>((set, get) => ({
@@ -170,4 +178,12 @@ export const useUI = create<UIState>((set, get) => ({
   closeTableLogModal: () => {
     set({ logTableModal: false, logTableModalType: null, logTableModalId: null });
   },
+
+  leagueAccountsModal: { open: false, leagueId: null },
+
+  openLeagueAccountsModal: (leagueId) =>
+    set({ leagueAccountsModal: { open: true, leagueId } }),
+
+  closeLeagueAccountsModal: () =>
+    set({ leagueAccountsModal: { open: false, leagueId: null } }),
 }));

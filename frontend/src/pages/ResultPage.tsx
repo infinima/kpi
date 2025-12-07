@@ -309,7 +309,7 @@ export function ResultPage() {
                     Скачать
                   </button>
                 </td>)}
-                {can("teams", "get", t.id) && (<td className={td}>
+                {can("teams", "get", t.id) && (<td className={tdCenter}>
                   {t.diploma && t.diploma !== "PARTICIPANT" && (
                       <button
                           onClick={async () =>
@@ -324,7 +324,7 @@ export function ResultPage() {
                       </button>
                   )}
                 </td>)}
-                {can("teams", "get", t.id) && (<td className={td}>
+                {can("teams", "get", t.id) && (<td className={tdCenter}>
                 {t.special_nominations?.length > 0 && (
                     <button
                         onClick={async () =>

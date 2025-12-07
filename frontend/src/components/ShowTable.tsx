@@ -7,7 +7,6 @@ export function ShowTable({tableType} : { tableType: string }) {
   const { tableData, isConnected , connect, disconnect } = useSocketStore();
 
   const dualMode = useUI(s => s.dualMode);
-  console.log("dual mode", dualMode);
 
   if (!isConnected) {
     return (
@@ -26,7 +25,7 @@ export function ShowTable({tableType} : { tableType: string }) {
   }
 
   if (tableType === "kvartaly") {
-    if (!dualMode) return (      <div className="flex w-full h-full border-none bg-[#1364b3]">
+    if (!dualMode) return (      <div className="flex  border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
       <KvartalyTable data={tableData} />       </div>
     );
 
@@ -37,7 +36,7 @@ export function ShowTable({tableType} : { tableType: string }) {
     const right = tableData.slice(mid);
 
     return (
-      <div className="flex w-full h-full border-none bg-[#1364b3]">
+      <div className="flex  border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
         <div className="w-1/2 overflow-auto border-none">
           <KvartalyTable data={left} />
         </div>
@@ -50,7 +49,7 @@ export function ShowTable({tableType} : { tableType: string }) {
   }
 
   if (tableType === "fudzi") {
-    if (!dualMode) return (      <div className="flex w-full h-full border-none bg-[#1364b3]">
+    if (!dualMode) return (      <div className="flex border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
       <FudziTable data={tableData} />      </div>
     );
 
@@ -60,7 +59,7 @@ export function ShowTable({tableType} : { tableType: string }) {
     const right = tableData.slice(mid);
 
     return (
-      <div className="flex w-full h-full border-none bg-[#1364b3]">
+      <div className="flex  border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
         <div className="w-1/2 overflow-auto border-r-[6px] border-[#1364b3]">
           <FudziTable data={left} />
         </div>
