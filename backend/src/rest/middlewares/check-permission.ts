@@ -35,7 +35,7 @@ export async function getScopeChain(object: string, objectId: number) {
 
         return {
             location_id: objectId,
-            event_id: location.event_id
+            event_id: location.event_id || null
         };
     }
 
@@ -57,7 +57,7 @@ export function checkPermission(
             const rawId =
                 req.params.id ??
                 req.params.object_id ??
-                // req.params.location_id ??
+                req.params.location_id ??
                 null;
 
             const objectId = rawId ? Number(rawId) : null;
