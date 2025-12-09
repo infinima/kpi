@@ -310,12 +310,12 @@ export function ResultPage() {
                   </button>
                 </td>)}
                 {can("teams", "get", t.id) && (<td className={tdCenter}>
-                  {t.diploma && t.diploma !== "PARTICIPANT" && (
+                  {t.diploma && (
                       <button
                           onClick={async () =>
                               await apiGetFile(
                                   `teams/${t.id}/diploma`,
-                                  `${t.name.replace(" ", "_")}_диплом.pdf`
+                                  `${t.name.replace(" ", "_")}_${t.diploma == "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`
                               )
                           }
                           className="text-primary text-sm mt-1 hover:underline"
