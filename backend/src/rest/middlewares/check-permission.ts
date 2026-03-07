@@ -35,7 +35,7 @@ export async function getScopeChain(object: string, objectId: number) {
 
         return {
             location_id: objectId,
-            event_id: location.event_id
+            event_id: location?.event_id || null
         };
     }
 

@@ -18,7 +18,7 @@ export async function generateDiploma(
         FIRST_DEGREE: "diploma_first_degree_template.pdf",
         SECOND_DEGREE: "diploma_second_degree_template.pdf",
         THIRD_DEGREE: "diploma_third_degree_template.pdf",
-        PARTICIPANT: "diploma_participant_template.pdf"
+        PARTICIPANT: "diploma_participant_template_compressed.pdf"
     };
 
     const templatePath = path.resolve(
@@ -51,7 +51,7 @@ export async function generateDiploma(
     const teamFontSize = 45;
     const teamMaxWidth = 400;
     const teamStartX = 43;
-    const teamBaseY = 455;
+    const teamBaseY = degree == "PARTICIPANT" ? 485 : 455;
     const teamBaseYDelta = 25;
 
     const memberFontSize = 22;
