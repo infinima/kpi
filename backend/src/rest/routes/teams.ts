@@ -371,8 +371,8 @@ teamsRouter.post(
 
             const result = await query(
                 `INSERT INTO teams
-                 (league_id, name, members, answers_kvartaly, answers_fudzi, special_nominations)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
+                 (league_id, name, members, answers_kvartaly, answers_fudzi, special_nominations, appreciations)
+                 VALUES (?, ?, ?, ?, ?, ?, '[]')`,
                 [
                     data.league_id,
                     data.name,

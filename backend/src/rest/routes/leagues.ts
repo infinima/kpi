@@ -721,8 +721,8 @@ leaguesRouter.post(
                 await query(
                     `INSERT INTO teams
                      (league_id, import_id, name, members,
-                      answers_kvartaly, answers_fudzi, special_nominations)
-                     VALUES (?, ?, ?, ?, ?, ?, '[]')`,
+                      answers_kvartaly, answers_fudzi, special_nominations, appreciations)
+                     VALUES (?, ?, ?, ?, ?, ?, '[]', '[]')`,
                     [
                         id,
                         t.id,
