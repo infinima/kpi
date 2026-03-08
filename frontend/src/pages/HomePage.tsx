@@ -1,8 +1,10 @@
-import { motion } from "framer-motion"
-import { FileText } from "lucide-react"
+import {motion} from "framer-motion"
+import {FileText} from "lucide-react"
 import Background from "@/components/layout/Background"
 import PrimaryButton from "@/components/ui/PrimaryButton"
 import AnimatedText from "@/components/ui/AnimatedText";
+import OutlineButton from "@/components/ui/OutlineButton";
+import {Link} from "react-router-dom";
 
 function downloadFile(url: string, filename?: string) {
     const link = document.createElement("a")
@@ -38,7 +40,7 @@ const leagues = [
 export default function HomePage() {
     return (
         <div className="relative min-h-screen overflow-hidden">
-            <Background active={true} />
+            <Background active={true}/>
 
             <section className="relative mx-auto max-w-6xl px-6 pt-28 pb-24 text-center">
                 <AnimatedText
@@ -48,9 +50,9 @@ export default function HomePage() {
                 />
 
                 <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
+                    initial={{opacity: 0, y: 20}}
+                    animate={{opacity: 1, y: 0}}
+                    transition={{delay: 0.2}}
                     className="
             mt-6
             mx-auto
@@ -65,27 +67,34 @@ export default function HomePage() {
                 </motion.p>
 
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.4 }}
+                    initial={{opacity: 0}}
+                    animate={{opacity: 1}}
+                    transition={{delay: 0.4}}
                     className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
                 >
                     <PrimaryButton
                         active={true}
-                        leftIcon={<FileText size={18} />}
+                        leftIcon={<FileText size={18}/>}
                         onClick={() => downloadFile("/rules.pdf", "Правила")}
                     >
                         Открыть правила
                     </PrimaryButton>
+                    <Link to="/events">
+                        <OutlineButton
+                            active={true}>
+                            К мероприятиям
+                        </OutlineButton>
+                    </Link>
+
 
                 </motion.div>
             </section>
 
             <section className="relative mx-auto max-w-6xl px-6 pb-28">
                 <motion.h2
-                    initial={{ opacity: 0, y: 10 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
+                    initial={{opacity: 0, y: 10}}
+                    whileInView={{opacity: 1, y: 0}}
+                    viewport={{once: true}}
                     className="
             mb-12
             text-center
@@ -109,10 +118,10 @@ export default function HomePage() {
                     {leagues.map((league, i) => (
                         <motion.div
                             key={i}
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.1 }}
+                            initial={{opacity: 0, y: 20}}
+                            whileInView={{opacity: 1, y: 0}}
+                            viewport={{once: true}}
+                            transition={{delay: i * 0.1}}
                             className="
                 relative
                 group

@@ -2,8 +2,6 @@ import { Link } from "react-router-dom"
 import Background from "@/components/layout/Background"
 import PrimaryButton from "@/components/ui/PrimaryButton"
 import OutlineButton from "@/components/ui/OutlineButton"
-import {ArrowLeft} from "lucide-react";
-import {AnimatePresence} from "framer-motion";
 import AnimatedText from "@/components/ui/AnimatedText";
 
 export default function NotFoundPage() {
@@ -19,7 +17,7 @@ export default function NotFoundPage() {
                 <AnimatedText
                     text={"Похоже, такой страницы не существует, она была перемещена или ссылка неверна."}
                     as={"p"}
-                    className={"mt-4 max-w-xl text-[var(--text-body)] leading-[var(--leading-body)] text-[var(--color-text-secondary)]"}
+                    className={"mt-4 max-w-xl leading-[var(--leading-body)] text-[var(--color-text-secondary)]"}
                     speed={20}
                 />
 
@@ -31,7 +29,6 @@ export default function NotFoundPage() {
                     </Link>
 
                     <OutlineButton
-                        // leftIcon={<ArrowLeft />}
                         active={true}
                         onClick={() => window.history.back()}
                     >
