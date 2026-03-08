@@ -4,22 +4,21 @@
 @source "./index.html";
 @source "./src/**/*.{js,ts,jsx,tsx}";
 
-@custom-variant dark (&:where(.dark *));
-
-.scrollbar-none::-webkit-scrollbar {
+.no-scrollbar::-webkit-scrollbar {
     display: none;
 }
 
-.scrollbar-none {
+.no-scrollbar {
+    -ms-overflow-style: none;
     scrollbar-width: none;
 }
 
 @theme {
     --font-family-nunito: "Nunito", sans-serif;
 
-    --color-primary: #3b82f6;
-    --color-primary-dark: #1d4ed8;
-    --color-primary-light: #93c5fd;
+    --color-primary: #6366f1;
+    --color-primary-dark: #4f46e5;
+    --color-primary-light: #818cf8;
 
     --color-background: #f8fafc;
     --color-surface: #ffffff;
@@ -35,29 +34,22 @@
     --color-error: #ef4444;
     --color-info: #3b82f6;
 
-    --color-dark-bg: #0f172a;
-    --color-dark-surface: #1E293B;
-    --color-dark-border: #334155;
-    --color-dark-hover: #1e293b;
-
-    --color-dark-text-main: #f8fafc;
-    --color-dark-text-secondary: #cbd5e1;
-    --color-dark-text-muted: #94a3b8;
-
     --radius-lg: 12px;
     --radius-xl: 16px;
 
     --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
-html, body {
+html,
+body {
     width: 100%;
     overflow-x: hidden;
-    transition: 1s ease-in-out;
 }
 
 body {
-    font-family: var(--font-family-nunito), serif;
+    font-family: var(--font-family-nunito), sans-serif;
+    background: var(--color-background);
+    color: var(--color-text-main);
 }
 
 @media (min-width: 320px) {
@@ -107,13 +99,4 @@ body {
 
 .toast-exit {
     animation: toastOut 0.25s ease-in forwards;
-}
-
-
-.no-scrollbar::-webkit-scrollbar {
-    display: none;
-}
-.no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
 }
