@@ -96,6 +96,7 @@ teamsRouter.get(
 
         const [row] = await query(
             `SELECT
+                 t.name,
                  t.appreciations,
                  e.name AS event_name,
                  YEAR(e.date) AS event_year
@@ -118,20 +119,18 @@ teamsRouter.get(
             });
         }
 
-        const teachers = row.appreciations;
-        const teacherName =
-            members?.coach?.full_name || "Руководитель команды";
+        const appreciations = row.appreciations;
         const eventName = row.event_name;
         const eventYear = String(row.event_year);
 
         try {
             const pdf = await generateAppreciation(
-                [teacherName],
+                appreciations,
                 eventName,
                 eventYear
             );
 
-            const safeName = teacherName
+            const safeName = row.name
                 .trim()
                 .replace(/\s+/g, "_")
                 .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
