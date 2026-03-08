@@ -11,7 +11,6 @@ import {UsersPage} from "@/pages/UserPage";
 import {LoginModal} from "@/components/services/Login";
 import {NotificationCenter} from "@/components/services/NotificationCenter";
 import {ProfileModal} from "@/components/ProfileModal";
-import {MenuBar} from "@/components/layout/MenuBar";
 import {LogModal} from "@/components/layout/LogModal";
 import {UserLogModal} from "@/components/layout/UserLogModal";
 import {PhotosModal} from "@/components/layout/PhotosModal";
@@ -20,12 +19,36 @@ import {LeagueAccountsModal} from "@/components/LeagueAccountsModal";
 
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import NotFoundPage from "@/pages/NotFoundPage";
+import EmptyLayout from "@/components/layout/EmptyLayout";
+import DefaultLayout from "@/components/layout/DefaultLayout";
+import NotReadyPage from "@/pages/NotReadyPage";
+import {LogsPage} from "@/pages/LogsPage";
+import {EventsPage} from "@/pages/event/EventPage";
+import {LocationsPage} from "@/pages/event/LocationPage";
+import {LeaguesPage} from "@/pages/event/LeaguesPage";
 
 export default function App() {
     return (
         <BrowserRouter>
             <Routes>
-                <Route path="/" element={<HomePage />} />
+                <Route element={<EmptyLayout />}>
+                    <Route path="/" element={<HomePage />} />
+                </Route>
+
+                <Route element={<DefaultLayout />}>
+                    <Route path="/logs" element={<LogsPage />} />
+                    <Route path="/results" element={<ResultPage/>} />
+                    <Route path="/show" element={<ShowPage />} />
+                    <Route path="/users" element={<UsersPage />} />
+                    <Route path="/teams" element={<TeamsPage/>} />
+                    <Route path="/tables" element={<TablesPage />} />
+                    <Route element={""}>
+                        <Route path="/events" element={<EventsPage />} />
+                        <Route path="/locations" element={<LocationsPage />} />
+                        <Route path="/leagues" element={<LeaguesPage />} />
+                    </Route>
+                </Route>
+
                 <Route path="*" element={<NotFoundPage />} />
             </Routes>
         </BrowserRouter>
