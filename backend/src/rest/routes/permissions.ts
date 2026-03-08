@@ -1,5 +1,5 @@
 import express from "express";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 import { validate } from "../middlewares/validate.js";
 import {
     CreatePermissionInput,

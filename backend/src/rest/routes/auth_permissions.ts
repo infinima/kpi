@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import { authRequired } from "../middlewares/auth-required.js";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 
 export const authPermissionsRouter = express.Router();
 

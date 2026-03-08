@@ -1,7 +1,7 @@
 import express from "express";
 import { validate } from "../middlewares/validate.js";
 import { GetOneEventInput, CreateEventInput, UpdateEventInput, DeleteEventQuery } from "../schemas/events.js";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { savePhoto } from "../../utils/save-photo.js";
 import { checkNotDeleted } from "../middlewares/check-not-deleted.js";

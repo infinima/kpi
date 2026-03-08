@@ -1,5 +1,5 @@
 import type { Server, Socket } from "socket.io";
-import { query } from "../utils/database.js";
+import { query } from "../db/pool.js";
 import { getKvartalyTable } from "./services/kvartaly-table.js";
 import { getFudziTable } from "./services/fudzi-table.js";
 import { getShowState } from "./services/show.js";

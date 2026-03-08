@@ -1,6 +1,6 @@
 import express from "express";
 import { validate } from "../middlewares/validate.js";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import { generateAppreciation } from "../../utils/generate-appreciation.js";
@@ -90,13 +90,13 @@ teamsRouter.get(
     "/:id/appreciation",
     validate(GetOneTeamInput, "params"),
     checkNotDeleted("team"),
-    checkPermission("teams", "get"),
+    // checkPermission("teams", "get"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
         const [row] = await query(
             `SELECT
-                 t.members,
+                 t.appreciations,
                  e.name AS event_name,
                  YEAR(e.date) AS event_year
              FROM teams t
@@ -118,7 +118,7 @@ teamsRouter.get(
             });
         }
 
-        const members = row.members;
+        const teachers = row.appreciations;
         const teacherName =
             members?.coach?.full_name || "Руководитель команды";
         const eventName = row.event_name;
@@ -126,7 +126,7 @@ teamsRouter.get(
 
         try {
             const pdf = await generateAppreciation(
-                teacherName,
+                [teacherName],
                 eventName,
                 eventYear
             );

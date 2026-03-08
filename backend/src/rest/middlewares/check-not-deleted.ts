@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 
 export type ObjectType = "event" | "location" | "league" | "team" | "user" | "photo";
 

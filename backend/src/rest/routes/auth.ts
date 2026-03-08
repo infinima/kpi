@@ -2,7 +2,7 @@ import express from "express";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { validate } from "../middlewares/validate.js";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 import { LoginInput, MeQuery } from "../schemas/auth.js";
 import { authRequired } from "../middlewares/auth-required.js";
 

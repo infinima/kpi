@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import https from "node:https";
 import { z } from "../../utils/zod-openapi-init.js";
 import { validate } from "../middlewares/validate.js";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import { saveFile } from "../../utils/save-file.js";

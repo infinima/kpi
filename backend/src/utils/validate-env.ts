@@ -17,6 +17,9 @@ const EnvSchema = z.object({
     SMTP_USER: z.string().min(1),
     SMTP_PASS: z.string().min(1),
     SMTP_FROM: z.string().min(1),
+
+    MIGRATIONS_TABLE: z.string().min(1),
+    TRIGGERS_IGNORED_TABLES: z.string().default("logs"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);
