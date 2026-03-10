@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom"
-import { useUser, useUI, useEventsNav } from "@/store"
+import { useUser, useUI } from "@/store"
 import DesktopMenuBar from "@/components/layout/MenuBar/DesktopMenuBar"
 import PhoneMenuBar from "@/components/layout/MenuBar/PhoneMenuBar"
 
@@ -10,10 +10,7 @@ export type MenuItem = {
 }
 
 export function MenuBar() {
-    const { mobileMenuOpen, toggleMobileMenu, closeMobileMenu } = useUI()
     const { user, can } = useUser()
-    // @ts-ignore
-    const { leagueId, tableType } = useEventsNav()
 
     const location = useLocation()
     const navigate = useNavigate()
@@ -26,34 +23,32 @@ export function MenuBar() {
         { id: "logs", title: "Логи", path: "/logs" },
         { id: "results", title: "Результаты", path: "/results" },
     ]
-
-    if (can("users", "get") || true) {
-        menuItems.push({ id: "users", title: "Пользователи", path: "/users" })
-    }
-
-    if (leagueId && can("teams", "create")|| true) {
-        menuItems.push({ id: "teams", title: "Команды", path: "/teams" })
-    }
-
-    if (leagueId && can("leagues", "get_show", leagueId)|| true) {
-        menuItems.push({ id: "show", title: "Показ", path: "/show" })
-    }
-
-    if (leagueId && can("leagues", "control_show", leagueId)|| true) {
-        menuItems.push({
-            id: "showControl",
-            title: "Управление показом",
-            path: "/show",
-        })
-    }
-
-    if (leagueId && tableType || true) {
-        menuItems.push({ id: "tables", title: "Таблицы", path: "/tables" })
-    }
-
+    //
+    // if (can("users", "get") || true) {
+    //     menuItems.push({ id: "users", title: "Пользователи", path: "/users" })
+    // }
+    //
+    // if (leagueId && can("teams", "create")|| true) {
+    //     menuItems.push({ id: "teams", title: "Команды", path: "/teams" })
+    // }
+    //
+    // if (leagueId && can("leagues", "get_show", leagueId)|| true) {
+    //     menuItems.push({ id: "show", title: "Показ", path: "/show" })
+    // }
+    //
+    // if (leagueId && can("leagues", "control_show", leagueId)|| true) {
+    //     menuItems.push({
+    //         id: "showControl",
+    //         title: "Управление показом",
+    //         path: "/show",
+    //     })
+    // }
+    //
+    // if (leagueId && tableType || true) {
+    //     menuItems.push({ id: "tables", title: "Таблицы", path: "/tables" })
+    // }
+    //
     const changePage = (path: string) => {
-        navigate(path)
-        closeMobileMenu()
     }
 
     return (
@@ -70,17 +65,14 @@ export function MenuBar() {
                 <DesktopMenuBar
                     menuItems={menuItems}
                     currentPath={location.pathname}
-                    changePage={changePage}
+                    changePage={(path: string) => navigate(path)}
                     user={user}
                 />
 
                 <PhoneMenuBar
                     menuItems={menuItems}
                     currentPath={location.pathname}
-                    changePage={changePage}
-                    mobileMenuOpen={mobileMenuOpen}
-                    toggleMobileMenu={toggleMobileMenu}
-                    closeMobileMenu={closeMobileMenu}
+                    changePage={(path: string) => navigate(path)}
                     user={user}
                 />
             </div>

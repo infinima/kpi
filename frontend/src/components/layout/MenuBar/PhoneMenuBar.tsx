@@ -1,16 +1,14 @@
-import { motion } from "framer-motion"
-// @ts-ignore
-import { Menu, X } from "lucide-react"
-import { useUI } from "@/store"
-import { BaseImage } from "@/components/BaseImage"
-import type { MenuItem } from "@/components/layout/MenuBar/MenuBar"
+import {motion} from "framer-motion"
+import {Menu, X} from "lucide-react"
+import {useUI} from "@/store"
+import type {MenuItem} from "@/components/layout/MenuBar/MenuBar"
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import {useState} from "react";
+
 type PhoneMenuBarProps = {
     menuItems: MenuItem[]
     currentPath: string
     changePage: (path: string) => void
-    mobileMenuOpen: boolean
-    toggleMobileMenu: () => void
-    closeMobileMenu: () => void
     user: any
 }
 
@@ -18,13 +16,13 @@ export default function PhoneMenuBar({
                                          menuItems,
                                          currentPath,
                                          changePage,
-                                         mobileMenuOpen,
-                                         toggleMobileMenu,
-                                         closeMobileMenu,
                                          user,
                                      }: PhoneMenuBarProps) {
+
+    let [MenuOpen, setOpen] = useState(false)
+
     return (
-        <div className="sm:hidden">
+        <div className="sm:hidden flex items-center w-full justify-between">
             <button
                 className="
           rounded-xl
@@ -33,18 +31,33 @@ export default function PhoneMenuBar({
           p-2
           text-[var(--color-text-main)]
           transition
-          hover:border-[rgba(99,102,241,0.28)]
+          hover:border-[var(--color-primary)]
           hover:text-[var(--color-primary)]
         "
-                onClick={toggleMobileMenu}
+                onClick={() => setOpen(!MenuOpen)}
             >
-                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                {MenuOpen ? <X size={24}/> : <Menu size={24}/>}
             </button>
+            {!user ? (
+                <PrimaryButton
+                    onClick={() => useUI.getState().openLoginModal()}
+                >
+                    Войти
+                </PrimaryButton>
+            ) : (
+                <PrimaryButton
+                    onClick={() => useUI.getState().openProfileModal()}
+                >
+                    Аккаунт
+                </PrimaryButton>
 
-            {mobileMenuOpen && (
+            )}
+
+
+            {MenuOpen && (
                 <motion.div
-                    initial={{ opacity: 0, y: -8 }}
-                    animate={{ opacity: 1, y: 0 }}
+                    initial={{opacity: 0, y: -8}}
+                    animate={{opacity: 1, y: 0}}
                     className="
             absolute left-0 top-full w-full
             border-t border-[var(--color-border)]
@@ -59,13 +72,16 @@ export default function PhoneMenuBar({
                             return (
                                 <button
                                     key={item.id}
-                                    onClick={() => changePage(item.path)}
+                                    onClick={() => {
+                                        changePage(item.path);
+                                        setOpen(false)
+                                    }}
                                     className={`
                     rounded-xl border px-4 py-3 text-left text-base font-medium transition
                     ${
                                         isActive
-                                            ? "border-[rgba(99,102,241,0.34)] text-[var(--color-primary)]"
-                                            : "border-[var(--color-border)] text-[var(--color-text-main)] hover:border-[rgba(99,102,241,0.24)] hover:text-[var(--color-primary)]"
+                                            ? "border-[var(--color-primary)] text-[var(--color-primary)]"
+                                            : "border-[var(--color-border)] text-[var(--color-text-main)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]"
                                     }
                   `}
                                 >
@@ -73,46 +89,6 @@ export default function PhoneMenuBar({
                                 </button>
                             )
                         })}
-
-                        {!user ? (
-                            <button
-                                onClick={() => {
-                                    closeMobileMenu()
-                                    useUI.getState().openLoginModal()
-                                }}
-                                className="
-                  mt-2 rounded-xl
-                  bg-[var(--color-primary)]
-                  px-4 py-3
-                  font-medium text-white
-                "
-                            >
-                                Войти
-                            </button>
-                        ) : (
-                            <button
-                                onClick={() => {
-                                    closeMobileMenu()
-                                    useUI.getState().openProfileModal()
-                                }}
-                                className="
-                  mt-2 flex items-center gap-3
-                  rounded-xl border border-[var(--color-border)]
-                  px-4 py-3
-                  text-left font-medium text-[var(--color-text-main)]
-                  transition
-                  hover:border-[rgba(99,102,241,0.24)]
-                  hover:text-[var(--color-primary)]
-                "
-                            >
-                                <BaseImage
-                                    path={`users/${user.id}/photo`}
-                                    fallbackLetter={user.first_name[0]}
-                                    className="h-8 w-8 rounded-full border border-[var(--color-border)] object-cover"
-                                />
-                                {user.first_name}
-                            </button>
-                        )}
                     </div>
                 </motion.div>
             )}
