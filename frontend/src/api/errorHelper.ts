@@ -19,6 +19,10 @@ const errorMessages: Record<string, string> = {
     UPDATE_USER_FAILED: "Ошибка при обновлении пользователя.",
     NO_FIELDS_FOR_UPDATE: "Нет полей для обновления.",
     EMAIL_ALREADY_EXISTS: "Пользователь с таким email уже существует.",
+    INVALID_CODE: "Неверный код подтверждения.",
+    CODE_EXPIRED: "Срок действия кода истёк.",
+    REGISTRATION_NOT_FOUND: "Заявка на регистрацию не найдена.",
+    REGISTRATION_BLOCKED: "Слишком много попыток. Попробуйте позже.",
 
     EVENT_NOT_FOUND: "Мероприятие не найдено.",
     EVENT_DELETED: "Мероприятие было удалено.",

@@ -1,5 +1,5 @@
 import {motion} from "framer-motion"
-import {FileText, LogIn} from "lucide-react"
+import {FileText, LogIn, UserPlus} from "lucide-react"
 import Background from "@/components/layout/Background"
 import PrimaryButton from "@/components/ui/PrimaryButton"
 import AnimatedText from "@/components/ui/AnimatedText";
@@ -41,6 +41,17 @@ export default function HomePage() {
     return (
         <div className="relative min-h-screen overflow-hidden">
             <Background active={true}/>
+
+            <div className="absolute right-6 top-6 z-20">
+                <Link to="/auth">
+                    <PrimaryButton
+                        active={true}
+                        leftIcon={<LogIn size={18}/>}
+                    >
+                        Войти / зарегистрироваться
+                    </PrimaryButton>
+                </Link>
+            </div>
 
             <section className="relative mx-auto max-w-6xl px-6 pt-28 pb-24 text-center">
                 <AnimatedText
@@ -85,12 +96,13 @@ export default function HomePage() {
                             Открыть demo
                         </OutlineButton>
                     </Link>
-                    <Link to="/auth">
-                        <OutlineButton
+                    <Link to="/lk">
+                        <PrimaryButton
                             active={true}
-                            leftIcon={<LogIn size={18}/>}>
-                            Войти / зарегистрироваться
-                        </OutlineButton>
+                            leftIcon={<UserPlus size={18}/>}
+                        >
+                            Зарегистрировать команду
+                        </PrimaryButton>
                     </Link>
 
                 </motion.div>
