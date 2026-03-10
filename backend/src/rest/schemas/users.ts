@@ -8,7 +8,7 @@ export const UserSchema = z.object({
     last_name: z.string().min(1),
     first_name: z.string().min(1),
     patronymic: z.string().nullable(),
-    phone_number: z.string().min(1),
+    phone_number: z.string().regex(/^\+?[0-9][0-9\s\-()]{8,20}$/, "Invalid phone number"),
     tg_id: z.coerce.number().int().nullable(),
     tg_username: z.string().nullable(),
     tg_full_name: z.string().nullable(),

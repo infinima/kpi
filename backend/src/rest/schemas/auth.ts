@@ -10,6 +10,25 @@ export const LoginInput = z.object({
 export const LoginResponse = z.object({
     token: z.string().min(10)
 });
+export const RegisterStartInput = z.object({
+    email: z.email(),
+    password: z.string().min(6, "Password must be at least 6 chars"),
+    last_name: z.string().min(1),
+    first_name: z.string().min(1),
+    patronymic: z.string().nullable().optional(),
+    phone_number: z.string().regex(/^\+?[0-9][0-9\s\-()]{8,20}$/, "Invalid phone number"),
+});
+export const RegisterStartResponse = z.object({
+    success: z.boolean(),
+    expires_at: z.string()
+});
+export const RegisterConfirmInput = z.object({
+    email: z.email(),
+    code: z.string().regex(/^\d{4}$/)
+});
+export const RegisterConfirmResponse = z.object({
+    id: z.number().int().positive()
+});
 export const LogoutResponse = z.object({
     success: z.boolean()
 });
@@ -94,6 +113,60 @@ registry.registerPath({
         },
         400: { description: "Validation failed" },
         401: { description: "Invalid credentials" }
+    }
+});
+
+// POST /api/auth/register/start
+registry.registerPath({
+    method: "post",
+    path: "/api/auth/register/start",
+    summary: "Начать регистрацию пользователя (отправка кода)",
+    tags: ["Auth"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: RegisterStartInput
+                }
+            }
+        }
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: RegisterStartResponse }
+            }
+        },
+        400: { description: "Validation failed" },
+        429: { description: "Too many attempts. Try later." }
+    }
+});
+
+// POST /api/auth/register/confirm
+registry.registerPath({
+    method: "post",
+    path: "/api/auth/register/confirm",
+    summary: "Подтвердить регистрацию по коду",
+    tags: ["Auth"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: RegisterConfirmInput
+                }
+            }
+        }
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: RegisterConfirmResponse }
+            }
+        },
+        400: { description: "Validation failed or invalid code" },
+        429: { description: "Too many attempts. Try later." }
     }
 });
 
