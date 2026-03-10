@@ -1,4 +1,4 @@
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 
 interface KvQuestion {
     correct: number;

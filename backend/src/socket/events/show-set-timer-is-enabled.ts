@@ -1,5 +1,5 @@
 import type { Socket, Server } from "socket.io";
-import db from "../../utils/database.js";
+import db from "../../db/pool.js";
 import { checkSocketPermission } from "../services/check-socket-permission.js";
 import { getShowState } from "../services/show.js";
 

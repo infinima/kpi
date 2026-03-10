@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import https from "node:https";
 import { z } from "../../utils/zod-openapi-init.js";
 import { validate } from "../middlewares/validate.js";
-import { query } from "../../utils/database.js";
+import { query } from "../../db/pool.js";
 import { checkNotDeleted, checkParentNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import { saveFile } from "../../utils/save-file.js";
@@ -36,7 +36,7 @@ leaguesRouter.get(
         const { location_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT id, location_id, name, status, created_at, updated_at, deleted_at
+            `SELECT id, location_id, name, max_teams_count, status, created_at, updated_at, deleted_at
              FROM leagues
              WHERE location_id = ? AND deleted_at IS NULL`,
             [location_id], (req as any).user_id
@@ -56,7 +56,7 @@ leaguesRouter.get(
         const { location_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT id, location_id, name, status, created_at, updated_at, deleted_at
+            `SELECT id, location_id, name, max_teams_count, status, created_at, updated_at, deleted_at
              FROM leagues
              WHERE location_id = ? AND deleted_at IS NOT NULL`,
             [location_id], (req as any).user_id
@@ -75,7 +75,7 @@ leaguesRouter.get(
         const { id } = (req as any).validated.params;
 
         const [row] = await query(
-            "SELECT id, location_id, name, status, created_at, updated_at, deleted_at FROM leagues WHERE id = ?",
+            "SELECT id, location_id, name, max_teams_count, status, created_at, updated_at, deleted_at FROM leagues WHERE id = ?",
             [id], (req as any).user_id
         );
 
@@ -337,8 +337,14 @@ leaguesRouter.post(
             }
 
             const result = await query(
-                "INSERT INTO leagues (location_id, name, fudzi_presentation, show_color_scheme) VALUES (?, ?, ?, ?)",
-                [data.location_id, data.name, fudziPath, JSON.stringify({})], (req as any).user_id
+                "INSERT INTO leagues (location_id, name, max_teams_count, fudzi_presentation, show_color_scheme) VALUES (?, ?, ?, ?, ?)",
+                [
+                    data.location_id,
+                    data.name,
+                    data.max_teams_count ?? 0,
+                    fudziPath,
+                    JSON.stringify({})
+                ], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
@@ -435,6 +441,9 @@ leaguesRouter.post(
             "NOT_STARTED",
             "REGISTRATION_IN_PROGRESS",
             "REGISTRATION_ENDED",
+            "TEAMS_FIXED",
+            "ARRIVAL_IN_PROGRESS",
+            "ARRIVAL_ENDED",
             "KVARTALY_GAME",
             "LUNCH",
             "FUDZI_GAME",
@@ -720,14 +729,16 @@ leaguesRouter.post(
             if (!existing) {
                 await query(
                     `INSERT INTO teams
-                     (league_id, import_id, name, members,
-                      answers_kvartaly, answers_fudzi, special_nominations)
-                     VALUES (?, ?, ?, ?, ?, ?, '[]')`,
+                     (league_id, import_id, owner_user_id, name, members, status,
+                      answers_kvartaly, answers_fudzi, special_nominations, appreciations)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, '[]', '[]')`,
                     [
                         id,
                         t.id,
+                        null,
                         t.name,
                         members,
+                        "ON_CHECKING",
                         JSON.stringify(
                             Array.from({ length: 4 }, () => ({
                                 finished: 0,

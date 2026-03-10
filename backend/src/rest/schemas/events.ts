@@ -13,6 +13,37 @@ export const EventSchema = z.object({
 registry.register("Event", EventSchema);
 
 export const GetOneEventInput = EventSchema.pick({ id: true });
+const RegistrationLeagueSchema = z.object({
+    id: z.coerce.number().int().positive(),
+    location_id: z.coerce.number().int().positive(),
+    name: z.string().min(1),
+    status: z.string(),
+    max_teams_count: z.number().int(),
+    teams_count: z.number().int(),
+    reserve_teams_count: z.number().int(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    deleted_at: z.string().nullable(),
+});
+const RegistrationLocationSchema = z.object({
+    id: z.coerce.number().int().positive(),
+    event_id: z.coerce.number().int().positive(),
+    name: z.string().min(1),
+    address: z.string().min(1),
+    created_at: z.string(),
+    updated_at: z.string(),
+    deleted_at: z.string().nullable(),
+    leagues: z.array(RegistrationLeagueSchema),
+});
+const RegistrationEventSchema = z.object({
+    id: z.coerce.number().int().positive(),
+    name: z.string().min(1),
+    date: z.iso.date(),
+    created_at: z.string(),
+    updated_at: z.string(),
+    deleted_at: z.string().nullable(),
+    locations: z.array(RegistrationLocationSchema),
+});
 export const CreateEventInput = EventSchema
     .omit({
         id: true,
@@ -46,6 +77,20 @@ registry.registerPath({
         200: {
             description: "OK",
             content: { "application/json": { schema: z.array(EventSchema) } },
+        },
+    },
+});
+
+// GET /api/events/registration
+registry.registerPath({
+    method: "get",
+    path: "/api/events/registration",
+    summary: "Получить лиги с открытой регистрацией, сгруппированные по событиям и площадкам",
+    tags: ["Events"],
+    responses: {
+        200: {
+            description: "OK",
+            content: { "application/json": { schema: z.array(RegistrationEventSchema) } },
         },
     },
 });

@@ -16,6 +16,7 @@ import { usersRouter } from "./routes/users.js";
 import { permissionsRouter } from "./routes/permissions.js";
 import { logsRouter } from "./routes/logs.js";
 import { photosRouter } from "./routes/photos.js";
+// import { mailingsRouter } from "./routes/mailings.js";
 
 export function createApp() {
     const __filename = fileURLToPath(import.meta.url);
@@ -29,10 +30,6 @@ export function createApp() {
     const staticDir = join(__dirname, "../..", "public");
     app.use(express.static(staticDir));
 
-    if (process.env.NODE_ENV === "development") {
-        app.use(cors({ origin: "http://localhost:5173", credentials: true }));
-    }
-
     app.use("/api/auth", authRouter);
     app.use("/api/auth/permissions", authPermissionsRouter);
     app.use("/api/events", eventsRouter);
@@ -43,10 +40,15 @@ export function createApp() {
     app.use("/api/permissions", permissionsRouter);
     app.use("/api/logs", logsRouter);
     app.use("/api/photos", photosRouter);
+    // app.use("/api/mailings", mailingsRouter);
 
-    // Swagger
-    const openApiSpec = generateOpenApiSpec();
-    app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+    if (process.env.NODE_ENV === "development") {
+        app.use(cors({ origin: "http://localhost:5173", credentials: true }));
+
+        // Swagger
+        const openApiSpec = generateOpenApiSpec();
+        app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+    }
 
     // Health
     app.get("/api/health", (_req, res) => res.json({ ok: true, ts: Date.now() }));

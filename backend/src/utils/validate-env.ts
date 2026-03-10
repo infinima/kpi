@@ -11,6 +11,15 @@ const EnvSchema = z.object({
     MYSQL_DATABASE: z.string().min(1),
 
     TG_BOT_TOKEN: z.string().min(1),
+
+    SMTP_HOST: z.string().min(1),
+    SMTP_PORT: z.coerce.number().default(465),
+    SMTP_USER: z.string().min(1),
+    SMTP_PASS: z.string().min(1),
+    SMTP_FROM: z.string().min(1),
+
+    MIGRATIONS_TABLE: z.string().min(1),
+    TRIGGERS_IGNORED_TABLES: z.string().default("logs"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);

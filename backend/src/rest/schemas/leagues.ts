@@ -6,6 +6,7 @@ export const LeagueSchema = z.object({
     id: z.coerce.number().int().positive(),
     location_id: z.coerce.number().int().positive(),
     name: z.string().min(1),
+    max_teams_count: z.number().int().min(0),
     status: z.string(),
     created_at: z.string(),
     updated_at: z.string(),
@@ -36,11 +37,13 @@ export const CreateLeagueInput = LeagueSchema
         created_at: true,
         updated_at: true,
         deleted_at: true,
+        max_teams_count: true,
     })
     .extend({
         fudzi_presentation: z.string()
             .regex(/^data:application\/pdf;base64,/i)
             .optional(),
+        max_teams_count: z.number().int().min(0).optional(),
     });
 export const UpdateLeagueInput = CreateLeagueInput
     .partial()
@@ -49,6 +52,9 @@ export const UpdateLeagueStatusInput = z.object({
         "NOT_STARTED",
         "REGISTRATION_IN_PROGRESS",
         "REGISTRATION_ENDED",
+        "TEAMS_FIXED",
+        "ARRIVAL_IN_PROGRESS",
+        "ARRIVAL_ENDED",
         "KVARTALY_GAME",
         "LUNCH",
         "FUDZI_GAME",

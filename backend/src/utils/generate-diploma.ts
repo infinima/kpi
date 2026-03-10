@@ -18,7 +18,7 @@ export async function generateDiploma(
         FIRST_DEGREE: "diploma_first_degree_template.pdf",
         SECOND_DEGREE: "diploma_second_degree_template.pdf",
         THIRD_DEGREE: "diploma_third_degree_template.pdf",
-        PARTICIPANT: "diploma_participant_template_compressed.pdf"
+        PARTICIPANT: "diploma_participant_template.pdf"
     };
 
     const templatePath = path.resolve(
