@@ -18,6 +18,108 @@ eventsRouter.get("/", async (req, res) => {
     res.json(events);
 });
 
+// GET /api/events/registration
+eventsRouter.get("/registration", async (req, res) => {
+    const rows = await query(
+        `SELECT
+             e.id AS event_id,
+             e.name AS event_name,
+             e.date AS event_date,
+             e.created_at AS event_created_at,
+             e.updated_at AS event_updated_at,
+             e.deleted_at AS event_deleted_at,
+             lo.id AS location_id,
+             lo.event_id AS location_event_id,
+             lo.name AS location_name,
+             lo.address AS location_address,
+             lo.created_at AS location_created_at,
+             lo.updated_at AS location_updated_at,
+             lo.deleted_at AS location_deleted_at,
+             l.id AS league_id,
+             l.location_id AS league_location_id,
+             l.name AS league_name,
+             l.status AS league_status,
+             l.max_teams_count,
+             l.created_at AS league_created_at,
+             l.updated_at AS league_updated_at,
+             l.deleted_at AS league_deleted_at,
+             SUM(CASE   
+                     WHEN t.deleted_at IS NULL
+                         AND t.status IN ('ON_CHECKING','ACCEPTED','PAID','ARRIVED')
+                         THEN 1
+                     ELSE 0
+                 END) AS teams_count,
+             SUM(CASE
+                     WHEN t.deleted_at IS NULL
+                         AND t.status IN ('IN_RESERVE')
+                         THEN 1
+                     ELSE 0
+                 END) AS reserve_teams_count
+         FROM leagues l
+                  JOIN locations lo ON lo.id = l.location_id AND lo.deleted_at IS NULL
+                  JOIN events e ON e.id = lo.event_id AND e.deleted_at IS NULL
+                  LEFT JOIN teams t ON t.league_id = l.id
+         WHERE l.deleted_at IS NULL
+           AND l.status = 'REGISTRATION_IN_PROGRESS'
+         GROUP BY
+             e.id, e.name, e.date, e.created_at, e.updated_at, e.deleted_at,
+             lo.id, lo.event_id, lo.name, lo.address, lo.created_at, lo.updated_at, lo.deleted_at,
+             l.id, l.location_id, l.name, l.status, l.max_teams_count, l.created_at, l.updated_at, l.deleted_at`,
+        [], (req as any).user_id
+    );
+
+    const eventsMap = new Map<number, any>();
+    const locationsMap = new Map<string, any>();
+
+    for (const row of rows as any[]) {
+        let event = eventsMap.get(row.event_id);
+        if (!event) {
+            event = {
+                id: row.event_id,
+                name: row.event_name,
+                date: row.event_date,
+                created_at: row.event_created_at,
+                updated_at: row.event_updated_at,
+                deleted_at: row.event_deleted_at,
+                locations: []
+            };
+            eventsMap.set(row.event_id, event);
+        }
+
+        const locationKey = `${row.event_id}:${row.location_id}`;
+        let location = locationsMap.get(locationKey);
+        if (!location) {
+            location = {
+                id: row.location_id,
+                event_id: row.location_event_id,
+                name: row.location_name,
+                address: row.location_address,
+                created_at: row.location_created_at,
+                updated_at: row.location_updated_at,
+                deleted_at: row.location_deleted_at,
+                leagues: []
+            };
+            locationsMap.set(locationKey, location);
+            event.locations.push(location);
+        }
+
+        location.leagues.push({
+            id: row.league_id,
+            location_id: row.league_location_id,
+            name: row.league_name,
+            status: row.league_status,
+            max_teams_count: row.max_teams_count,
+            teams_count: Number(row.teams_count ?? 0),
+            reserve_teams_count: Number(row.reserve_teams_count ?? 0),
+            created_at: row.league_created_at,
+            updated_at: row.league_updated_at,
+            deleted_at: row.league_deleted_at
+        });
+    }
+
+    res.json([...eventsMap.values()]);
+});
+
 // GET /api/events/deleted
 eventsRouter.get("/deleted",
     checkPermission("events", "restore"),

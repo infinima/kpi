@@ -1,8 +1,6 @@
 import express from "express";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../db/pool.js";
-import { resolveFilePath } from "../../utils/resolve-file-path.js";
-import { savePhoto } from "../../utils/save-photo.js";
 import { checkNotDeleted } from "../middlewares/check-not-deleted.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 
@@ -19,7 +17,7 @@ usersRouter.get(
     async (req, res) => {
         const users = await query(
             `SELECT 
-                id, email, last_name, first_name, patronymic,
+                id, email, last_name, first_name, patronymic, phone_number,
                 tg_id, tg_username, tg_full_name,
                 created_at, updated_at, deleted_at
              FROM users
@@ -36,7 +34,7 @@ usersRouter.get(
     checkPermission("users", "restore"),
     async (req, res) => {
         const users = await query(
-            `SELECT id, email, last_name, first_name, patronymic,
+            `SELECT id, email, last_name, first_name, patronymic, phone_number,
                     tg_id, tg_username, tg_full_name,
                     created_at, updated_at, deleted_at
              FROM users
@@ -58,7 +56,7 @@ usersRouter.get(
 
         const [user] = await query(
             `SELECT 
-                id, email, last_name, first_name, patronymic,
+                id, email, last_name, first_name, patronymic, phone_number,
                 tg_id, tg_username, tg_full_name,
                 created_at, updated_at, deleted_at
              FROM users
@@ -67,43 +65,6 @@ usersRouter.get(
         );
 
         res.json(user);
-    }
-);
-
-// GET /api/users/:id/photo
-usersRouter.get(
-    "/:id/photo",
-    validate(GetOneUserInput, "params"),
-    checkPermission("users", "get"),
-    async (req, res) => {
-        const { id } = (req as any).validated.params;
-
-        const [user] = await query(
-            "SELECT photo FROM users WHERE id = ?",
-            [id], (req as any).user_id
-        );
-
-        try {
-            const absolutePath = resolveFilePath(user.photo);
-            res.sendFile(absolutePath, (err) => {
-                if (err) {
-                    console.error(err);
-                    res.status(500).json({
-                        error: {
-                            code: "FAILED_TO_SEND_FILE",
-                            message: "Failed to send file"
-                        }
-                    });
-                }
-            });
-        } catch (e: any) {
-            res.status(400).json({
-                error: {
-                    code: "INVALID_FILE_PATH",
-                    message: e.message
-                }
-            });
-        }
     }
 );
 
@@ -130,12 +91,11 @@ usersRouter.post(
                 });
             }
 
-            const photoPath = await savePhoto(data.photo);
             const passwordHash = await bcrypt.hash(data.password, 10);
 
             const result = await query(
                 `INSERT INTO users 
-                    (email, password_hash, last_name, first_name, patronymic, photo)
+                    (email, password_hash, last_name, first_name, patronymic, phone_number)
                  VALUES (?, ?, ?, ?, ?, ?)`,
                 [
                     data.email,
@@ -143,7 +103,7 @@ usersRouter.post(
                     data.last_name,
                     data.first_name,
                     data.patronymic || null,
-                    photoPath
+                    data.phone_number
                 ], (req as any).user_id
             );
 
@@ -209,10 +169,6 @@ usersRouter.patch(
                         }
                     });
                 }
-            }
-
-            if (fields.photo) {
-                fields.photo = await savePhoto(String(fields.photo));
             }
 
             await query("UPDATE users SET ? WHERE id = ?", [fields, id], (req as any).user_id);

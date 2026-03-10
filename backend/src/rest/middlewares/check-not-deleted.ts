@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { query } from "../../db/pool.js";
 
-export type ObjectType = "event" | "location" | "league" | "team" | "user" | "photo";
+export type ObjectType = "event" | "location" | "league" | "team" | "user" | "photo" | "mailing";
 
 const CHAIN: Record<ObjectType, ObjectType | null> = {
     event: null,
@@ -10,6 +10,7 @@ const CHAIN: Record<ObjectType, ObjectType | null> = {
     team: "league",
     user: null,
     photo: "location",
+    mailing: null,
 };
 
 const TABLE: Record<ObjectType, string> = {
@@ -19,6 +20,7 @@ const TABLE: Record<ObjectType, string> = {
     team: "teams",
     user: "users",
     photo: "photos",
+    mailing: "mailings",
 };
 
 const PARENT_FIELD: Record<"location" | "league" | "team" | "photo", string> = {

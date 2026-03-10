@@ -8,6 +8,7 @@ export const UserSchema = z.object({
     last_name: z.string().min(1),
     first_name: z.string().min(1),
     patronymic: z.string().nullable(),
+    phone_number: z.string().min(1),
     tg_id: z.coerce.number().int().nullable(),
     tg_username: z.string().nullable(),
     tg_full_name: z.string().nullable(),
@@ -27,10 +28,6 @@ export const CreateUserInput = UserSchema.omit({
     tg_username: true
 }).extend({
     password: z.string().min(6, "Password must be at least 6 chars"),
-    photo: z.string().regex(
-        /^data:image\/(png|jpe?g|webp);base64,/i,
-        "Must be base64 square image string"
-    ),
 });
 export const UpdateUserInput = CreateUserInput
     .partial()
@@ -90,27 +87,6 @@ registry.registerPath({
     },
 });
 
-
-// GET /api/users/{id}/photo
-registry.registerPath({
-    method: "get",
-    path: "/api/users/{id}/photo",
-    summary: "Получить фото пользователя",
-    tags: ["Users"],
-    security: [{ BearerAuth: [] }],
-    request: { params: GetOneUserInput },
-    responses: {
-        200: {
-            description: "OK",
-            content: {
-                "image/webp": { schema: { type: "string", format: "binary" } },
-            },
-        },
-        400: { description: "The user is deleted" },
-        404: { description: "The user does not exist" },
-        500: { description: "Failed to send file" },
-    },
-});
 
 // POST /api/users
 registry.registerPath({

@@ -10,7 +10,7 @@ export async function sendEmail(
     subject: string,
     text: string,
     attachments: Attachment[] = []
-) {
+): Promise<string> {
     const transporter = nodemailer.createTransport({
         host: process.env.SMTP_HOST!,
         port: Number(process.env.SMTP_PORT),
@@ -34,4 +34,5 @@ export async function sendEmail(
     });
 
     console.log(`[+] Письмо с темой "${subject}" на электронную почту ${to} отправлено:`, info.messageId);
+    return info.messageId;
 }
