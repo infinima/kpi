@@ -1,5 +1,5 @@
 import {motion} from "framer-motion"
-import {FileText} from "lucide-react"
+import {FileText, LogIn} from "lucide-react"
 import Background from "@/components/layout/Background"
 import PrimaryButton from "@/components/ui/PrimaryButton"
 import AnimatedText from "@/components/ui/AnimatedText";
@@ -70,7 +70,7 @@ export default function HomePage() {
                     initial={{opacity: 0}}
                     animate={{opacity: 1}}
                     transition={{delay: 0.4}}
-                    className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row"
+                    className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:flex-wrap"
                 >
                     <PrimaryButton
                         active={true}
@@ -79,13 +79,19 @@ export default function HomePage() {
                     >
                         Открыть правила
                     </PrimaryButton>
-                    <Link to="/events">
+                    <Link to="/example">
                         <OutlineButton
                             active={true}>
-                            К мероприятиям
+                            Открыть demo
                         </OutlineButton>
                     </Link>
-
+                    <Link to="/auth">
+                        <OutlineButton
+                            active={true}
+                            leftIcon={<LogIn size={18}/>}>
+                            Войти / зарегистрироваться
+                        </OutlineButton>
+                    </Link>
 
                 </motion.div>
             </section>

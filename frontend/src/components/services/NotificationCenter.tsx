@@ -1,85 +1,135 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useNotifications} from "@/store";
 import {X} from "lucide-react";
 
-export function NotificationCenter() {
-    const {messages, removeMessage} = useNotifications();
-    const [leaving, setLeaving] = useState<Record<string, boolean>>({});
+const DEFAULT_DURATION = 5000;
 
-    const handleRemove = (id: string) => {
-        // включаем анимацию ухода
-        setLeaving((prev) => ({...prev, [id]: true}));
+const TITLES = {
+    success: "Успешно",
+    error: "Ошибка",
+    warning: "Предупреждение",
+    info: "Информация",
+} as const;
 
-        // удаляем после анимации
-        setTimeout(() => removeMessage(id), 250);
+const TONE_CLASSES = {
+    error: "bg-[var(--color-error)] text-white border-[var(--color-error)]",
+    warning: "bg-[var(--color-warning)] text-white border-[var(--color-warning)]",
+    success: "bg-[var(--color-success)] text-white border-[var(--color-success)]",
+    info: "bg-[var(--color-info)] text-white border-[var(--color-info)]",
+} as const;
+
+type NotificationType = keyof typeof TITLES;
+
+function NotificationItem({
+                              msg,
+                              onRemove,
+                          }: {
+    msg: {
+        id: string;
+        type: NotificationType;
+        text: string;
+        actionText?: string;
+        action?: () => void;
+        duration?: number;
+    };
+    onRemove: (id: string) => void;
+}) {
+    const [leaving, setLeaving] = useState(false);
+    const timerRef = useRef<number | null>(null);
+    const removedRef = useRef(false);
+
+    const duration = msg.duration ?? DEFAULT_DURATION;
+
+    const handleRemove = () => {
+        if (removedRef.current) return;
+        removedRef.current = true;
+        setLeaving(true);
+
+        if (timerRef.current) {
+            window.clearTimeout(timerRef.current);
+        }
+
+        window.setTimeout(() => {
+            onRemove(msg.id);
+        }, 250);
     };
 
+    useEffect(() => {
+        timerRef.current = window.setTimeout(() => {
+            handleRemove();
+        }, duration);
+
+        return () => {
+            if (timerRef.current) {
+                window.clearTimeout(timerRef.current);
+            }
+        };
+    }, [duration]);
+
     return (
-        <div className="fixed top-0 left-0 w-full z-9999 flex flex-col items-center gap-2 p-2 sm:p-4 pointer-events-none" >            {messages.map((msg) => {
-                const animClass = leaving[msg.id] ? "toast-exit" : "toast-enter";
-
-                return (
-                    <div
-                        key={msg.id}
-                        className={`
-        ${animClass}
-        w-full max-w-[420px] sm:w-[420px]
-        px-4 py-3 sm:px-4 sm:py-3
-        rounded-lg shadow-card flex items-start gap-3 border
-        pointer-events-auto
-
-        text-sm sm:text-base
-
-        ${
-                            msg.type === "error"
-                                ? "bg-error text-white border-error"
-                                : msg.type === "warning"
-                                    ? "bg-warning text-white border-warning"
-                                    : msg.type === "success"
-                                        ? "bg-success text-white border-success"
-                                        : "bg-info text-white border-info"
-                        }
-    `}
-                    >
-                        <div className="flex-1">
-                            <div className="font-bold capitalize mb-1">
-                                {{
-                                    success: "Успешно",
-                                    error: "Ошибка",
-                                    warning: "Предупреждение",
-                                    info: "Информация"
-                                }[msg.type]}
-                            </div>
-
-                            <div className="text-sm whitespace-pre-line">
-                                {msg.text}
-                            </div>
-
-                            {msg.actionText && msg.action && (
-                                <button
-                                    onClick={msg.action}
-                                    className="
-            mt-3 px-3 py-1
-            bg-surface text-text-main
-            rounded-lg shadow-sm hover:opacity-90
-
-            text-xs sm:text-sm
-        "
-                                >
-                                    {msg.actionText}
-                                </button>
-                            )}
-                        </div>
-
-                        <button
-                            onClick={() => handleRemove(msg.id)}
-                            className="opacity-80 hover:opacity-100"
-                        >
-                            <X size={18}/>
-                        </button>
+        <div
+            className={`
+                relative overflow-hidden
+                w-full max-w-full rounded-xl border shadow-card
+                pointer-events-auto
+                sm:w-[420px]
+                ${leaving ? "toast-exit" : "toast-enter"}
+                ${TONE_CLASSES[msg.type]}
+            `}
+        >
+            <div className="relative flex items-start gap-3 px-4 py-3">
+                <div className="min-w-0 flex-1">
+                    <div className="mb-1 font-bold capitalize">
+                        {TITLES[msg.type]}
                     </div>
-                );
-            })}
+
+                    <div className="text-sm leading-5 whitespace-pre-line break-words sm:text-[15px]">
+                        {msg.text}
+                    </div>
+
+                    {msg.actionText && msg.action && (
+                        <button
+                            onClick={msg.action}
+                            className="
+                                mt-3 rounded-lg px-3 py-1 text-xs shadow-sm hover:opacity-90 sm:text-sm
+                                bg-[var(--color-surface)] text-[var(--color-text-main)]
+                            "
+                        >
+                            {msg.actionText}
+                        </button>
+                    )}
+                </div>
+
+                <button
+                    onClick={handleRemove}
+                    className="shrink-0 opacity-80 transition-opacity hover:opacity-100"
+                >
+                    <X size={18} />
+                </button>
+            </div>
+        </div>
+    );
+}
+
+export default function NotificationCenter() {
+    const {messages, removeMessage} = useNotifications();
+
+    return (
+        <div
+            className="
+                pointer-events-none
+                fixed top-2 right-2 z-[9999]
+                flex w-[calc(100vw-16px)] flex-col items-stretch gap-2
+                sm:top-4 sm:right-4 sm:w-auto sm:items-end
+            "
+        >
+            {messages.map((msg) => (
+                <NotificationItem
+                    key={msg.id}
+                    msg={msg}
+                    onRemove={removeMessage}
+                />
+            ))}
         </div>
     );
 }

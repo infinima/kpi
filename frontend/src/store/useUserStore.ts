@@ -1,7 +1,7 @@
 import {create} from "zustand";
 import {apiGet, apiPost} from "@/api";
 import {useNotifications} from "@/store/useNotificationStore";
-import {useNavigation, useUI} from "@/store";
+import {useUI} from "@/store";
 
 export type PermissionEntity =
   "events" |
