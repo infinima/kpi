@@ -6,7 +6,6 @@ CREATE TABLE `mailings` (
   `selection_location_id` int DEFAULT NULL,
   `selection_league_id` int DEFAULT NULL,
   `selection_manual_emails` json DEFAULT NULL,
-  `generated_attachments` set('appreciation','certificate','diploma') NOT NULL DEFAULT '',
   `shared_attachments` json NOT NULL,
   `status` enum('draft','sending','sent','partially_sent','failed','canceled') NOT NULL DEFAULT 'draft',
   `send_started_at` timestamp NULL DEFAULT NULL,
