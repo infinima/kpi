@@ -1,0 +1,55 @@
+services:
+  db:
+    image: mysql:8.0.43
+    container_name: kpi-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kpi}
+      MYSQL_USER: ${MYSQL_USER:-kpi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kpi_pass}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_pass}
+    ports:
+      - "3306:3306"
+    volumes:
+      - kpi_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_pass}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: ghcr.io/infinima/kpi:latest
+    container_name: kpi-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: ${PORT:-3000}
+
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER:-kpi}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-kpi_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-kpi}
+
+      TG_BOT_TOKEN: ${TG_BOT_TOKEN}
+
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      SMTP_FROM: ${SMTP_FROM}
+      SUPPORT_EMAIL: ${SUPPORT_EMAIL:-kpi@phtl.ru}
+
+      MIGRATIONS_TABLE: ${MIGRATIONS_TABLE:-schema_migrations}
+      TRIGGERS_IGNORED_TABLES: ${TRIGGERS_IGNORED_TABLES:-logs}
+    ports:
+      - "3000:3000"
+    volumes:
+      - /opt/kpiturnir/files:/app/files
+
+volumes:
+  kpi_mysql_data:

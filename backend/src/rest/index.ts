@@ -16,7 +16,7 @@ import { usersRouter } from "./routes/users.js";
 import { permissionsRouter } from "./routes/permissions.js";
 import { logsRouter } from "./routes/logs.js";
 import { photosRouter } from "./routes/photos.js";
-// import { mailingsRouter } from "./routes/mailings.js";
+import { mailingsRouter } from "./routes/mailings.js";
 
 export function createApp() {
     const __filename = fileURLToPath(import.meta.url);
@@ -40,7 +40,7 @@ export function createApp() {
     app.use("/api/permissions", permissionsRouter);
     app.use("/api/logs", logsRouter);
     app.use("/api/photos", photosRouter);
-    // app.use("/api/mailings", mailingsRouter);
+    app.use("/api/mailings", mailingsRouter);
 
     if (process.env.NODE_ENV === "development") {
         app.use(cors({ origin: "http://localhost:5173", credentials: true }));
