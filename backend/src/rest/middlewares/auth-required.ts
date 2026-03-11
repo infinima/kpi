@@ -1,4 +1,5 @@
 import { query } from "../../db/pool.js";
+import crypto from "crypto";
 
 // @ts-ignore
 export async function authRequired(req, res, next) {
@@ -11,16 +12,17 @@ export async function authRequired(req, res, next) {
     }
 
     const token = auth.substring(7);
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
     const [session] = await query(
         `SELECT s.*
          FROM sessions s
          JOIN users u ON u.id = s.user_id
-         WHERE s.token = ?
+         WHERE s.token_hash = ?
            AND s.is_deactivated = 0
            AND s.expires_at > NOW()
            AND u.deleted_at IS NULL`,
-        [token]
+        [tokenHash]
     );
 
     if (!session) {

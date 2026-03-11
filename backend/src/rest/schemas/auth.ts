@@ -27,7 +27,7 @@ export const RegisterConfirmInput = z.object({
     code: z.string().regex(/^\d{4}$/)
 });
 export const RegisterConfirmResponse = z.object({
-    id: z.number().int().positive()
+    token: z.string().min(10)
 });
 export const LogoutResponse = z.object({
     success: z.boolean()

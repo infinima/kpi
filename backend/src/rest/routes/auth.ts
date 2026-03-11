@@ -232,7 +232,16 @@ authRouter.post(
             [reqRow.id], (req as any).user_id
         );
 
-        res.json({ id: newUserId });
+        const token = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+        await query(
+            `INSERT INTO sessions (token_hash, user_id, is_deactivated, expires_at)
+             VALUES (?, ?, 0, DATE_ADD(NOW(), INTERVAL 1 DAY))`,
+            [tokenHash, newUserId], (req as any).user_id
+        );
+
+        res.json({ token });
     }
 );
 
@@ -269,11 +278,12 @@ authRouter.post(
         }
 
         const token = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
 
         await query(
-            `INSERT INTO sessions (token, user_id, is_deactivated, expires_at)
+            `INSERT INTO sessions (token_hash, user_id, is_deactivated, expires_at)
              VALUES (?, ?, 0, DATE_ADD(NOW(), INTERVAL 1 DAY))`,
-            [token, user.id], (req as any).user_id
+            [tokenHash, user.id], (req as any).user_id
         );
 
         res.json({ token });
@@ -287,15 +297,16 @@ authRouter.get(
     validate(MeQuery, "query"),
     async (req, res) => {
         const token = (req as any).token;
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
         const { include } = (req as any).validated.query ?? {};
 
         const [session] = await query(
             `SELECT user_id, expires_at
              FROM sessions
-             WHERE token = ?
+             WHERE token_hash = ?
                AND is_deactivated = 0
                AND expires_at > NOW()`,
-            [token], (req as any).user_id
+            [tokenHash], (req as any).user_id
         );
 
         if (!session) {
@@ -335,17 +346,18 @@ authRouter.post(
     authRequired,
     async (req, res) => {
         const token = (req as any).token;
+        const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
         const userId = (req as any).user_id;
 
         const result = await query(
             `
             UPDATE sessions
                SET is_deactivated = 1
-            WHERE token = ?
+            WHERE token_hash = ?
               AND user_id = ?
               AND is_deactivated = 0
             `,
-            [token, userId], (req as any).user_id
+            [tokenHash, userId], (req as any).user_id
         );
 
         if (result.affectedRows === 0) {
