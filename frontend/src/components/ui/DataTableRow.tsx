@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from "react";
+import {useMemo, useState} from "react";
 import {Pencil, Trash2, X, Save} from "lucide-react";
 import type {TableColumnConfig, TableRowData} from "./data-table/types";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -15,6 +15,9 @@ type Props = {
     onSave?: (data: TableRowData) => Promise<void> | void;
     onDelete?: (row: TableRowData) => Promise<void> | void;
     onCreated?: () => void;
+    onRowClick?: (row: TableRowData) => Promise<void> | void;
+    hideActions?: boolean;
+    actionsWidth?: number;
     className?: string;
 };
 
@@ -25,6 +28,9 @@ export function DataTableRow({
                                  onSave,
                                  onDelete,
                                  onCreated,
+                                 onRowClick,
+                                 hideActions = false,
+                                 actionsWidth = 220,
                                  className = "",
                              }: Props) {
     const [isEditing, setIsEditing] = useState(isCreating);
@@ -113,15 +119,20 @@ export function DataTableRow({
         }
     };
 
+    const canEdit = Boolean(onSave);
+    const canDelete = Boolean(onDelete);
+
     return (
         <div
             className={`
                 grid items-center gap-2 px-4 py-1 text-[var(--color-text-main)]
                 ${isCreating ? "bg-[rgba(99,102,241,0.06)]" : "bg-transparent hover:bg-[rgba(148,163,184,0.08)]"}
+                ${!isEditing && onRowClick ? "cursor-pointer" : ""}
                 ${className}
             `}
+            onClick={isEditing || !onRowClick ? undefined : () => void onRowClick(row)}
             style={{
-                gridTemplateColumns: `${columns.map((col) => `${col.width}fr`).join(" ")} 220px`,
+                gridTemplateColumns: `${columns.map((col) => `${col.width}fr`).join(" ")} ${actionsWidth}px`,
             }}
         >
             {columns.map((column) => {
@@ -178,7 +189,7 @@ export function DataTableRow({
             })}
 
             <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2 whitespace-nowrap">
-                {isEditing ? (
+                {hideActions ? null : isEditing ? (
                     <>
                         <PrimaryButton
                             active
@@ -202,25 +213,35 @@ export function DataTableRow({
                     </>
                 ) : (
                     <>
-                        <OutlineButton
-                            active
-                            onClick={() => setIsEditing(true)}
-                            disabled={loading}
-                            className="px-2.5 py-1.5 text-sm"
-                        >
-                            <span className="sr-only">Изменить</span>
-                            <Pencil size={16} />
-                        </OutlineButton>
+                        {canEdit ? (
+                            <OutlineButton
+                                active
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    setIsEditing(true);
+                                }}
+                                disabled={loading}
+                                className="px-2.5 py-1.5 text-sm shadow-none"
+                            >
+                                <span className="sr-only">Изменить</span>
+                                <Pencil size={16} />
+                            </OutlineButton>
+                        ) : null}
 
-                        <PrimaryButton
-                            active
-                            onClick={handleDelete}
-                            disabled={loading}
-                            className="bg-[var(--color-error)] px-2.5 py-1.5 text-sm shadow-none hover:bg-[color:var(--color-error)]/90"
-                        >
-                            <span className="sr-only">Удалить</span>
-                            <Trash2 size={16} />
-                        </PrimaryButton>
+                        {canDelete ? (
+                            <PrimaryButton
+                                active
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    void handleDelete();
+                                }}
+                                disabled={loading}
+                                className="bg-[var(--color-error)] px-2.5 py-1.5 text-sm shadow-none hover:bg-[color:var(--color-error)]/90"
+                            >
+                                <span className="sr-only">Удалить</span>
+                                <Trash2 size={16} />
+                            </PrimaryButton>
+                        ) : null}
                     </>
                 )}
             </div>

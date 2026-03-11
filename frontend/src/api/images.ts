@@ -1,13 +1,11 @@
+import type { ApiNotifyOptions } from "./request";
+import { BASE_URL, parseJsonResponse } from "./request";
 import { useUser } from "@/store";
-import { showApiError } from "@/api/errorHelper";
+import { showApiError } from "./errorHelper";
 
-const BASE_URL = window.location.origin + "/api/";
-
-export async function getImage(path: string): Promise<string | null> {
-
-    const token = useUser.getState().token;
-
+export async function getImage(path: string, notify?: ApiNotifyOptions): Promise<string | null> {
     try {
+        const token = useUser.getState().token;
         const res = await fetch(BASE_URL + path, {
             method: "GET",
             headers: {
@@ -16,32 +14,29 @@ export async function getImage(path: string): Promise<string | null> {
             },
         });
 
-        if (res.status === 401) {
-            useUser.getState().logout();
-            throw { error: { code: "NO_TOKEN" } };
-        }
-
         if (res.status === 400) {
-          return null;
+            return null;
         }
 
         if (!res.ok) {
-            let json = null;
-            try {
-                json = await res.json();
-            } catch {}
+            const json = await parseJsonResponse(res);
+            if (res.status === 401) {
+                useUser.getState().logout();
+                throw { error: { code: "NO_TOKEN", message: "Unauthorized" } };
+            }
             throw json || { error: { code: "INTERNAL_ERROR" } };
         }
 
         const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-
-
-        return url;
-
-    } catch (err) {
-
-        showApiError(err);
+        return URL.createObjectURL(blob);
+    } catch (error) {
+        if (notify?.error) {
+            if (typeof notify.error === "string") {
+                showApiError(notify.error);
+            } else {
+                showApiError(error);
+            }
+        }
         return null;
     }
 }

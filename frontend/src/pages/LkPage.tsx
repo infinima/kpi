@@ -1,0 +1,899 @@
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import {
+    CalendarDays,
+    Check,
+    ChevronRight,
+    CircleUserRound,
+    LogIn,
+    LogOut,
+    MapPin,
+    Trophy,
+    Users
+} from "lucide-react";
+import Background from "@/components/layout/Background";
+import AnimatedText from "@/components/ui/AnimatedText";
+import PrimaryButton from "@/components/ui/PrimaryButton";
+import OutlineButton from "@/components/ui/OutlineButton";
+import { apiGet, apiPatch, apiPost } from "@/api";
+import { useNotifications, useUser } from "@/store";
+
+type CabinetTab = "profile" | "registration";
+
+type ProfileResponse = {
+    id: number;
+    email: string;
+    first_name: string;
+    last_name: string;
+    patronymic: string | null;
+    phone_number: string;
+    tg_username: string | null;
+    tg_full_name: string | null;
+};
+
+type RegistrationLeague = {
+    id: number;
+    location_id: number;
+    name: string;
+    status: string;
+    max_teams_count: number;
+    teams_count: number;
+    reserve_teams_count: number;
+};
+
+type RegistrationLocation = {
+    id: number;
+    event_id: number;
+    name: string;
+    address: string;
+    leagues: RegistrationLeague[];
+};
+
+type RegistrationEvent = {
+    id: number;
+    name: string;
+    date: string;
+    locations: RegistrationLocation[];
+};
+
+type ProfileFormState = {
+    first_name: string;
+    last_name: string;
+    patronymic: string;
+    phone_number: string;
+    email: string;
+};
+
+type TeamFormState = {
+    eventId: string;
+    locationId: string;
+    leagueId: string;
+    name: string;
+    school: string;
+    schoolMode: string;
+    region: string;
+    regionMode: string;
+    members: string[];
+    appreciationsText: string;
+    meals_count: string;
+    maintainer_full_name: string;
+    maintainer_activity: string;
+    acceptedOffer: boolean;
+};
+
+const inputClassName = `
+    w-full rounded-2xl border border-[var(--color-border)]
+    bg-[rgba(255,255,255,0.92)] px-4 py-3
+    text-[var(--color-text-main)] outline-none transition
+    placeholder:text-[var(--color-text-secondary)]
+    focus:border-[var(--color-primary-light)]
+`;
+
+const readOnlyClassName = `
+    w-full rounded-2xl border border-[var(--color-border)]
+    bg-[rgba(248,250,252,0.88)] px-4 py-3
+    text-[var(--color-text-secondary)]
+`;
+
+const activityOptions = [
+    "семинар учителей математики",
+    "экскурсия по Технопарку (платно)",
+    "мастер-класс в Технопарке (платно)",
+    "заниматься своими делами",
+];
+
+const schoolOptions = [
+    "АНОО «Физтех-лицей» им. П.Л. Капицы",
+    "МАОУ лицей №5 г. Долгопрудный",
+    "АНОО Гимназия им. Е.М. Примакова",
+    "АНОО \"Физмат-лицей имени академика В.Г. Кадышевского\"",
+    "АНОО «Областной технолицей им. В. И. Долгих»",
+    "ГБОУ Школа № 2101",
+    "ГБОУ Школа № 57",
+    "ГБОУ Школа №1543",
+    "ГБОУ ФМО \"Курчатовская школа\"",
+    "ГБПОУ «Воробьевы горы»",
+    "ГАОУ МО \"Балашихинский лицей\"",
+    "МБОУ «Гимназия №1 имени Героя РФ А.В. Баландина»",
+    "МБОУ СОШ №6 г.о. Мытищи",
+    "ГБОУ МО «Одинцовский «Десятый лицей»",
+    "МБОУ Гимназия №1 г. Жуковский",
+    "ШПЦМ",
+    "Школа «Летово»",
+    "ГАОУ ТО «ФМШ» Г. Тюмень",
+    "Математический клуб \"Ответ\"",
+    "сборная команда",
+];
+
+const regionOptions = [
+    "Московская область",
+    "г. Москва",
+    "г. Тверь",
+    "Тверская область",
+    "г. Калуга",
+    "Калужская область",
+    "г. Калининград",
+    "г. Санкт-Петербург",
+    "г. Тюмень",
+];
+
+const customSchoolValue = "свое название";
+const customRegionValue = "свой регион";
+
+const emptyTeamForm = (): TeamFormState => ({
+    eventId: "",
+    locationId: "",
+    leagueId: "",
+    name: "",
+    school: "",
+    schoolMode: "",
+    region: "",
+    regionMode: "",
+    members: ["", "", "", ""],
+    appreciationsText: "",
+    meals_count: "0",
+    maintainer_full_name: "",
+    maintainer_activity: "",
+    acceptedOffer: false,
+});
+
+function InfoBadge({ icon, text }: { icon: ReactNode; text: string }) {
+    return (
+        <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[rgba(255,255,255,0.78)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)]">
+            <span className="text-[var(--color-primary)]">{icon}</span>
+            <span>{text}</span>
+        </div>
+    );
+}
+
+function formatEventDate(value: string) {
+    try {
+        return new Date(value).toLocaleDateString("ru-RU", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+        });
+    } catch {
+        return value;
+    }
+}
+
+export default function LkPage() {
+    const user = useUser((state) => state.user);
+    const token = useUser((state) => state.token);
+    const fetchUser = useUser((state) => state.fetchUser);
+    const logout = useUser((state) => state.logout);
+    const notify = useNotifications((state) => state.addMessage);
+
+    const [activeTab, setActiveTab] = useState<CabinetTab>("profile");
+
+    const [profileForm, setProfileForm] = useState<ProfileFormState>({
+        first_name: "",
+        last_name: "",
+        patronymic: "",
+        phone_number: "",
+        email: "",
+    });
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [profileSaving, setProfileSaving] = useState(false);
+
+    const [registrationData, setRegistrationData] = useState<RegistrationEvent[]>([]);
+    const [registrationLoading, setRegistrationLoading] = useState(false);
+    const [teamSaving, setTeamSaving] = useState(false);
+    const [teamForm, setTeamForm] = useState<TeamFormState>(emptyTeamForm);
+
+    useEffect(() => {
+        if (!user?.id) {
+            return;
+        }
+
+        let cancelled = false;
+
+        async function loadProfile() {
+            try {
+                setProfileLoading(true);
+                const data = await apiGet<ProfileResponse>(`users/${user?.id}`, { error: true });
+
+                if (cancelled) {
+                    return;
+                }
+
+                setProfileForm({
+                    first_name: data.first_name ?? "",
+                    last_name: data.last_name ?? "",
+                    patronymic: data.patronymic ?? "",
+                    phone_number: data.phone_number ?? "",
+                    email: data.email ?? "",
+                });
+            } finally {
+                if (!cancelled) {
+                    setProfileLoading(false);
+                }
+            }
+        }
+
+        void loadProfile();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [user?.id]);
+
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+
+        let cancelled = false;
+
+        async function loadRegistrationOptions() {
+            try {
+                setRegistrationLoading(true);
+                const data = await apiGet<RegistrationEvent[]>("events/registration", { error: true });
+
+                if (cancelled) {
+                    return;
+                }
+
+                setRegistrationData(data);
+            } finally {
+                if (!cancelled) {
+                    setRegistrationLoading(false);
+                }
+            }
+        }
+
+        void loadRegistrationOptions();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [token]);
+
+    const selectedEvent = useMemo(
+        () => registrationData.find((event) => String(event.id) === teamForm.eventId) ?? null,
+        [registrationData, teamForm.eventId]
+    );
+
+    const selectedLocation = useMemo(
+        () => selectedEvent?.locations.find((location) => String(location.id) === teamForm.locationId) ?? null,
+        [selectedEvent, teamForm.locationId]
+    );
+
+    const selectedLeague = useMemo(
+        () => selectedLocation?.leagues.find((league) => String(league.id) === teamForm.leagueId) ?? null,
+        [selectedLocation, teamForm.leagueId]
+    );
+
+    function handleProfileFieldChange(field: keyof ProfileFormState, value: string) {
+        setProfileForm((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function handleMemberChange(index: number, value: string) {
+        setTeamForm((prev) => ({
+            ...prev,
+            members: prev.members.map((member, memberIndex) => memberIndex === index ? value : member),
+        }));
+    }
+
+    function handleEventChange(value: string) {
+        setTeamForm((prev) => ({
+            ...prev,
+            eventId: value,
+            locationId: "",
+            leagueId: "",
+        }));
+    }
+
+    function handleLocationChange(value: string) {
+        setTeamForm((prev) => ({
+            ...prev,
+            locationId: value,
+            leagueId: "",
+        }));
+    }
+
+    function handleSchoolModeChange(value: string) {
+        setTeamForm((prev) => ({
+            ...prev,
+            schoolMode: value,
+            school: value && value !== customSchoolValue ? value : "",
+        }));
+    }
+
+    function handleRegionModeChange(value: string) {
+        setTeamForm((prev) => ({
+            ...prev,
+            regionMode: value,
+            region: value && value !== customRegionValue ? value : "",
+        }));
+    }
+
+    async function handleProfileSave() {
+        if (!user?.id) {
+            return;
+        }
+
+        if (!profileForm.first_name.trim() || !profileForm.last_name.trim() || !profileForm.phone_number.trim()) {
+            notify({ type: "warning", text: "Заполните имя, фамилию и телефон" });
+            return;
+        }
+
+        try {
+            setProfileSaving(true);
+            await apiPatch(`users/${user.id}`, {
+                first_name: profileForm.first_name.trim(),
+                last_name: profileForm.last_name.trim(),
+                patronymic: profileForm.patronymic.trim() || null,
+                phone_number: profileForm.phone_number.trim(),
+            }, {
+                success: "Личные данные сохранены",
+                error: true,
+            });
+            await fetchUser();
+        } finally {
+            setProfileSaving(false);
+        }
+    }
+
+    async function handleTeamSubmit() {
+        if (!teamForm.eventId || !teamForm.locationId || !teamForm.leagueId) {
+            notify({ type: "warning", text: "Выберите мероприятие, площадку и лигу" });
+            return;
+        }
+
+        if (
+            !teamForm.name.trim() ||
+            !teamForm.school.trim() ||
+            !teamForm.region.trim() ||
+            !teamForm.maintainer_full_name.trim() ||
+            !teamForm.maintainer_activity
+        ) {
+            notify({ type: "warning", text: "Заполните обязательные поля команды и сопровождающего" });
+            return;
+        }
+
+        if (teamForm.members.some((member) => !member.trim())) {
+            notify({ type: "warning", text: "Укажите всех четырёх участников" });
+            return;
+        }
+
+        if (!teamForm.acceptedOffer) {
+            notify({ type: "warning", text: "Подтвердите согласие с офертой" });
+            return;
+        }
+
+        const mealsCount = Number(teamForm.meals_count);
+        if (!Number.isInteger(mealsCount) || mealsCount < 0 || mealsCount > 5) {
+            notify({ type: "warning", text: "Количество обедов должно быть от 0 до 5" });
+            return;
+        }
+
+        try {
+            setTeamSaving(true);
+            await apiPost("teams", {
+                league_id: Number(teamForm.leagueId),
+                name: teamForm.name.trim(),
+                members: teamForm.members.map((member) => member.trim()),
+                appreciations: teamForm.appreciationsText
+                    .split("\n")
+                    .map((value) => value.trim())
+                    .filter(Boolean),
+                school: teamForm.school.trim(),
+                region: teamForm.region.trim(),
+                meals_count: mealsCount,
+                maintainer_full_name: teamForm.maintainer_full_name.trim() || null,
+                maintainer_activity: teamForm.maintainer_activity || null,
+            }, {
+                success: "Команда зарегистрирована",
+                error: true,
+            });
+
+            const currentEventId = teamForm.eventId;
+            const currentLocationId = teamForm.locationId;
+            const currentLeagueId = teamForm.leagueId;
+
+            setTeamForm({
+                ...emptyTeamForm(),
+                eventId: currentEventId,
+                locationId: currentLocationId,
+                leagueId: currentLeagueId,
+            });
+
+            const updatedRegistrationData = await apiGet<RegistrationEvent[]>("events/registration");
+            setRegistrationData(updatedRegistrationData);
+        } finally {
+            setTeamSaving(false);
+        }
+    }
+
+    if (!token) {
+        return (
+            <div className="relative min-h-screen overflow-hidden">
+                <Background active />
+
+                <section className="relative mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
+                    <div className="w-full rounded-[36px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.88)] p-8 shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-10">
+                        <AnimatedText
+                            as="h1"
+                            text="Личный кабинет"
+                            className="text-4xl font-semibold tracking-tight text-[var(--color-text-main)] sm:text-5xl"
+                        />
+
+                        <p className="mt-4 max-w-2xl text-base text-[var(--color-text-secondary)]">
+                            Для продолжения нужно войти в аккаунт или создать его.
+                        </p>
+
+                        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                            <Link to="/auth">
+                                <PrimaryButton active leftIcon={<LogIn size={18} />}>
+                                    Войти / зарегистрироваться
+                                </PrimaryButton>
+                            </Link>
+                            <Link to="/">
+                                <OutlineButton active>
+                                    Вернуться на главную
+                                </OutlineButton>
+                            </Link>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    if (!user) {
+        return (
+            <div className="relative min-h-screen overflow-hidden">
+                <Background active />
+
+                <section className="relative mx-auto flex min-h-screen max-w-5xl items-center px-6 py-16">
+                    <div className="w-full rounded-[36px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.88)] p-8 shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-10">
+                        <AnimatedText
+                            as="h1"
+                            text="Загружаем личный кабинет"
+                            className="text-4xl font-semibold tracking-tight text-[var(--color-text-main)] sm:text-5xl"
+                        />
+                    </div>
+                </section>
+            </div>
+        );
+    }
+
+    return (
+        <div className="relative min-h-screen overflow-hidden">
+            <Background active />
+
+            <section className="relative mx-auto max-w-7xl px-6 pb-20 pt-12">
+                <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+                    <div className="max-w-3xl">
+                        <AnimatedText
+                            as="h1"
+                            text="Личный кабинет"
+                            className="text-4xl font-semibold tracking-tight text-[var(--color-text-main)] sm:text-5xl"
+                        />
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                        <OutlineButton
+                            active
+                            leftIcon={<LogOut size={16} />}
+                            onClick={() => {
+                                void logout();
+                            }}
+                        >
+                            Выйти
+                        </OutlineButton>
+                    </div>
+                </div>
+
+                <div className="mt-10 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+                    <aside className="rounded-[32px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.80)] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("profile")}
+                            className={`flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeTab === "profile" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                        >
+                            <span className="flex items-center gap-3">
+                                <CircleUserRound size={18} />
+                                <span>Личные данные</span>
+                            </span>
+                            <ChevronRight size={16} />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => setActiveTab("registration")}
+                            className={`mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeTab === "registration" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                        >
+                            <span className="flex items-center gap-3">
+                                <Trophy size={18} />
+                                <span>Регистрация на турнир</span>
+                            </span>
+                            <ChevronRight size={16} />
+                        </button>
+                    </aside>
+
+                    <motion.div
+                        key={activeTab}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="rounded-[36px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] p-6 shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8"
+                    >
+                        {activeTab === "profile" ? (
+                            <div>
+                                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <h2 className="text-2xl font-semibold text-[var(--color-text-main)]">
+                                            Личные данные
+                                        </h2>
+                                    </div>
+                                </div>
+
+                                <div className="mt-8 grid gap-5 sm:grid-cols-2">
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Имя</span>
+                                        <input
+                                            value={profileForm.first_name}
+                                            onChange={(event) => handleProfileFieldChange("first_name", event.target.value)}
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Фамилия</span>
+                                        <input
+                                            value={profileForm.last_name}
+                                            onChange={(event) => handleProfileFieldChange("last_name", event.target.value)}
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Отчество</span>
+                                        <input
+                                            value={profileForm.patronymic}
+                                            onChange={(event) => handleProfileFieldChange("patronymic", event.target.value)}
+                                            placeholder="Необязательно"
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Телефон</span>
+                                        <input
+                                            value={profileForm.phone_number}
+                                            onChange={(event) => handleProfileFieldChange("phone_number", event.target.value)}
+                                            placeholder="+7 999 123-45-67"
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <label className="block space-y-2 sm:col-span-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Email</span>
+                                        <input
+                                            value={profileForm.email}
+                                            readOnly
+                                            className={readOnlyClassName}
+                                        />
+                                    </label>
+                                </div>
+
+                                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <p className="text-sm text-[var(--color-text-secondary)]">
+                                        {profileLoading ? "Профиль загружается..." : ""}
+                                    </p>
+
+                                    <PrimaryButton
+                                        active
+                                        loading={profileSaving}
+                                        loadingText="Сохраняем..."
+                                        leftIcon={<Check size={18} />}
+                                        onClick={handleProfileSave}
+                                    >
+                                        Сохранить
+                                    </PrimaryButton>
+                                </div>
+                            </div>
+                        ) : (
+                            <div>
+                                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                    <div className="max-w-2xl">
+                                        <h2 className="text-2xl font-semibold text-[var(--color-text-main)]">
+                                            Регистрация на турнир
+                                        </h2>
+                                    </div>
+
+                                    {selectedLeague ? (
+                                        <div className="grid gap-2 sm:grid-cols-2">
+                                            <InfoBadge
+                                                icon={<Users size={14} />}
+                                                text={`Команд: ${selectedLeague.teams_count} / ${selectedLeague.max_teams_count}`}
+                                            />
+                                            <InfoBadge
+                                                icon={<Users size={14} />}
+                                                text={`Резерв: ${selectedLeague.reserve_teams_count}`}
+                                            />
+                                        </div>
+                                    ) : null}
+                                </div>
+
+                                {registrationLoading ? (
+                                    <p className="mt-8 text-sm text-[var(--color-text-secondary)]">
+                                        Загружаем доступные турниры...
+                                    </p>
+                                ) : registrationData.length === 0 ? (
+                                    <div className="mt-8 rounded-[28px] border border-dashed border-[var(--color-border)] bg-[rgba(255,255,255,0.55)] p-6 text-sm text-[var(--color-text-secondary)]">
+                                        Сейчас нет лиг с открытой регистрацией.
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="mt-8 grid gap-5 lg:grid-cols-3">
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Мероприятие</span>
+                                                <select
+                                                    value={teamForm.eventId}
+                                                    onChange={(event) => handleEventChange(event.target.value)}
+                                                    className={inputClassName}
+                                                >
+                                                    <option value="">Выберите мероприятие</option>
+                                                    {registrationData.map((event) => (
+                                                        <option key={event.id} value={event.id}>
+                                                            {event.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Площадка</span>
+                                                <select
+                                                    value={teamForm.locationId}
+                                                    onChange={(event) => handleLocationChange(event.target.value)}
+                                                    className={inputClassName}
+                                                    disabled={!selectedEvent}
+                                                >
+                                                    <option value="">Выберите площадку</option>
+                                                    {selectedEvent?.locations.map((location) => (
+                                                        <option key={location.id} value={location.id}>
+                                                            {location.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Лига</span>
+                                                <select
+                                                    value={teamForm.leagueId}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, leagueId: event.target.value }))}
+                                                    className={inputClassName}
+                                                    disabled={!selectedLocation}
+                                                >
+                                                    <option value="">Выберите лигу</option>
+                                                    {selectedLocation?.leagues.map((league) => (
+                                                        <option key={league.id} value={league.id}>
+                                                            {league.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+                                        </div>
+
+                                        {selectedEvent ? (
+                                            <div className="mt-6 flex flex-wrap gap-3">
+                                                <InfoBadge
+                                                    icon={<CalendarDays size={14} />}
+                                                    text={`Дата: ${formatEventDate(selectedEvent.date)}`}
+                                                />
+                                                {selectedLocation ? (
+                                                    <InfoBadge
+                                                        icon={<MapPin size={14} />}
+                                                        text={`Адрес: ${selectedLocation.address}`}
+                                                    />
+                                                ) : null}
+                                            </div>
+                                        ) : null}
+
+                                        <div className="mt-8 grid gap-5 sm:grid-cols-2">
+                                            <label className="block space-y-2 sm:col-span-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Название команды</span>
+                                                <input
+                                                    value={teamForm.name}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, name: event.target.value }))}
+                                                    placeholder="Например, Пифагоры"
+                                                    className={inputClassName}
+                                                />
+                                            </label>
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Учебное заведение команды</span>
+                                                <select
+                                                    value={teamForm.schoolMode}
+                                                    onChange={(event) => handleSchoolModeChange(event.target.value)}
+                                                    className={inputClassName}
+                                                >
+                                                    <option value="">Выберите учебное заведение</option>
+                                                    {schoolOptions.map((option) => (
+                                                        <option key={option} value={option}>
+                                                            {option}
+                                                        </option>
+                                                    ))}
+                                                    <option value={customSchoolValue}>{customSchoolValue}</option>
+                                                </select>
+                                            </label>
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Регион</span>
+                                                <select
+                                                    value={teamForm.regionMode}
+                                                    onChange={(event) => handleRegionModeChange(event.target.value)}
+                                                    className={inputClassName}
+                                                >
+                                                    <option value="">Выберите регион</option>
+                                                    {regionOptions.map((option) => (
+                                                        <option key={option} value={option}>
+                                                            {option}
+                                                        </option>
+                                                    ))}
+                                                    <option value={customRegionValue}>{customRegionValue}</option>
+                                                </select>
+                                            </label>
+
+                                            {teamForm.schoolMode === customSchoolValue ? (
+                                                <label className="block space-y-2">
+                                                    <span className="text-sm text-[var(--color-text-secondary)]">Свое учебное заведение</span>
+                                                    <input
+                                                        value={teamForm.school}
+                                                        onChange={(event) => setTeamForm((prev) => ({ ...prev, school: event.target.value }))}
+                                                        className={inputClassName}
+                                                    />
+                                                </label>
+                                            ) : null}
+
+                                            {teamForm.regionMode === customRegionValue ? (
+                                                <label className="block space-y-2">
+                                                    <span className="text-sm text-[var(--color-text-secondary)]">Свой регион</span>
+                                                    <input
+                                                        value={teamForm.region}
+                                                        onChange={(event) => setTeamForm((prev) => ({ ...prev, region: event.target.value }))}
+                                                        className={inputClassName}
+                                                    />
+                                                </label>
+                                            ) : null}
+
+                                            {teamForm.members.map((member, index) => (
+                                                <label key={index} className="block space-y-2">
+                                                    <span className="text-sm text-[var(--color-text-secondary)]">
+                                                        Участник {index + 1}
+                                                    </span>
+                                                    <input
+                                                        value={member}
+                                                        onChange={(event) => handleMemberChange(index, event.target.value)}
+                                                        placeholder="Фамилия Имя"
+                                                        className={inputClassName}
+                                                    />
+                                                </label>
+                                            ))}
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Сопровождающий</span>
+                                                <input
+                                                    value={teamForm.maintainer_full_name}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, maintainer_full_name: event.target.value }))}
+                                                    placeholder="ФИО сопровождающего"
+                                                    required
+                                                    className={inputClassName}
+                                                />
+                                            </label>
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Активность сопровождающего</span>
+                                                <select
+                                                    value={teamForm.maintainer_activity}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, maintainer_activity: event.target.value }))}
+                                                    required
+                                                    className={inputClassName}
+                                                >
+                                                    <option value="">Не выбрано</option>
+                                                    {activityOptions.map((option) => (
+                                                        <option key={option} value={option}>
+                                                            {option}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </label>
+
+                                            <label className="block space-y-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Количество обедов</span>
+                                                <span className="block text-xs text-[var(--color-text-secondary)]">
+                                                    Цена: 400 рублей за человека, сопровождающего тоже нужно учитывать.
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min={0}
+                                                    max={5}
+                                                    value={teamForm.meals_count}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, meals_count: event.target.value }))}
+                                                    className={inputClassName}
+                                                />
+                                            </label>
+
+                                            <label className="block space-y-2 sm:col-span-2">
+                                                <span className="text-sm text-[var(--color-text-secondary)]">Благодарности</span>
+                                                <textarea
+                                                    value={teamForm.appreciationsText}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, appreciationsText: event.target.value }))}
+                                                    placeholder="По одной строке на каждую благодарность"
+                                                    rows={4}
+                                                    className={`${inputClassName} resize-none`}
+                                                />
+                                            </label>
+                                        </div>
+
+                                        <label className="mt-6 flex items-start gap-3 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] px-4 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={teamForm.acceptedOffer}
+                                                onChange={(event) => setTeamForm((prev) => ({ ...prev, acceptedOffer: event.target.checked }))}
+                                                className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
+                                            />
+                                            <span className="text-sm text-[var(--color-text-secondary)]">
+                                                Вы подтверждаете{" "}
+                                                <Link to="/offer" className="text-[var(--color-primary)] underline underline-offset-2">
+                                                    оферту
+                                                </Link>
+                                                .
+                                            </span>
+                                        </label>
+
+                                        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div className="flex flex-col gap-3 sm:flex-row">
+                                                <OutlineButton
+                                                    active
+                                                    onClick={() => setTeamForm(emptyTeamForm())}
+                                                >
+                                                    Сбросить
+                                                </OutlineButton>
+                                                <PrimaryButton
+                                                    active
+                                                    loading={teamSaving}
+                                                    loadingText="Отправляем..."
+                                                    leftIcon={<Check size={18} />}
+                                                    onClick={handleTeamSubmit}
+                                                >
+                                                    Подать заявку
+                                                </PrimaryButton>
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </motion.div>
+                </div>
+            </section>
+        </div>
+    );
+}

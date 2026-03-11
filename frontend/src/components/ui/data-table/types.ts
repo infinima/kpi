@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export type TableColumnType =
     | "text"
     | "number"
@@ -25,7 +27,12 @@ export type TableColumnConfig = {
 
 export type TableConfig = {
     columns: TableColumnConfig[];
+    hideActions?: boolean;
+    allowCreate?: boolean;
+    actionsWidth?: number;
 };
+
+export type TableToolbarContent = ReactNode;
 
 export type TableRowData = Record<string, string | number | null | undefined>;
 

@@ -46,6 +46,15 @@ export default function AuthPage() {
         phone_number: "",
     });
 
+    function navigateAfterAuth() {
+        if (window.history.length > 1) {
+            navigate(-1);
+            return;
+        }
+
+        navigate("/");
+    }
+
     async function handleLogin() {
         if (!loginForm.email.trim() || !loginForm.password.trim()) {
             notify({type: "warning", text: "Заполните почту и пароль"});
@@ -54,9 +63,9 @@ export default function AuthPage() {
 
         try {
             setLoginLoading(true);
-            const data = await apiPost<{ token: string }>("auth/login", loginForm);
+            const data = await apiPost<{ token: string }>("auth/login", loginForm, { error: true });
             await loginUser(data.token);
-            navigate("/example");
+            navigateAfterAuth();
         } finally {
             setLoginLoading(false);
         }
@@ -88,7 +97,7 @@ export default function AuthPage() {
                 first_name: registerForm.first_name,
                 patronymic: null,
                 phone_number: registerForm.phone_number,
-            });
+            }, { error: true });
             notify({
                 type: "success",
                 text: "Код подтверждения отправлен на почту.",
@@ -110,9 +119,9 @@ export default function AuthPage() {
             const data = await apiPost<{ id: number; token: string }>("auth/register/confirm", {
                 email: registerForm.email,
                 code: confirmCode,
-            });
+            }, { error: true });
             await loginUser(data.token);
-            navigate("/example");
+            navigateAfterAuth();
         } finally {
             setRegisterLoading(false);
         }

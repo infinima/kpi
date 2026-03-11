@@ -1,159 +1,173 @@
-import {useEffect, useMemo, useState} from "react";
-import {apiGet} from "@/api";
-import {Plus, Search} from "lucide-react";
-import {useUI, useUser} from "@/store";
+import { useEffect, useMemo, useState } from "react";
+import { CalendarDays } from "lucide-react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { apiDelete, apiGet, apiPatch } from "@/api";
+import { BaseImage } from "@/components/BaseImage";
+import { DataTable } from "@/components/ui/DataTable";
+import type { TableRowData } from "@/components/ui/data-table/types";
+import { eventsTableConfig, mapEventRows } from "@/pages/event/tableConfigs";
+import { useUser } from "@/store";
+import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
-import {EventCard} from "@/components/EventCard";
-import {FormModal} from "@/components/layout/FormModal";
-import {eventForm} from "@/config/eventForm";
-
-interface EventItem {
-  id: number;
-  name: string;
-  date: string;
-  created_at: string;
-  updated_at: string;
-  deleted_at: string | null;
-}
+type EventItem = {
+    id: number;
+    name: string;
+    date: string;
+};
 
 export function EventsPage() {
-  const [events, setEvents] = useState<EventItem[]>([]);
-  const [search, setSearch] = useState("");
-  const [mode, setMode] = useState<"active" | "deleted">("active");
-  const [dateFilter, setDateFilter] = useState<"all" | "future" | "past">("all");
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const { eventId } = useParams();
+    const { can, user } = useUser();
+    const [events, setEvents] = useState<EventItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [visibility, setVisibility] = useState<"active" | "deleted">("active");
 
-  const {can, guest} = useUser();
-  const canRestore = !guest && can("events", "restore");
-  const canCreate = !guest && can("events", "create");
-
-  const {
-    formModalOpen: formOpen,
-    closeFormModal: closeForm,
-    openFormModal: openForm,
-    formConfig,
-    formData,
-  } = useUI();
-
-  useEffect(() => {
-    if (!canRestore && mode === "deleted") {
-      setMode("active");
-    }
-  }, [canRestore, mode]);
-
-  useEffect(() => {
-    void loadEvents();
-  }, [mode]);
-
-  async function loadEvents() {
-    try {
-      const url = (mode === "deleted") ? "events/deleted" : "events";
-      const data = await apiGet(url);
-      setEvents(data);
-    } catch {
-    }
-  }
-
-  const filteredBySearch = useMemo(() => {
-    const s = search.toLowerCase();
-    return events.filter((e) => e.name.toLowerCase().includes(s));
-  }, [search, events]);
-
-  const filteredByDate = useMemo(() => {
-    if (mode === "deleted") return filteredBySearch;
-
-    const now = Date.now();
-
-    return filteredBySearch.filter((e) => {
-      const t = new Date(e.date).getTime();
-
-      if (dateFilter === "future") return t >= now;
-      if (dateFilter === "past") return t < now;
-
-      return true;
-    });
-  }, [filteredBySearch, dateFilter, mode]);
-
-  const sorted = useMemo(() => {
-    return [...filteredByDate].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    const rows = useMemo(() => mapEventRows(events), [events]);
+    const canManage = canUseTableMode(user?.rights, "events") && visibility === "active";
+    const canSeeDeleted = Boolean(user?.rights.events?.global?.includes("restore"));
+    const viewMode = getCollectionViewMode(searchParams, "events", canManage);
+    const effectiveVisibility = viewMode === "table" ? visibility : "active";
+    const visibilityFilter = (
+        <select
+            value={visibility}
+            onChange={(event) => setVisibility(event.target.value as "active" | "deleted")}
+            className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
+        >
+            <option value="active">Существующие</option>
+            {canSeeDeleted ? <option value="deleted">Удалённые</option> : null}
+        </select>
     );
-  }, [filteredByDate]);
 
-  return (
-    <div className="space-y-6">
+    useEffect(() => {
+        let ignore = false;
 
-      <div className="flex flex-col sm:flex-row gap-4 sm:items-center">
+        async function load() {
+            try {
+                setLoading(true);
+                const data = await apiGet<EventItem[]>(
+                    effectiveVisibility === "deleted" ? "events/deleted" : "events"
+                );
+                if (!ignore) {
+                    setEvents(data);
+                }
+            } finally {
+                if (!ignore) {
+                    setLoading(false);
+                }
+            }
+        }
 
-        <div className="relative w-full sm:w-80">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60"
-            size={18}
-          />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по мероприятиям…"
-            className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
-          />
-        </div>
+        void load();
+        return () => {
+            ignore = true;
+        };
+    }, [effectiveVisibility]);
 
-        {canRestore &&
-          (<select
-              value={mode}
-              onChange={(e) => setMode(e.target.value as any)}
-              className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border">
+    async function handleUpdate(updatedRow: TableRowData) {
+        await apiPatch(`events/${updatedRow.id}`, {
+            name: updatedRow.name,
+            date: updatedRow.date,
+        }, {
+            success: "Мероприятие обновлено",
+            error: true,
+        });
 
-              <option value="active">Активные</option>
-              <option value="deleted">Удалённые</option>
-            </select>
-          )}
+        setEvents((prev) =>
+            prev.map((event) =>
+                String(event.id) === String(updatedRow.id)
+                    ? { ...event, name: String(updatedRow.name ?? ""), date: String(updatedRow.date ?? "") }
+                    : event
+            )
+        );
+    }
 
-        {mode === "active" &&
-          (<select
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value as any)}
-              className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border">
-              <option value="all">Все</option>
-              <option value="future">Будущие</option>
-              <option value="past">Прошедшие</option>
-            </select>
-          )}
+    async function handleDelete(row: TableRowData) {
+        await apiDelete(`events/${row.id}`, Number(row.id));
+        setEvents((prev) => prev.filter((event) => String(event.id) !== String(row.id)));
 
-        {mode === "active" && canCreate && (
-            <button
-            onClick={() => openForm(eventForm, null)}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark">
-            <Plus size={18}/>
-            Добавить мероприятие
-          </button>
-        )}
-      </div>
+        if (String(eventId) === String(row.id)) {
+            navigate("/events");
+        }
+    }
 
-      {sorted.length === 0 && (
-        <p>Ничего не найдено</p>
-      )}
+    return (
+        <section className="space-y-6">
+            <div>
+                <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">
+                    Мероприятия
+                </div>
+                <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                    Нажмите на строку мероприятия, чтобы дописать его `id` в адрес и открыть следующий уровень в боковом меню.
+                </div>
+            </div>
 
-      {sorted.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {sorted.map((ev) => (
-            <EventCard
-              key={ev.id}
-              event={ev}
-              onRefresh={loadEvents}
-              isDeleted={mode === "deleted"}
-            />
-          ))}
-        </div>
-      )}
+            {loading ? (
+                <div className="rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] px-6 py-8 text-sm text-[var(--color-text-secondary)]">
+                    Загрузка...
+                </div>
+            ) : viewMode === "table" ? (
+                <DataTable
+                    config={eventsTableConfig}
+                    data={rows}
+                    onUpdate={canManage ? handleUpdate : undefined}
+                    onDelete={canManage ? handleDelete : undefined}
+                    onRowClick={(row) => navigate({ pathname: `/events/${row.id}`, search: location.search })}
+                    toolbarContent={visibilityFilter}
+                />
+            ) : (
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                        {events.map((event) => {
+                            const selected = String(event.id) === String(eventId);
 
-      {formOpen && (
-        <FormModal
-          config={formConfig}
-          initialData={formData}
-          onClose={closeForm}
-          onUpdated={loadEvents}
-        />
-      )}
-    </div>
-  );
+                            return (
+                                <button
+                                    key={event.id}
+                                    type="button"
+                                    onClick={() => navigate({ pathname: `/events/${event.id}`, search: location.search })}
+                                    className={`
+                                        rounded-[28px] border p-5 text-left transition
+                                        ${selected
+                                            ? "border-[var(--color-primary)] bg-[rgba(14,116,144,0.08)]"
+                                            : "border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] hover:border-[var(--color-primary-light)]"}
+                                    `}
+                                >
+                                    <div className="mb-4 overflow-hidden rounded-[22px] border border-[var(--color-border)]">
+                                        <BaseImage
+                                            path={`events/${event.id}/photo`}
+                                            alt={event.name}
+                                            className="aspect-[16/9] w-full object-cover"
+                                            fallbackLetter="E"
+                                        />
+                                    </div>
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(99,102,241,0.12)] text-[var(--color-primary)]">
+                                            <CalendarDays size={20} />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-lg font-semibold text-[var(--color-text-main)]">
+                                                {event.name}
+                                            </div>
+                                            <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                                                Дата: {new Date(event.date).toLocaleDateString("ru-RU")}
+                                            </div>
+                                            <div className="mt-1 text-sm text-[var(--color-text-muted)]">
+                                                ID: {event.id}
+                                            </div>
+                                            {event.deleted_at ? (
+                                                <div className="mt-1 text-sm text-[var(--color-error)]">
+                                                    Удалено: {new Date(event.deleted_at).toLocaleString("ru-RU")}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                </div>
+            )}
+        </section>
+    );
 }

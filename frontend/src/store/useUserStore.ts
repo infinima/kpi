@@ -92,10 +92,6 @@ export const useUser = create<UserState>((set, get) => ({
       useUI.getState().closeProfileModal();
     } catch {
     }
-    try {
-      useNavigation.getState().setPage("home");
-    } catch {
-    }
 
     if (!token) {
       set({user: null, token: null, guest: true});

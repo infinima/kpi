@@ -1,10 +1,11 @@
-import React, {useMemo, useState} from "react";
+import {useMemo, useState} from "react";
 import {ArrowUp, ArrowDown, Search, Plus, RotateCcw} from "lucide-react";
 import {DataTableRow} from "./DataTableRow";
 import type {
     SortDirection,
     TableConfig,
     TableColumnConfig,
+    TableToolbarContent,
     TableRowData,
 } from "./data-table/types";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -18,9 +19,11 @@ import {
 type Props = {
     config: TableConfig;
     data: TableRowData[];
-    onCreate: (data: TableRowData) => Promise<void> | void;
-    onUpdate: (data: TableRowData) => Promise<void> | void;
-    onDelete: (data: TableRowData) => Promise<void> | void;
+    onCreate?: (data: TableRowData) => Promise<void> | void;
+    onUpdate?: (data: TableRowData) => Promise<void> | void;
+    onDelete?: (data: TableRowData) => Promise<void> | void;
+    onRowClick?: (row: TableRowData) => Promise<void> | void;
+    toolbarContent?: TableToolbarContent;
 };
 
 export function DataTable({
@@ -29,6 +32,8 @@ export function DataTable({
                               onCreate,
                               onUpdate,
                               onDelete,
+                              onRowClick,
+                              toolbarContent,
                           }: Props) {
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [sortKey, setSortKey] = useState<string | null>(null);
@@ -36,6 +41,8 @@ export function DataTable({
     const [showCreateRow, setShowCreateRow] = useState(false);
 
     const columns = config.columns;
+    const actionsWidth = config.actionsWidth ?? (config.hideActions ? 56 : 220);
+    const canCreate = config.allowCreate !== false && Boolean(onCreate);
 
     const searchableColumns = useMemo(
         () => columns.filter((col) => col.searchable),
@@ -105,7 +112,7 @@ export function DataTable({
                             style={{
                                 gridTemplateColumns: `${columns
                                     .map((col) => `${col.width}fr`)
-                                    .join(" ")} 220px`,
+                                    .join(" ")} ${actionsWidth}px`,
                             }}
                         >
                             {columns.map((column) => (
@@ -128,8 +135,7 @@ export function DataTable({
                                     )}
                                 </button>
                             ))}
-
-                            <div className="text-right">Действия</div>
+                            <div className="text-right">{config.hideActions ? "" : "Действия"}</div>
                         </div>
 
                         <div
@@ -140,7 +146,7 @@ export function DataTable({
                             style={{
                                 gridTemplateColumns: `${columns
                                     .map((col) => `${col.width}fr`)
-                                    .join(" ")} 220px`,
+                                    .join(" ")} ${actionsWidth}px`,
                             }}
                         >
                             {columns.map((column) => (
@@ -169,14 +175,17 @@ export function DataTable({
                             ))}
 
                             <div className="flex justify-end gap-2">
-                                <PrimaryButton
-                                    active
-                                    onClick={() => setShowCreateRow((prev) => !prev)}
-                                    className="px-3 py-2 text-sm shadow-none"
-                                >
-                                    <span className="sr-only">{showCreateRow ? "Скрыть форму создания" : "Создать строку"}</span>
-                                    <Plus size={16} />
-                                </PrimaryButton>
+                                {toolbarContent}
+                                {canCreate && !config.hideActions ? (
+                                    <PrimaryButton
+                                        active
+                                        onClick={() => setShowCreateRow((prev) => !prev)}
+                                        className="px-3 py-2 text-sm shadow-none"
+                                    >
+                                        <span className="sr-only">{showCreateRow ? "Скрыть форму создания" : "Создать строку"}</span>
+                                        <Plus size={16} />
+                                    </PrimaryButton>
+                                ) : null}
                                 <OutlineButton
                                     active
                                     onClick={resetFilters}
@@ -196,18 +205,23 @@ export function DataTable({
                                     row={row}
                                     onSave={onUpdate}
                                     onDelete={onDelete}
+                                    onRowClick={onRowClick}
+                                    hideActions={config.hideActions}
+                                    actionsWidth={actionsWidth}
                                 />
                             ))}
 
-                            {showCreateRow && (
+                            {showCreateRow && onCreate ? (
                                 <DataTableRow
                                     columns={columns}
                                     row={createRowTemplate}
                                     isCreating
                                     onSave={onCreate}
                                     onCreated={() => setShowCreateRow(false)}
+                                    hideActions={config.hideActions}
+                                    actionsWidth={actionsWidth}
                                 />
-                            )}
+                            ) : null}
                         </div>
                     </div>
                 </div>

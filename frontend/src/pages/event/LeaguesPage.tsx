@@ -1,140 +1,214 @@
-import { useEffect, useState, useMemo } from "react";
-import { Search, Plus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Trophy } from "lucide-react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
+import { DataTable } from "@/components/ui/DataTable";
+import type { TableRowData } from "@/components/ui/data-table/types";
+import { leaguesTableConfig, mapLeagueRows } from "@/pages/event/tableConfigs";
+import { useUser } from "@/store";
+import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
-import { apiGet } from "@/api";
-import { useEventsNav, useUI, useNotifications, useUser } from "@/store";
-
-import { LeagueCard } from "@/components/LeagueCard";
-import { FormModal } from "@/components/layout/FormModal";
-import { leagueForm } from "@/config/leagueForm";
+type LeagueItem = {
+    id: number;
+    name: string;
+    status: string;
+    max_teams_count: number;
+};
 
 export function LeaguesPage() {
-    const locationId = useEventsNav((s) => s.locationId);
-
-    const [leagues, setLeagues] = useState<any[]>([]);
-    const [search, setSearch] = useState("");
-    const [mode, setMode] = useState<"active" | "deleted">("active");
-
-
-    const formOpen = useUI((s) => s.formModalOpen);
-    const closeForm = useUI((s) => s.closeFormModal);
-    const openForm = useUI((s) => s.openFormModal);
-    const formConfig = useUI((s) => s.formConfig);
-    const formData = useUI((s) => s.formData);
-
-    // ---- ПРАВА ----
-    const { can, guest } = useUser();
-
-    const canCreate = can("leagues", "create", locationId);
-    const canRestore = can("leagues", "restore", locationId);
-    const canViewDeleted = canRestore; // правило как в других страницах
-
-
-
-    // ---- ЗАГРУЗКА ----
-    async function loadLeagues() {
-        if (!locationId) return;
-
-        try {
-            const url =
-                mode === "active"
-                    ? `leagues/location/${locationId}`
-                    : `leagues/location/${locationId}/deleted`;
-
-            const data = await apiGet(url);
-            setLeagues(data);
-        } catch {}
-    }
+    const location = useLocation();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const { eventId, locationId, leagueId } = useParams();
+    const { user } = useUser();
+    const [leagues, setLeagues] = useState<LeagueItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [visibility, setVisibility] = useState<"active" | "deleted">("active");
 
     useEffect(() => {
-        loadLeagues();
-    }, [mode, locationId]);
+        let ignore = false;
 
+        async function load() {
+            if (!locationId) return;
 
-    // ---- Поиск ----
-    const filtered = useMemo(() => {
-        const s = search.toLowerCase();
-        return leagues.filter((l: any) =>
-            l.name.toLowerCase().includes(s)
+            try {
+                setLoading(true);
+                const data = await apiGet<LeagueItem[]>(
+                    visibility === "deleted"
+                        ? `leagues/location/${locationId}/deleted`
+                        : `leagues/location/${locationId}`
+                );
+                if (!ignore) {
+                    setLeagues(data);
+                }
+            } finally {
+                if (!ignore) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        void load();
+        return () => {
+            ignore = true;
+        };
+    }, [locationId, visibility]);
+
+    const rows = useMemo(() => mapLeagueRows(leagues), [leagues]);
+    const canManage = canUseTableMode(user?.rights, "leagues") && visibility === "active";
+    const canSeeDeleted = Boolean(user?.rights.leagues?.global?.includes("restore"));
+    const viewMode = getCollectionViewMode(searchParams, "leagues", canManage);
+    const visibilityFilter = (
+        <select
+            value={visibility}
+            onChange={(event) => setVisibility(event.target.value as "active" | "deleted")}
+            className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
+        >
+            <option value="active">Существующие</option>
+            {canSeeDeleted ? <option value="deleted">Удалённые</option> : null}
+        </select>
+    );
+
+    async function handleUpdate(updatedRow: TableRowData) {
+        const currentLeague = leagues.find((league) => String(league.id) === String(updatedRow.id));
+        const nextStatus = String(updatedRow.status ?? currentLeague?.status ?? "");
+
+        await apiPatch(`leagues/${updatedRow.id}`, {
+            name: updatedRow.name,
+            max_teams_count: Number(updatedRow.max_teams_count ?? 0),
+        }, {
+            error: true,
+        });
+
+        if (currentLeague && nextStatus && nextStatus !== currentLeague.status) {
+            await apiPost(`leagues/${updatedRow.id}/status`, {
+                new_status: nextStatus,
+            }, {
+                success: "Статус лиги обновлён",
+                error: true,
+            });
+        }
+
+        setLeagues((prev) =>
+            prev.map((league) =>
+                String(league.id) === String(updatedRow.id)
+                    ? {
+                        ...league,
+                        name: String(updatedRow.name ?? ""),
+                        max_teams_count: Number(updatedRow.max_teams_count ?? 0),
+                        status: nextStatus || league.status,
+                    }
+                    : league
+            )
         );
-    }, [search, leagues]);
+    }
 
+    async function handleDelete(row: TableRowData) {
+        await apiDelete(`leagues/${row.id}`, Number(row.id));
+        setLeagues((prev) => prev.filter((league) => String(league.id) !== String(row.id)));
+    }
 
-    // Если нет прав — показать сообщение
+    async function handleCreate(newRow: TableRowData) {
+        if (!locationId) {
+            return;
+        }
 
+        const response = await apiPost<{ id: number }>("leagues", {
+            location_id: Number(locationId),
+            name: newRow.name,
+            max_teams_count: Number(newRow.max_teams_count ?? 0),
+        }, {
+            success: "Лига создана",
+            error: true,
+        });
+
+        setLeagues((prev) => [
+            ...prev,
+            {
+                id: response.id,
+                name: String(newRow.name ?? ""),
+                max_teams_count: Number(newRow.max_teams_count ?? 0),
+                status: "NOT_STARTED",
+            },
+        ]);
+    }
 
     return (
-        <div className="space-y-6">
-
-            {/* SEARCH + FILTERS + ADD */}
-            <div className="flex flex-col sm:flex-row gap-4">
-
-                {/* Поиск */}
-                <div className="relative w-full sm:w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60" size={18} />
-                    <input
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Поиск по лигам…"
-                        className="
-                            w-full pl-10 pr-3 py-2 rounded-lg
-                            bg-surface dark:bg-dark-surface
-                            border border-border dark:border-dark-border
-                        "
-                    />
+        <section className="space-y-6">
+            <div>
+                <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">
+                    Лиги площадки
                 </div>
-
-                {/* Активные / удалённые */}
-                {canViewDeleted && <select
-                    value={mode}
-                    onChange={(e) => setMode(e.target.value as any)}
-                    className="px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border">
-
-                    <option value="active">Активные</option>
-                    {canViewDeleted && <option value="deleted">Удалённые</option>}
-                </select>}
-
-                {/* Добавить лигу */}
-                {mode === "active" && canCreate && (
-                    <button
-                        onClick={() => openForm(leagueForm, { location_id: locationId })}
-                        className="
-                            flex items-center gap-2 px-4 py-2
-                            bg-primary text-white rounded-lg
-                            hover:bg-primary-dark
-                        "
-                    >
-                        <Plus size={18} />
-                        Добавить лигу
-                    </button>
-                )}
+                <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                    Нажмите на строку лиги, чтобы дописать её `id` в адрес и открыть следующий уровень в боковом меню.
+                </div>
             </div>
 
-            {/* LIST */}
-            {filtered.length === 0 ? (
-                <p>Ничего не найдено</p>
+            {loading ? (
+                <div className="rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] px-6 py-8 text-sm text-[var(--color-text-secondary)]">
+                    Загрузка...
+                </div>
+            ) : viewMode === "table" ? (
+                <DataTable
+                    config={leaguesTableConfig}
+                    data={rows}
+                    onCreate={canManage ? handleCreate : undefined}
+                    onUpdate={canManage ? handleUpdate : undefined}
+                    onDelete={canManage ? handleDelete : undefined}
+                    onRowClick={(row) => navigate({ pathname: `/events/${eventId}/location/${locationId}/league/${row.id}`, search: location.search })}
+                    toolbarContent={visibilityFilter}
+                />
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filtered.map((lg) => (
-                        <LeagueCard
-                            key={lg.id}
-                            league={lg}
-                            onRefresh={loadLeagues}
-                            isDeleted={mode === "deleted"}
-                        />
-                    ))}
+                <div className="space-y-4">
+                    <div className="flex justify-end">
+                        {visibilityFilter}
+                    </div>
+                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                        {leagues.map((league) => {
+                            const selected = String(league.id) === String(leagueId);
+
+                            return (
+                                <button
+                                    key={league.id}
+                                    type="button"
+                                    onClick={() => navigate({ pathname: `/events/${eventId}/location/${locationId}/league/${league.id}`, search: location.search })}
+                                    className={`
+                                        rounded-[28px] border p-5 text-left transition
+                                        ${selected
+                                            ? "border-[var(--color-primary)] bg-[rgba(14,116,144,0.08)]"
+                                            : "border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] hover:border-[var(--color-primary-light)]"}
+                                    `}
+                                >
+                                    <div className="flex items-start gap-4">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(245,158,11,0.14)] text-[var(--color-warning)]">
+                                            <Trophy size={20} />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <div className="truncate text-lg font-semibold text-[var(--color-text-main)]">
+                                                {league.name}
+                                            </div>
+                                            <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                                                Команд: {league.max_teams_count}
+                                            </div>
+                                            <div className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                                                Статус: {league.status}
+                                            </div>
+                                            <div className="mt-1 text-sm text-[var(--color-text-muted)]">
+                                                ID: {league.id}
+                                            </div>
+                                            {(league as any).deleted_at ? (
+                                                <div className="mt-1 text-sm text-[var(--color-error)]">
+                                                    Удалено: {new Date((league as any).deleted_at).toLocaleString("ru-RU")}
+                                                </div>
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
             )}
-
-            {/* MODAL */}
-            {formOpen && (
-                <FormModal
-                    config={formConfig}
-                    initialData={formData}
-                    onClose={closeForm}
-                    onUpdated={loadLeagues}
-                />
-            )}
-        </div>
+        </section>
     );
 }

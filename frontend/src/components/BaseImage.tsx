@@ -17,24 +17,34 @@ export function BaseImage({
     const [url, setUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        let revokedUrl: string | null = null;
         let isMounted = true;
+        let currentUrl: string | null = null;
 
         async function load() {
             const loadedUrl = await getImage(path);
 
-            if (!loadedUrl || !isMounted) return;
+            if (!loadedUrl || !isMounted) {
+                if (loadedUrl) {
+                    URL.revokeObjectURL(loadedUrl);
+                }
+                return;
+            }
 
-
-            setUrl(loadedUrl);
+            currentUrl = loadedUrl;
+            setUrl((previousUrl) => {
+                if (previousUrl) {
+                    URL.revokeObjectURL(previousUrl);
+                }
+                return loadedUrl;
+            });
         }
 
-        load();
+        void load();
 
         return () => {
             isMounted = false;
-            if (revokedUrl) {
-                URL.revokeObjectURL(revokedUrl);
+            if (currentUrl) {
+                URL.revokeObjectURL(currentUrl);
             }
         };
     }, [path]);

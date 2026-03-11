@@ -5,10 +5,18 @@ import ExamplePage from "@/pages/ExamplePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/AuthPage";
+import LkPage from "@/pages/LkPage";
+import OfferPage from "@/pages/OfferPage";
 import {useUser} from "@/store";
 import EmptyLayout from "@/components/layout/EmptyLayout";
 import DefaultLayout from "@/components/layout/DefaultLayout";
 import NotReadyPage from "@/pages/NotReadyPage";
+import { EventsPage } from "@/pages/event/EventPage";
+import { EventsRootPage } from "@/pages/event/EventsRootPage";
+import { LocationsPage } from "@/pages/event/LocationPage";
+import { LeaguesPage } from "@/pages/event/LeaguesPage";
+import { Navigate } from "react-router-dom";
+import { EventPlaceholderPage } from "@/pages/event/EventPlaceholderPage";
 
 export default function App() {
     const fetchUser = useUser((state) => state.fetchUser);
@@ -33,30 +41,36 @@ export default function App() {
             <NotificationCenter />
 
             <Routes>
-                <Route element={<EmptyLayout />}>
-                    <Route path="/" element={<HomePage />} />
-                </Route>
-
-                <Route element={<DefaultLayout />}>
-                    <Route path="/logs" element={<NotReadyPage pageName={"Логи"} />} />
-                    <Route path="/results" element={<NotReadyPage pageName={"Страница результатов"} />} />
-                    <Route path="/show" element={<NotReadyPage pageName={"Показ"} />} />
-                    {/*<Route path="/users" element={<UsersPage />} />*/}
-                    {/*<Route path="/teams" element={<TeamsPage/>} />*/}
-                    <Route path="/tables" element={<NotReadyPage pageName={"Таблицы"} />} />
-                    <Route element={""}>
-                        {/*<Route path="/events" element={<EventsPage />} />*/}
-                        {/*<Route path="/locations" element={<LocationsPage />} />*/}
-                        {/*<Route path="/leagues" element={<LeaguesPage />} />*/}
-
-                    </Route>
-                </Route>
-
-                <Route path="*" element={<NotFoundPage />} />
+                <Route path="/" element={<HomePage />} />
                 <Route path="/indev" element={<NotReadyPage pageName={"В разработке"} />} />
                 <Route path="/example" element={<ExamplePage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/lk" element={<LkPage />} />
+                <Route path="/offer" element={<OfferPage />} />
                 <Route path="*" element={<NotFoundPage />} />
+
+                <Route path="/events" element={<EventsRootPage />}>
+                    <Route index element={<EventsPage />} />
+                    <Route path=":eventId" element={<EventsPage />} />
+                    <Route path=":eventId/history" element={<EventPlaceholderPage title="История изменений мероприятия" />} />
+                    <Route path=":eventId/location" element={<LocationsPage />} />
+                    <Route path=":eventId/location/:locationId" element={<LocationsPage />} />
+                    <Route path=":eventId/location/:locationId/history" element={<EventPlaceholderPage title="История изменений площадки" />} />
+                    <Route path=":eventId/location/:locationId/photos" element={<LocationsPage />} />
+                    <Route path=":eventId/location/:locationId/league" element={<LeaguesPage />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId" element={<LeaguesPage />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/history" element={<EventPlaceholderPage title="История изменений лиги" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/results/kvartaly" element={<EventPlaceholderPage title="Результаты кварталов" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/results/fudzi" element={<EventPlaceholderPage title="Результаты фудзи" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/results/overall" element={<EventPlaceholderPage title="Общие результаты" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/accounts" element={<EventPlaceholderPage title="Аккаунты показа" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/teams" element={<EventPlaceholderPage title="Команды" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/show" element={<EventPlaceholderPage title="Показ" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/show-control" element={<EventPlaceholderPage title="Управление показом" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/tables" element={<EventPlaceholderPage title="Таблички" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/fudzi-presentation" element={<EventPlaceholderPage title="Презентация фудзи" />} />
+                </Route>
+
             </Routes>
         </BrowserRouter>
     );
