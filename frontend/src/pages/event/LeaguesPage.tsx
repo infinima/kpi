@@ -2,17 +2,21 @@ import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
-import { DataTable } from "@/components/ui/DataTable";
-import type { TableRowData } from "@/components/ui/data-table/types";
-import { leaguesTableConfig, mapLeagueRows } from "@/pages/event/tableConfigs";
+import { EntityTable } from "@/components/ui/table/EntityTable";
+import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import { leagueEntityColumns, mapLeagueEntityRows } from "@/pages/event/entityTableConfigs";
 import { useUser } from "@/store";
 import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
 type LeagueItem = {
     id: number;
+    location_id: number;
     name: string;
     status: string;
     max_teams_count: number;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
 };
 
 export function LeaguesPage() {
@@ -54,7 +58,7 @@ export function LeaguesPage() {
         };
     }, [locationId, visibility]);
 
-    const rows = useMemo(() => mapLeagueRows(leagues), [leagues]);
+    const rows = useMemo(() => mapLeagueEntityRows(leagues), [leagues]);
     const canManage = canUseTableMode(user?.rights, "leagues") && visibility === "active";
     const canSeeDeleted = Boolean(user?.rights.leagues?.global?.includes("restore"));
     const viewMode = getCollectionViewMode(searchParams, "leagues", canManage);
@@ -69,7 +73,7 @@ export function LeaguesPage() {
         </select>
     );
 
-    async function handleUpdate(updatedRow: TableRowData) {
+    async function handleUpdate(updatedRow: EntityTableRowData) {
         const currentLeague = leagues.find((league) => String(league.id) === String(updatedRow.id));
         const nextStatus = String(updatedRow.status ?? currentLeague?.status ?? "");
 
@@ -103,12 +107,20 @@ export function LeaguesPage() {
         );
     }
 
-    async function handleDelete(row: TableRowData) {
+    async function handleDelete(row: EntityTableRowData) {
         await apiDelete(`leagues/${row.id}`, Number(row.id));
         setLeagues((prev) => prev.filter((league) => String(league.id) !== String(row.id)));
     }
 
-    async function handleCreate(newRow: TableRowData) {
+    async function handleRestore(row: EntityTableRowData) {
+        await apiPost(`leagues/${row.id}/restore`, undefined, {
+            success: "Лига восстановлена",
+            error: true,
+        });
+        setLeagues((prev) => prev.filter((league) => String(league.id) !== String(row.id)));
+    }
+
+    async function handleCreate(newRow: EntityTableRowData) {
         if (!locationId) {
             return;
         }
@@ -126,6 +138,7 @@ export function LeaguesPage() {
             ...prev,
             {
                 id: response.id,
+                location_id: Number(locationId),
                 name: String(newRow.name ?? ""),
                 max_teams_count: Number(newRow.max_teams_count ?? 0),
                 status: "NOT_STARTED",
@@ -139,9 +152,6 @@ export function LeaguesPage() {
                 <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">
                     Лиги площадки
                 </div>
-                <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                    Нажмите на строку лиги, чтобы дописать её `id` в адрес и открыть следующий уровень в боковом меню.
-                </div>
             </div>
 
             {loading ? (
@@ -149,14 +159,16 @@ export function LeaguesPage() {
                     Загрузка...
                 </div>
             ) : viewMode === "table" ? (
-                <DataTable
-                    config={leaguesTableConfig}
+                <EntityTable
+                    columns={leagueEntityColumns}
                     data={rows}
                     onCreate={canManage ? handleCreate : undefined}
                     onUpdate={canManage ? handleUpdate : undefined}
                     onDelete={canManage ? handleDelete : undefined}
+                    onRestore={visibility === "deleted" ? handleRestore : undefined}
                     onRowClick={(row) => navigate({ pathname: `/events/${eventId}/location/${locationId}/league/${row.id}`, search: location.search })}
                     toolbarContent={visibilityFilter}
+                    actionsWidth={136}
                 />
             ) : (
                 <div className="space-y-4">
@@ -196,9 +208,9 @@ export function LeaguesPage() {
                                             <div className="mt-1 text-sm text-[var(--color-text-muted)]">
                                                 ID: {league.id}
                                             </div>
-                                            {(league as any).deleted_at ? (
+                                            {league.deleted_at ? (
                                                 <div className="mt-1 text-sm text-[var(--color-error)]">
-                                                    Удалено: {new Date((league as any).deleted_at).toLocaleString("ru-RU")}
+                                                    Удалено: {new Date(league.deleted_at).toLocaleString("ru-RU")}
                                                 </div>
                                             ) : null}
                                         </div>

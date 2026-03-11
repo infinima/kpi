@@ -3,16 +3,20 @@ import { Camera, MapPin } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import { BaseImage } from "@/components/BaseImage";
-import { DataTable } from "@/components/ui/DataTable";
-import type { TableRowData } from "@/components/ui/data-table/types";
-import { locationsTableConfig, mapLocationRows } from "@/pages/event/tableConfigs";
+import { EntityTable } from "@/components/ui/table/EntityTable";
+import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import { locationEntityColumns, mapLocationEntityRows } from "@/pages/event/entityTableConfigs";
 import { useUser } from "@/store";
 import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
 type LocationItem = {
     id: number;
+    event_id: number;
     name: string;
     address: string;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
 };
 
 type PhotoItem = {
@@ -27,7 +31,7 @@ export function LocationsPage() {
     const [searchParams] = useSearchParams();
     const { eventId, locationId } = useParams();
     const { user } = useUser();
-    const isPhotosMode = Boolean(locationId);
+    const isPhotosMode = location.pathname.endsWith("/photos");
 
     const [locations, setLocations] = useState<LocationItem[]>([]);
     const [photos, setPhotos] = useState<PhotoItem[]>([]);
@@ -116,7 +120,7 @@ export function LocationsPage() {
         };
     }, [isPhotosMode, locations]);
 
-    const rows = useMemo(() => mapLocationRows(locations), [locations]);
+    const rows = useMemo(() => mapLocationEntityRows(locations), [locations]);
     const canManage = canUseTableMode(user?.rights, "locations") && visibility === "active";
     const canSeeDeleted = Boolean(user?.rights.locations?.global?.includes("restore"));
     const viewMode = getCollectionViewMode(searchParams, "locations", canManage);
@@ -131,7 +135,7 @@ export function LocationsPage() {
         </select>
     );
 
-    async function handleUpdate(updatedRow: TableRowData) {
+    async function handleUpdate(updatedRow: EntityTableRowData) {
         await apiPatch(`locations/${updatedRow.id}`, {
             name: updatedRow.name,
             address: updatedRow.address,
@@ -153,7 +157,7 @@ export function LocationsPage() {
         );
     }
 
-    async function handleDelete(row: TableRowData) {
+    async function handleDelete(row: EntityTableRowData) {
         await apiDelete(`locations/${row.id}`, Number(row.id));
         setLocations((prev) => prev.filter((location) => String(location.id) !== String(row.id)));
 
@@ -162,7 +166,15 @@ export function LocationsPage() {
         }
     }
 
-    async function handleCreate(newRow: TableRowData) {
+    async function handleRestore(row: EntityTableRowData) {
+        await apiPost(`locations/${row.id}/restore`, undefined, {
+            success: "Площадка восстановлена",
+            error: true,
+        });
+        setLocations((prev) => prev.filter((location) => String(location.id) !== String(row.id)));
+    }
+
+    async function handleCreate(newRow: EntityTableRowData) {
         if (!eventId) {
             return;
         }
@@ -180,6 +192,7 @@ export function LocationsPage() {
             ...prev,
             {
                 id: response.id,
+                event_id: Number(eventId),
                 name: String(newRow.name ?? ""),
                 address: String(newRow.address ?? ""),
             },
@@ -238,9 +251,6 @@ export function LocationsPage() {
                 <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">
                     Площадки
                 </div>
-                <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                    Нажмите на строку площадки, чтобы дописать её `id` в адрес и открыть следующий уровень в боковом меню.
-                </div>
             </div>
 
             {loading ? (
@@ -248,14 +258,16 @@ export function LocationsPage() {
                     Загрузка...
                 </div>
             ) : viewMode === "table" ? (
-                <DataTable
-                    config={locationsTableConfig}
+                <EntityTable
+                    columns={locationEntityColumns}
                     data={rows}
                     onCreate={canManage ? handleCreate : undefined}
                     onUpdate={canManage ? handleUpdate : undefined}
                     onDelete={canManage ? handleDelete : undefined}
+                    onRestore={visibility === "deleted" ? handleRestore : undefined}
                     onRowClick={(row) => navigate({ pathname: `/events/${eventId}/location/${row.id}`, search: location.search })}
                     toolbarContent={visibilityFilter}
+                    actionsWidth={136}
                 />
             ) : (
                 <div className="space-y-4">
@@ -309,9 +321,9 @@ export function LocationsPage() {
                                                 <div className="mt-1 text-sm text-[var(--color-text-muted)]">
                                                     ID: {item.id}
                                                 </div>
-                                                {(item as any).deleted_at ? (
+                                                {item.deleted_at ? (
                                                     <div className="mt-1 text-sm text-[var(--color-error)]">
-                                                        Удалено: {new Date((item as any).deleted_at).toLocaleString("ru-RU")}
+                                                        Удалено: {new Date(item.deleted_at).toLocaleString("ru-RU")}
                                                     </div>
                                                 ) : null}
                                             </div>

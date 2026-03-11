@@ -1,3 +1,3 @@
 export * from "./useUserStore";
 export * from "./useNotificationStore";
-export * from "./useUI";
+export * from "./useModalStore";

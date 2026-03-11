@@ -354,25 +354,30 @@ export default function EventsSidebar() {
                                     />
                                 ) : null}
 
-                                {can("locations", "get") || can("locations", "create") || can("locations", "update") ? (
-                                    <SidebarItem
-                                        to={`/events/${eventInfo.id}/location`}
-                                        label="Площадки"
-                                        icon={<MapPin size={16} />}
-                                        end={!locationId}
-                                        collapsed={effectiveCollapsed}
-                                        modeToggle={
-                                            <SidebarModeToggle
-                                                entity="locations"
-                                                to={locationId
-                                                    ? `/events/${eventInfo.id}/location/${locationId}`
-                                                    : `/events/${eventInfo.id}/location`}
-                                                canTable={canUseTableMode(rights, "locations")}
-                                                collapsed={effectiveCollapsed}
-                                            />
-                                        }
-                                    />
-                                ) : null}
+                                <SidebarItem
+                                    to={`/events/${eventInfo.id}/teams`}
+                                    label="Команды"
+                                    icon={<Users size={16} />}
+                                    collapsed={effectiveCollapsed}
+                                />
+
+                                <SidebarItem
+                                    to={`/events/${eventInfo.id}/location`}
+                                    label="Площадки"
+                                    icon={<MapPin size={16} />}
+                                    end={!locationId}
+                                    collapsed={effectiveCollapsed}
+                                    modeToggle={
+                                        <SidebarModeToggle
+                                            entity="locations"
+                                            to={locationId
+                                                ? `/events/${eventInfo.id}/location/${locationId}`
+                                                : `/events/${eventInfo.id}/location`}
+                                            canTable={canUseTableMode(rights, "locations")}
+                                            collapsed={effectiveCollapsed}
+                                        />
+                                    }
+                                />
 
                                 {locationInfo ? (
                                     <>
@@ -388,31 +393,36 @@ export default function EventsSidebar() {
                                         ) : null}
 
                                         <SidebarItem
+                                            to={`/events/${eventInfo.id}/location/${locationInfo.id}/teams`}
+                                            label="Команды"
+                                            icon={<Users size={16} />}
+                                            collapsed={effectiveCollapsed}
+                                        />
+
+                                        <SidebarItem
                                             to={`/events/${eventInfo.id}/location/${locationInfo.id}/photos`}
                                             label="Фотографии"
                                             icon={<Camera size={16} />}
                                             collapsed={effectiveCollapsed}
                                         />
 
-                                        {can("leagues", "get") || can("leagues", "create") || can("leagues", "update") ? (
-                                            <SidebarItem
-                                                to={`/events/${eventInfo.id}/location/${locationInfo.id}/league`}
-                                                label="Лиги"
-                                                icon={<Trophy size={16} />}
-                                                end={!leagueId}
-                                                collapsed={effectiveCollapsed}
-                                                modeToggle={
-                                                    <SidebarModeToggle
-                                                        entity="leagues"
-                                                        to={leagueId
-                                                            ? `/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueId}`
-                                                            : `/events/${eventInfo.id}/location/${locationInfo.id}/league`}
-                                                        canTable={canUseTableMode(rights, "leagues")}
-                                                        collapsed={effectiveCollapsed}
-                                                    />
-                                                }
-                                            />
-                                        ) : null}
+                                        <SidebarItem
+                                            to={`/events/${eventInfo.id}/location/${locationInfo.id}/league`}
+                                            label="Лиги"
+                                            icon={<Trophy size={16} />}
+                                            end={!leagueId}
+                                            collapsed={effectiveCollapsed}
+                                            modeToggle={
+                                                <SidebarModeToggle
+                                                    entity="leagues"
+                                                    to={leagueId
+                                                        ? `/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueId}`
+                                                        : `/events/${eventInfo.id}/location/${locationInfo.id}/league`}
+                                                    canTable={canUseTableMode(rights, "leagues")}
+                                                    collapsed={effectiveCollapsed}
+                                                />
+                                            }
+                                        />
 
                                         {leagueInfo ? (
                                             <>
@@ -427,32 +437,26 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "edit_answers", leagueNumber) ? (
-                                                    <SidebarItem
-                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/kvartaly`}
-                                                        label="Результаты кварталов"
-                                                        icon={<Rows3 size={16} />}
-                                                        collapsed={effectiveCollapsed}
-                                                    />
-                                                ) : null}
+                                                <SidebarItem
+                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/kvartaly`}
+                                                    label="Результаты кварталов"
+                                                    icon={<Rows3 size={16} />}
+                                                    collapsed={effectiveCollapsed}
+                                                />
 
-                                                {leagueNumber && can("leagues", "edit_answers", leagueNumber) ? (
-                                                    <SidebarItem
-                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/fudzi`}
-                                                        label="Результаты фудзи"
-                                                        icon={<Rows3 size={16} />}
-                                                        collapsed={effectiveCollapsed}
-                                                    />
-                                                ) : null}
+                                                <SidebarItem
+                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/fudzi`}
+                                                    label="Результаты фудзи"
+                                                    icon={<Rows3 size={16} />}
+                                                    collapsed={effectiveCollapsed}
+                                                />
 
-                                                {leagueNumber && can("leagues", "edit_answers", leagueNumber) ? (
-                                                    <SidebarItem
-                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/overall`}
-                                                        label="Результаты общие"
-                                                        icon={<Rows3 size={16} />}
-                                                        collapsed={effectiveCollapsed}
-                                                    />
-                                                ) : null}
+                                                <SidebarItem
+                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/overall`}
+                                                    label="Результаты общие"
+                                                    icon={<Rows3 size={16} />}
+                                                    collapsed={effectiveCollapsed}
+                                                />
 
                                                 {leagueNumber && can("leagues", "update", leagueNumber) ? (
                                                     <SidebarItem

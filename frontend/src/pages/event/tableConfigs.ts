@@ -62,6 +62,33 @@ export const leaguesTableConfig: TableConfig = {
     ],
 };
 
+export const teamsTableConfig: TableConfig = {
+    hideActions: true,
+    allowCreate: false,
+    actionsWidth: 120,
+    columns: [
+        { key: "id", label: "ID", type: "number", width: 0.6, sortable: true, editable: false, searchable: true },
+        { key: "league_id", label: "Лига", type: "number", width: 0.7, sortable: true, editable: false, searchable: true },
+        { key: "owner_user_id", label: "Владелец", type: "number", width: 0.8, sortable: true, editable: false, searchable: true },
+        { key: "name", label: "Команда", type: "text", width: 1.6, sortable: true, editable: false, searchable: true },
+        { key: "members", label: "Участники", type: "text", width: 2.2, sortable: true, editable: false, searchable: true },
+        { key: "appreciations", label: "Благодарности", type: "text", width: 1.8, sortable: true, editable: false, searchable: true },
+        { key: "school", label: "Учебное заведение", type: "text", width: 1.8, sortable: true, editable: false, searchable: true },
+        { key: "region", label: "Регион", type: "text", width: 1.2, sortable: true, editable: false, searchable: true },
+        { key: "meals_count", label: "Обеды", type: "number", width: 0.7, sortable: true, editable: false, searchable: true },
+        { key: "maintainer_full_name", label: "Сопровождающий", type: "text", width: 1.7, sortable: true, editable: false, searchable: true },
+        { key: "maintainer_activity", label: "Активность", type: "text", width: 1.8, sortable: true, editable: false, searchable: true },
+        { key: "status", label: "Статус", type: "text", width: 1.2, sortable: true, editable: false, searchable: true },
+        { key: "answers_kvartaly", label: "Ответы кварталы", type: "text", width: 2, sortable: true, editable: false, searchable: true },
+        { key: "answers_fudzi", label: "Ответы фудзи", type: "text", width: 2, sortable: true, editable: false, searchable: true },
+        { key: "diploma", label: "Диплом", type: "text", width: 1.1, sortable: true, editable: false, searchable: true },
+        { key: "special_nominations", label: "Номинации", type: "text", width: 1.8, sortable: true, editable: false, searchable: true },
+        { key: "created_at", label: "Создано", type: "text", width: 1.1, sortable: true, editable: false, searchable: true },
+        { key: "updated_at", label: "Обновлено", type: "text", width: 1.1, sortable: true, editable: false, searchable: true },
+        { key: "deleted_at", label: "Удалено", type: "text", width: 1.1, sortable: true, editable: false, searchable: true },
+    ],
+};
+
 export function mapEventRows(rows: { id: number; name: string; date: string }[]): TableRowData[] {
     return rows.map((row) => ({
         id: row.id,
@@ -95,5 +122,29 @@ export function mapLeagueRows(rows: { id: number; location_id: number; name: str
         created_at: (row as any).created_at ?? "",
         updated_at: (row as any).updated_at ?? "",
         deleted_at: (row as any).deleted_at ?? "",
+    }));
+}
+
+export function mapTeamRows(rows: any[]): TableRowData[] {
+    return rows.map((row) => ({
+        id: row.id,
+        league_id: row.league_id ?? "",
+        owner_user_id: row.owner_user_id ?? "",
+        name: row.name ?? "",
+        members: Array.isArray(row.members) ? row.members.join(", ") : String(row.members ?? ""),
+        appreciations: Array.isArray(row.appreciations) ? row.appreciations.join(", ") : String(row.appreciations ?? ""),
+        school: row.school ?? "",
+        region: row.region ?? "",
+        meals_count: row.meals_count ?? 0,
+        maintainer_full_name: row.maintainer_full_name ?? "",
+        maintainer_activity: row.maintainer_activity ?? "",
+        status: row.status ?? "",
+        answers_kvartaly: typeof row.answers_kvartaly === "string" ? row.answers_kvartaly : JSON.stringify(row.answers_kvartaly ?? ""),
+        answers_fudzi: typeof row.answers_fudzi === "string" ? row.answers_fudzi : JSON.stringify(row.answers_fudzi ?? ""),
+        diploma: row.diploma ?? "",
+        special_nominations: Array.isArray(row.special_nominations) ? row.special_nominations.join(", ") : String(row.special_nominations ?? ""),
+        created_at: row.created_at ?? "",
+        updated_at: row.updated_at ?? "",
+        deleted_at: row.deleted_at ?? "",
     }));
 }
