@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { apiDelete, apiGet, apiPatch } from "@/api";
+import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import { BaseImage } from "@/components/BaseImage";
-import { DataTable } from "@/components/ui/DataTable";
-import type { TableRowData } from "@/components/ui/data-table/types";
-import { eventsTableConfig, mapEventRows } from "@/pages/event/tableConfigs";
+import { EntityTable } from "@/components/ui/table/EntityTable";
+import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import { eventEntityColumns, mapEventEntityRows } from "@/pages/event/entityTableConfigs";
 import { useUser } from "@/store";
 import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
@@ -13,6 +13,9 @@ type EventItem = {
     id: number;
     name: string;
     date: string;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
 };
 
 export function EventsPage() {
@@ -25,7 +28,7 @@ export function EventsPage() {
     const [loading, setLoading] = useState(true);
     const [visibility, setVisibility] = useState<"active" | "deleted">("active");
 
-    const rows = useMemo(() => mapEventRows(events), [events]);
+    const rows = useMemo(() => mapEventEntityRows(events), [events]);
     const canManage = canUseTableMode(user?.rights, "events") && visibility === "active";
     const canSeeDeleted = Boolean(user?.rights.events?.global?.includes("restore"));
     const viewMode = getCollectionViewMode(searchParams, "events", canManage);
@@ -66,7 +69,7 @@ export function EventsPage() {
         };
     }, [effectiveVisibility]);
 
-    async function handleUpdate(updatedRow: TableRowData) {
+    async function handleUpdate(updatedRow: EntityTableRowData) {
         await apiPatch(`events/${updatedRow.id}`, {
             name: updatedRow.name,
             date: updatedRow.date,
@@ -84,7 +87,7 @@ export function EventsPage() {
         );
     }
 
-    async function handleDelete(row: TableRowData) {
+    async function handleDelete(row: EntityTableRowData) {
         await apiDelete(`events/${row.id}`, Number(row.id));
         setEvents((prev) => prev.filter((event) => String(event.id) !== String(row.id)));
 
@@ -93,14 +96,19 @@ export function EventsPage() {
         }
     }
 
+    async function handleRestore(row: EntityTableRowData) {
+        await apiPost(`events/${row.id}/restore`, undefined, {
+            success: "Мероприятие восстановлено",
+            error: true,
+        });
+        setEvents((prev) => prev.filter((event) => String(event.id) !== String(row.id)));
+    }
+
     return (
         <section className="space-y-6">
             <div>
                 <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">
                     Мероприятия
-                </div>
-                <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                    Нажмите на строку мероприятия, чтобы дописать его `id` в адрес и открыть следующий уровень в боковом меню.
                 </div>
             </div>
 
@@ -109,13 +117,15 @@ export function EventsPage() {
                     Загрузка...
                 </div>
             ) : viewMode === "table" ? (
-                <DataTable
-                    config={eventsTableConfig}
+                <EntityTable
+                    columns={eventEntityColumns}
                     data={rows}
                     onUpdate={canManage ? handleUpdate : undefined}
                     onDelete={canManage ? handleDelete : undefined}
+                    onRestore={effectiveVisibility === "deleted" ? handleRestore : undefined}
                     onRowClick={(row) => navigate({ pathname: `/events/${row.id}`, search: location.search })}
                     toolbarContent={visibilityFilter}
+                    actionsWidth={136}
                 />
             ) : (
                 <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">

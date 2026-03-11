@@ -79,6 +79,7 @@ type TeamFormState = {
     meals_count: string;
     maintainer_full_name: string;
     maintainer_activity: string;
+    isReserve: boolean;
     acceptedOffer: boolean;
 };
 
@@ -155,6 +156,7 @@ const emptyTeamForm = (): TeamFormState => ({
     meals_count: "0",
     maintainer_full_name: "",
     maintainer_activity: "",
+    isReserve: false,
     acceptedOffer: false,
 });
 
@@ -286,6 +288,65 @@ export default function LkPage() {
         [selectedLocation, teamForm.leagueId]
     );
 
+    const availablePlaces = useMemo(() => {
+        if (!selectedLeague) {
+            return null;
+        }
+
+        return Math.max(0, selectedLeague.max_teams_count - selectedLeague.teams_count);
+    }, [selectedLeague]);
+
+    useEffect(() => {
+        if (registrationData.length === 0) {
+            return;
+        }
+
+        setTeamForm((prev) => {
+            if (prev.eventId) {
+                return prev;
+            }
+
+            const firstEvent = registrationData[0];
+            const firstLocation = firstEvent?.locations[0];
+
+            return {
+                ...prev,
+                eventId: firstEvent ? String(firstEvent.id) : "",
+                locationId: firstLocation ? String(firstLocation.id) : "",
+                leagueId: "",
+            };
+        });
+    }, [registrationData]);
+
+    useEffect(() => {
+        if (!selectedEvent) {
+            return;
+        }
+
+        setTeamForm((prev) => {
+            const hasCurrentLocation = selectedEvent.locations.some((location) => String(location.id) === prev.locationId);
+            if (hasCurrentLocation) {
+                return prev;
+            }
+
+            const firstLocation = selectedEvent.locations[0];
+
+            return {
+                ...prev,
+                locationId: firstLocation ? String(firstLocation.id) : "",
+                leagueId: "",
+            };
+        });
+    }, [selectedEvent]);
+
+    useEffect(() => {
+        if (availablePlaces === 0 || !teamForm.isReserve) {
+            return;
+        }
+
+        setTeamForm((prev) => ({ ...prev, isReserve: false }));
+    }, [availablePlaces, teamForm.isReserve]);
+
     function handleProfileFieldChange(field: keyof ProfileFormState, value: string) {
         setProfileForm((prev) => ({ ...prev, [field]: value }));
     }
@@ -363,6 +424,11 @@ export default function LkPage() {
             return;
         }
 
+        if (availablePlaces === 0 && !teamForm.isReserve) {
+            notify({ type: "warning", text: "Свободных мест нет. Включите запись в очередь." });
+            return;
+        }
+
         if (
             !teamForm.name.trim() ||
             !teamForm.school.trim() ||
@@ -394,6 +460,8 @@ export default function LkPage() {
             setTeamSaving(true);
             await apiPost("teams", {
                 league_id: Number(teamForm.leagueId),
+                owner_user_id: user.id,
+                is_reserve: teamForm.isReserve,
                 name: teamForm.name.trim(),
                 members: teamForm.members.map((member) => member.trim()),
                 appreciations: teamForm.appreciationsText
@@ -629,11 +697,11 @@ export default function LkPage() {
                                         <div className="grid gap-2 sm:grid-cols-2">
                                             <InfoBadge
                                                 icon={<Users size={14} />}
-                                                text={`Команд: ${selectedLeague.teams_count} / ${selectedLeague.max_teams_count}`}
+                                                text={`Осталось мест: ${availablePlaces ?? 0}`}
                                             />
                                             <InfoBadge
                                                 icon={<Users size={14} />}
-                                                text={`Резерв: ${selectedLeague.reserve_teams_count}`}
+                                                text={`В резерве: ${selectedLeague.reserve_teams_count}`}
                                             />
                                         </div>
                                     ) : null}
@@ -722,7 +790,7 @@ export default function LkPage() {
                                                 <input
                                                     value={teamForm.name}
                                                     onChange={(event) => setTeamForm((prev) => ({ ...prev, name: event.target.value }))}
-                                                    placeholder="Например, Пифагоры"
+                                                    placeholder="Пифагоры"
                                                     className={inputClassName}
                                                 />
                                             </label>
@@ -840,6 +908,25 @@ export default function LkPage() {
                                                 />
                                             </label>
 
+                                            {availablePlaces === 0 ? (
+                                                <label className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] px-4 py-3 sm:col-span-2">
+                                                    <span className="text-sm font-medium text-[var(--color-text-main)]">
+                                                        Записаться в резерв
+                                                    </span>
+                                                    <button
+                                                        type="button"
+                                                        role="switch"
+                                                        aria-checked={teamForm.isReserve}
+                                                        onClick={() => setTeamForm((prev) => ({ ...prev, isReserve: !prev.isReserve }))}
+                                                        className={`relative h-7 w-12 rounded-full transition ${teamForm.isReserve ? "bg-[var(--color-primary)]" : "bg-[rgba(148,163,184,0.45)]"}`}
+                                                    >
+                                                        <span
+                                                            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${teamForm.isReserve ? "left-6" : "left-1"}`}
+                                                        />
+                                                    </button>
+                                                </label>
+                                            ) : null}
+
                                             <label className="block space-y-2 sm:col-span-2">
                                                 <span className="text-sm text-[var(--color-text-secondary)]">Благодарности</span>
                                                 <textarea
@@ -879,11 +966,11 @@ export default function LkPage() {
                                                 <PrimaryButton
                                                     active
                                                     loading={teamSaving}
-                                                    loadingText="Отправляем..."
+                                                    loadingText={teamForm.isReserve ? "Записываем в очередь..." : "Отправляем..."}
                                                     leftIcon={<Check size={18} />}
                                                     onClick={handleTeamSubmit}
                                                 >
-                                                    Подать заявку
+                                                    {teamForm.isReserve ? "Зарегистрироваться в очередь" : "Подать заявку"}
                                                 </PrimaryButton>
                                             </div>
                                         </div>

@@ -19,6 +19,49 @@ const inputClassName = `
     transition focus:border-[var(--color-primary-light)]
 `;
 
+function formatRussianPhone(value: string) {
+    const digits = value.replace(/\D/g, "");
+    const normalized = digits.startsWith("7")
+        ? `8${digits.slice(1, 11)}`
+        : digits.slice(0, 11);
+
+    if (!normalized) {
+        return "";
+    }
+
+    const part1 = normalized.slice(0, 1);
+    const part2 = normalized.slice(1, 4);
+    const part3 = normalized.slice(4, 7);
+    const part4 = normalized.slice(7, 9);
+    const part5 = normalized.slice(9, 11);
+
+    let formatted = part1;
+    if (part2) formatted += ` (${part2}`;
+    if (part2.length === 3) formatted += ")";
+    if (part3) formatted += ` ${part3}`;
+    if (part4) formatted += `-${part4}`;
+    if (part5) formatted += `-${part5}`;
+
+    return formatted;
+}
+
+function getRussianPhoneDigits(value: string) {
+    const digits = value.replace(/\D/g, "");
+    if (digits.length !== 11) {
+        return null;
+    }
+
+    if (digits.startsWith("8")) {
+        return digits;
+    }
+
+    if (digits.startsWith("7")) {
+        return `8${digits.slice(1)}`;
+    }
+
+    return null;
+}
+
 export default function AuthPage() {
     const navigate = useNavigate();
     const notify = useNotifications((state) => state.addMessage);
@@ -72,6 +115,8 @@ export default function AuthPage() {
     }
 
     async function handleRegister() {
+        const normalizedPhone = getRussianPhoneDigits(registerForm.phone_number);
+
         if (
             !registerForm.first_name.trim() ||
             !registerForm.last_name.trim() ||
@@ -80,6 +125,11 @@ export default function AuthPage() {
             !registerForm.phone_number.trim()
         ) {
             notify({type: "warning", text: "Заполните обязательные поля"});
+            return;
+        }
+
+        if (!normalizedPhone) {
+            notify({type: "warning", text: "Введите телефон в формате 8 (800) 555-35-35 или +7 (800) 555-35-35"});
             return;
         }
 
@@ -96,7 +146,7 @@ export default function AuthPage() {
                 last_name: registerForm.last_name,
                 first_name: registerForm.first_name,
                 patronymic: null,
-                phone_number: registerForm.phone_number,
+                phone_number: normalizedPhone,
             }, { error: true });
             notify({
                 type: "success",
@@ -247,8 +297,11 @@ export default function AuthPage() {
                                             <span className="text-sm text-[var(--color-text-secondary)]">Телефон</span>
                                             <input
                                                 value={registerForm.phone_number}
-                                                onChange={(event) => setRegisterForm((prev) => ({...prev, phone_number: event.target.value}))}
-                                                placeholder="+7 999 123-45-67"
+                                                onChange={(event) => setRegisterForm((prev) => ({
+                                                    ...prev,
+                                                    phone_number: formatRussianPhone(event.target.value),
+                                                }))}
+                                                placeholder="8 (800) 555-35-35"
                                                 className={inputClassName}
                                             />
                                         </label>

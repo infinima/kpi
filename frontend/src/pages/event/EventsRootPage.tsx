@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, Outlet, useLocation, useParams } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
+import { Navigate, Outlet, useLocation, useParams } from "react-router-dom";
 import Background from "@/components/layout/Background";
 import EventsSidebar from "@/components/layout/events/EventsSidebar";
 import { apiGet } from "@/api";
@@ -99,25 +98,6 @@ export function EventsRootPage() {
         };
     }, [leagueId]);
 
-    const crumbs = [
-        { label: "Мероприятия", to: "/events" },
-        ...(eventInfo ? [{ label: eventInfo.name, to: `/events/${eventInfo.id}/location` }] : []),
-        ...(locationInfo
-            ? [{
-                label: locationInfo.name,
-                to: location.pathname.includes("/photos")
-                    ? `/events/${eventId}/location/${locationInfo.id}/photos`
-                    : `/events/${eventId}/location/${locationInfo.id}/league`,
-            }]
-            : []),
-        ...(leagueInfo
-            ? [{
-                label: leagueInfo.name,
-                to: `/events/${eventId}/location/${locationId}/league/${leagueInfo.id}/history`,
-            }]
-            : []),
-    ];
-
     return (
         <div className="relative min-h-screen overflow-hidden">
             <Background active={true} />
@@ -127,17 +107,6 @@ export function EventsRootPage() {
                     <EventsSidebar />
 
                     <main className="min-w-0 flex-1 rounded-[32px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.88)] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:p-6">
-                        <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-[var(--color-text-secondary)]">
-                            {crumbs.map((crumb, index) => (
-                                <div key={crumb.to} className="flex items-center gap-2">
-                                    <Link to={crumb.to} className="rounded-full px-3 py-1 hover:bg-[var(--color-hover)]">
-                                        {crumb.label}
-                                    </Link>
-                                    {index < crumbs.length - 1 ? <ChevronRight size={14} /> : null}
-                                </div>
-                            ))}
-                        </div>
-
                         <Outlet context={{ eventInfo, locationInfo, leagueInfo }} />
                     </main>
                 </div>

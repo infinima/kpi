@@ -1,12 +1,8 @@
-import {useMemo, useState} from "react";
-import {Pencil, Trash2, X, Save} from "lucide-react";
-import type {TableColumnConfig, TableRowData} from "./data-table/types";
+import { useEffect, useMemo, useState } from "react";
+import { Pencil, Save, Trash2, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
-import {
-    getEmptyValue,
-    renderCellValue,
-} from "./data-table/utils";
+import type { TableColumnConfig, TableRowData } from "@/components/ui/data-table/types";
 
 type Props = {
     columns: TableColumnConfig[];
@@ -18,193 +14,117 @@ type Props = {
     onRowClick?: (row: TableRowData) => Promise<void> | void;
     hideActions?: boolean;
     actionsWidth?: number;
-    className?: string;
 };
 
+function renderValue(value: unknown, column: TableColumnConfig) {
+    if (column.type === "select" && column.options) {
+        const option = column.options.find((item) => item.value === value);
+        return option?.label ?? String(value ?? "");
+    }
+
+    return String(value ?? "");
+}
+
 export function DataTableRow({
-                                 columns,
-                                 row,
-                                 isCreating = false,
-                                 onSave,
-                                 onDelete,
-                                 onCreated,
-                                 onRowClick,
-                                 hideActions = false,
-                                 actionsWidth = 220,
-                                 className = "",
-                             }: Props) {
+    columns,
+    row,
+    isCreating = false,
+    onSave,
+    onDelete,
+    onCreated,
+    onRowClick,
+    hideActions = false,
+    actionsWidth = 220,
+}: Props) {
+    const [draft, setDraft] = useState<TableRowData>(row);
     const [isEditing, setIsEditing] = useState(isCreating);
-    const [draft, setDraft] = useState<TableRowData>(() => {
-        const base: TableRowData = {};
-
-        for (const col of columns) {
-            base[col.key] = row[col.key] ?? getEmptyValue(col.type);
-        }
-
-        return base;
-    });
-
     const [loading, setLoading] = useState(false);
 
+    useEffect(() => {
+        setDraft(row);
+    }, [row]);
+
     const canSave = useMemo(() => {
-        return columns.every((col) => {
-            if (!col.required) return true;
-            const value = draft[col.key];
+        return columns.every((column) => {
+            if (!column.required) return true;
+            const value = draft[column.key];
             return value !== "" && value !== null && value !== undefined;
         });
     }, [columns, draft]);
 
-    const handleChange = (key: string, value: string) => {
-        setDraft((prev) => ({
-            ...prev,
-            [key]: value,
-        }));
-    };
-
-    const handleCancel = () => {
-        if (isCreating) {
-            setDraft(() => {
-                const base: TableRowData = {};
-                for (const col of columns) {
-                    base[col.key] = getEmptyValue(col.type);
-                }
-                return base;
-            });
-            return;
-        }
-
-        setDraft(() => {
-            const base: TableRowData = {};
-            for (const col of columns) {
-                base[col.key] = row[col.key] ?? getEmptyValue(col.type);
-            }
-            return base;
-        });
-
-        setIsEditing(false);
-    };
-
-    const handleSave = async () => {
+    async function handleSave() {
         if (!onSave || !canSave) return;
 
         try {
             setLoading(true);
             await onSave(draft);
-
-            if (!isCreating) {
-                setIsEditing(false);
-            } else {
-                setDraft(() => {
-                    const base: TableRowData = {};
-                    for (const col of columns) {
-                        base[col.key] = getEmptyValue(col.type);
-                    }
-                    return base;
-                });
+            if (isCreating) {
                 onCreated?.();
+            } else {
+                setIsEditing(false);
             }
         } finally {
             setLoading(false);
         }
-    };
-
-    const handleDelete = async () => {
-        if (!onDelete) return;
-
-        try {
-            setLoading(true);
-            await onDelete(row);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const canEdit = Boolean(onSave);
-    const canDelete = Boolean(onDelete);
+    }
 
     return (
         <div
-            className={`
-                grid items-center gap-2 px-4 py-1 text-[var(--color-text-main)]
-                ${isCreating ? "bg-[rgba(99,102,241,0.06)]" : "bg-transparent hover:bg-[rgba(148,163,184,0.08)]"}
-                ${!isEditing && onRowClick ? "cursor-pointer" : ""}
-                ${className}
-            `}
+            className={`grid items-center gap-2 px-4 py-1 text-[var(--color-text-main)] ${!isEditing && onRowClick ? "cursor-pointer hover:bg-[rgba(148,163,184,0.08)]" : ""}`}
             onClick={isEditing || !onRowClick ? undefined : () => void onRowClick(row)}
             style={{
-                gridTemplateColumns: `${columns.map((col) => `${col.width}fr`).join(" ")} ${actionsWidth}px`,
+                gridTemplateColumns: `${columns.map((column) => `${column.width}fr`).join(" ")} ${actionsWidth}px`,
             }}
         >
-            {columns.map((column) => {
-                const editable = column.editable !== false;
-
-                return (
-                    <div key={column.key} className="min-w-0 self-center">
-                        {isEditing && editable ? (
-                            column.type === "select" ? (
-                                <select
-                                    value={String(draft[column.key] ?? "")}
-                                    onChange={(e) => handleChange(column.key, e.target.value)}
-                                    className="
-                                        block w-full min-w-0 rounded-xl border border-[var(--color-border)]
-                                        bg-[var(--color-background)] px-2.5 py-1.5 text-sm outline-none
-                                        focus:border-[var(--color-primary-light)]
-                                    "
-                                >
-                                    <option value="">Выбрать</option>
-                                    {column.options?.map((option) => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : (
-                                <input
-                                    type={
-                                        column.type === "number"
-                                            ? "number"
-                                            : column.type === "email"
-                                                ? "email"
-                                                : column.type === "date"
-                                                    ? "date"
-                                                    : "text"
-                                    }
-                                    value={String(draft[column.key] ?? "")}
-                                    onChange={(e) => handleChange(column.key, e.target.value)}
-                                    placeholder={column.label}
-                                    className="
-                                        block w-full min-w-0 rounded-xl border border-[var(--color-border)]
-                                        bg-[var(--color-background)] px-2.5 py-1.5 text-sm outline-none
-                                        focus:border-[var(--color-primary-light)]
-                                    "
-                                />
-                            )
+            {columns.map((column) => (
+                <div key={column.key} className="min-w-0">
+                    {isEditing && column.editable !== false ? (
+                        column.type === "select" ? (
+                            <select
+                                value={String(draft[column.key] ?? "")}
+                                onChange={(event) => setDraft((prev) => ({ ...prev, [column.key]: event.target.value }))}
+                                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1.5 text-sm outline-none"
+                            >
+                                <option value="">Выбрать</option>
+                                {column.options?.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
                         ) : (
-                            <div className="min-w-0 truncate text-sm font-medium sm:text-[15px]">
-                                {renderCellValue(draft[column.key], column)}
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
+                            <input
+                                type={column.type === "number" ? "number" : column.type === "email" ? "email" : column.type === "date" ? "date" : "text"}
+                                value={String(draft[column.key] ?? "")}
+                                onChange={(event) => setDraft((prev) => ({ ...prev, [column.key]: event.target.value }))}
+                                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1.5 text-sm outline-none"
+                            />
+                        )
+                    ) : (
+                        <div className="truncate text-sm font-medium" title={renderValue(draft[column.key], column)}>
+                            {renderValue(draft[column.key], column)}
+                        </div>
+                    )}
+                </div>
+            ))}
 
-            <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2 whitespace-nowrap">
+            <div className="flex items-center justify-end gap-2">
                 {hideActions ? null : isEditing ? (
                     <>
-                        <PrimaryButton
-                            active
-                            onClick={handleSave}
-                            disabled={!canSave || loading}
-                            className="px-2.5 py-1.5 text-sm shadow-none"
-                        >
+                        <PrimaryButton active onClick={() => void handleSave()} disabled={!canSave || loading} className="px-2.5 py-1.5 text-sm shadow-none">
                             <span className="sr-only">Сохранить</span>
                             <Save size={16} />
                         </PrimaryButton>
-
                         <OutlineButton
                             active
-                            onClick={handleCancel}
-                            disabled={loading}
+                            onClick={() => {
+                                setDraft(row);
+                                if (isCreating) {
+                                    onCreated?.();
+                                } else {
+                                    setIsEditing(false);
+                                }
+                            }}
                             className="px-2.5 py-1.5 text-sm"
                         >
                             <span className="sr-only">Отмена</span>
@@ -213,29 +133,26 @@ export function DataTableRow({
                     </>
                 ) : (
                     <>
-                        {canEdit ? (
+                        {onSave ? (
                             <OutlineButton
                                 active
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     setIsEditing(true);
                                 }}
-                                disabled={loading}
                                 className="px-2.5 py-1.5 text-sm shadow-none"
                             >
                                 <span className="sr-only">Изменить</span>
                                 <Pencil size={16} />
                             </OutlineButton>
                         ) : null}
-
-                        {canDelete ? (
+                        {onDelete ? (
                             <PrimaryButton
                                 active
                                 onClick={(event) => {
                                     event.stopPropagation();
-                                    void handleDelete();
+                                    void onDelete(row);
                                 }}
-                                disabled={loading}
                                 className="bg-[var(--color-error)] px-2.5 py-1.5 text-sm shadow-none hover:bg-[color:var(--color-error)]/90"
                             >
                                 <span className="sr-only">Удалить</span>

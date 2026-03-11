@@ -1,7 +1,6 @@
 import {create} from "zustand";
 import {apiGet, apiPost} from "@/api";
 import {useNotifications} from "@/store/useNotificationStore";
-import {useUI} from "@/store";
 
 export type PermissionEntity =
   "events" |
@@ -88,10 +87,7 @@ export const useUser = create<UserState>((set, get) => ({
   logout: async () => {
     const token = get().token;
 
-    try {
-      useUI.getState().closeProfileModal();
-    } catch {
-    }
+
 
     if (!token) {
       set({user: null, token: null, guest: true});

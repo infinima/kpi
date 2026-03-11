@@ -1,5 +1,6 @@
 import {useEffect} from "react";
 import NotificationCenter from "@/components/services/NotificationCenter";
+import { ModalContainer } from "@/components/modals/ModalContainer";
 import {BrowserRouter, Route, Routes} from "react-router-dom";
 import ExamplePage from "@/pages/ExamplePage";
 import NotFoundPage from "@/pages/NotFoundPage";
@@ -8,15 +9,13 @@ import AuthPage from "@/pages/AuthPage";
 import LkPage from "@/pages/LkPage";
 import OfferPage from "@/pages/OfferPage";
 import {useUser} from "@/store";
-import EmptyLayout from "@/components/layout/EmptyLayout";
-import DefaultLayout from "@/components/layout/DefaultLayout";
 import NotReadyPage from "@/pages/NotReadyPage";
 import { EventsPage } from "@/pages/event/EventPage";
 import { EventsRootPage } from "@/pages/event/EventsRootPage";
 import { LocationsPage } from "@/pages/event/LocationPage";
 import { LeaguesPage } from "@/pages/event/LeaguesPage";
-import { Navigate } from "react-router-dom";
 import { EventPlaceholderPage } from "@/pages/event/EventPlaceholderPage";
+import { EventTeamsPage } from "@/pages/event/EventTeamsPage";
 
 export default function App() {
     const fetchUser = useUser((state) => state.fetchUser);
@@ -39,6 +38,7 @@ export default function App() {
     return (
         <BrowserRouter>
             <NotificationCenter />
+            <ModalContainer />
 
             <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -53,10 +53,12 @@ export default function App() {
                     <Route index element={<EventsPage />} />
                     <Route path=":eventId" element={<EventsPage />} />
                     <Route path=":eventId/history" element={<EventPlaceholderPage title="История изменений мероприятия" />} />
+                    <Route path=":eventId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location" element={<LocationsPage />} />
                     <Route path=":eventId/location/:locationId" element={<LocationsPage />} />
                     <Route path=":eventId/location/:locationId/history" element={<EventPlaceholderPage title="История изменений площадки" />} />
                     <Route path=":eventId/location/:locationId/photos" element={<LocationsPage />} />
+                    <Route path=":eventId/location/:locationId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location/:locationId/league" element={<LeaguesPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId" element={<LeaguesPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/history" element={<EventPlaceholderPage title="История изменений лиги" />} />
@@ -64,7 +66,7 @@ export default function App() {
                     <Route path=":eventId/location/:locationId/league/:leagueId/results/fudzi" element={<EventPlaceholderPage title="Результаты фудзи" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/results/overall" element={<EventPlaceholderPage title="Общие результаты" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/accounts" element={<EventPlaceholderPage title="Аккаунты показа" />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/teams" element={<EventPlaceholderPage title="Команды" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/show" element={<EventPlaceholderPage title="Показ" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/show-control" element={<EventPlaceholderPage title="Управление показом" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/tables" element={<EventPlaceholderPage title="Таблички" />} />
