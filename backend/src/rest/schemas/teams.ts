@@ -105,6 +105,23 @@ export const UpdateTeamInput = CreateTeamInput
 
 // ===== Документация =====
 
+// GET /api/teams/my
+registry.registerPath({
+    method: "get",
+    path: "/api/teams/my",
+    summary: "Получить свои команды (owner_user_id = текущий пользователь)",
+    tags: ["Teams"],
+    security: [{ BearerAuth: [] }],
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: z.array(TeamSchema) },
+            },
+        },
+    },
+});
+
 // GET /api/teams/league/:league_id
 registry.registerPath({
     method: "get",

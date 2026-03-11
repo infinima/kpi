@@ -19,6 +19,30 @@ import {
 
 export const teamsRouter = express.Router();
 
+// GET /api/teams/my
+teamsRouter.get(
+    "/my",
+    checkPermission("teams", "get"),
+    async (req, res) => {
+        const userId = (req as any).user_id;
+
+        const rows = await query(
+            `SELECT id, league_id, owner_user_id, name, members, appreciations,
+                    school, region, meals_count, maintainer_full_name, maintainer_activity,
+                    status,
+                    answers_kvartaly, answers_fudzi,
+                    diploma, special_nominations,
+                    created_at, updated_at, deleted_at
+             FROM teams
+             WHERE owner_user_id = ? AND deleted_at IS NULL`,
+            [userId],
+            userId
+        );
+
+        res.json(rows);
+    }
+);
+
 // GET /api/teams/league/:league_id
 teamsRouter.get(
     "/league/:league_id",
