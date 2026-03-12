@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { FileText, ImagePlus, Trash2 } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
-import { BaseImage } from "@/components/BaseImage";
 import { LocationCard } from "@/components/ui/cards/LocationCard";
 import { EntityTable } from "@/components/ui/table/EntityTable";
-import type { EntityTableColumn, EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
 import { locationEntityColumns, mapLocationEntityRows } from "@/pages/event/entityTableConfigs";
 import { useModalStore, useUser } from "@/store";
-import { pickImageFile } from "@/utils/pickImageFile";
 import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
 type LocationItem = {
@@ -33,7 +31,6 @@ export function LocationsPage() {
     const [searchParams] = useSearchParams();
     const { eventId, locationId } = useParams();
     const { user, can } = useUser();
-    const openModal = useModalStore((state) => state.openModal);
     const isPhotosMode = location.pathname.endsWith("/photos");
 
     const [locations, setLocations] = useState<LocationItem[]>([]);
@@ -46,36 +43,6 @@ export function LocationsPage() {
     const canSeeDeleted = Boolean(user?.rights.locations?.global?.includes("restore"));
     const viewMode = getCollectionViewMode(searchParams, "locations", canUseTable);
     const effectiveVisibility = viewMode === "table" ? visibility : "active";
-
-    function handlePhotoChange(rowId: number, file: File) {
-        openModal("crop", {
-            file,
-            title: "Фото площадки",
-            confirmLabel: "Добавить фото",
-            onCrop: async (photo) => {
-                await apiPost("photos", {
-                    location_id: rowId,
-                    file: photo,
-                }, {
-                    success: "Фото площадки добавлено",
-                    error: true,
-                });
-                const refreshedPhotos = await apiGet<PhotoItem[]>(`photos/location/${rowId}`);
-                setLocationPhotos((prev) => ({ ...prev, [rowId]: refreshedPhotos[0]?.id ?? null }));
-            },
-        });
-    }
-
-    function handlePhotoDraftPick(setValue: (value: string | number | null | undefined) => void, file: File) {
-        openModal("crop", {
-            file,
-            title: "Фото площадки",
-            confirmLabel: "Использовать фото",
-            onCrop: async (photo) => {
-                setValue(photo);
-            },
-        });
-    }
 
     useEffect(() => {
         let ignore = false;
@@ -159,101 +126,7 @@ export function LocationsPage() {
     }, [isPhotosMode, locations]);
 
     const rows = useMemo(() => mapLocationEntityRows(locations), [locations]);
-    const columns = useMemo<EntityTableColumn[]>(() => [
-        {
-            key: "photo",
-            label: "Фото",
-            width: 0.72,
-            editable: false,
-            searchable: false,
-            sortable: false,
-            renderEditor: ({ value, setValue, isCreating }) => {
-                if (!isCreating) {
-                    return <div className="h-12 w-12" />;
-                }
-
-                const preview = typeof value === "string" ? value : "";
-
-                return (
-                    <button
-                        type="button"
-                        onClick={(event) => {
-                            event.stopPropagation();
-                            pickImageFile((file) => handlePhotoDraftPick(setValue, file));
-                        }}
-                        className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-[var(--color-border)] bg-[rgba(248,250,252,0.9)] transition hover:border-[var(--color-primary-light)] hover:bg-white"
-                        title={preview ? "Изменить фото" : "Добавить фото"}
-                        aria-label={preview ? "Изменить фото" : "Добавить фото"}
-                    >
-                        {preview ? (
-                            <img src={preview} alt="Фото" className="h-full w-full object-cover" />
-                        ) : (
-                            <ImagePlus size={14} className="text-[var(--color-text-secondary)]" />
-                        )}
-                    </button>
-                );
-            },
-            renderCell: (row) => {
-                const rowId = Number(row.id);
-                const photoId = locationPhotos[rowId];
-
-                return (
-                    <div className="flex items-center">
-                        <div className="h-12 w-16 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[rgba(248,250,252,0.9)]">
-                            {photoId ? (
-                                canManage ? (
-                                    <button
-                                        type="button"
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            pickImageFile((file) => handlePhotoChange(rowId, file));
-                                        }}
-                                        className="block h-full w-full transition hover:opacity-90"
-                                        title="Изменить фото"
-                                        aria-label="Изменить фото"
-                                    >
-                                        <BaseImage
-                                            path={`photos/${photoId}/preview`}
-                                            alt={String(row.name ?? "Фото")}
-                                            className="h-full w-full object-cover"
-                                            fallbackLetter="L"
-                                        />
-                                    </button>
-                                ) : (
-                                    <BaseImage
-                                        path={`photos/${photoId}/preview`}
-                                        alt={String(row.name ?? "Фото")}
-                                        className="h-full w-full object-cover"
-                                        fallbackLetter="L"
-                                    />
-                                )
-                            ) : (
-                                canManage ? (
-                                    <button
-                                        type="button"
-                                        onClick={(event) => {
-                                            event.stopPropagation();
-                                            pickImageFile((file) => handlePhotoChange(rowId, file));
-                                        }}
-                                        className="flex h-full w-full items-center justify-center text-xs text-[var(--color-text-muted)] transition hover:bg-[rgba(255,255,255,0.55)]"
-                                        title="Добавить фото"
-                                        aria-label="Добавить фото"
-                                    >
-                                        Нет
-                                    </button>
-                                ) : (
-                                    <div className="flex h-full w-full items-center justify-center text-xs text-[var(--color-text-muted)]">
-                                        Нет
-                                    </div>
-                                )
-                            )}
-                        </div>
-                    </div>
-                );
-            },
-        },
-        ...locationEntityColumns,
-    ], [canManage, locationPhotos]);
+    const columns = locationEntityColumns;
     const visibilityFilter = (
         canSeeDeleted ? (
             <button
@@ -334,19 +207,6 @@ export function LocationsPage() {
                 address: String(newRow.address ?? ""),
             },
         ]);
-
-        if (typeof newRow.photo === "string" && newRow.photo) {
-            await apiPost("photos", {
-                location_id: response.id,
-                file: newRow.photo,
-            }, {
-                success: "Фото площадки добавлено",
-                error: true,
-            });
-
-            const refreshedPhotos = await apiGet<PhotoItem[]>(`photos/location/${response.id}`);
-            setLocationPhotos((prev) => ({ ...prev, [response.id]: refreshedPhotos[0]?.id ?? null }));
-        }
     }
 
     if (isPhotosMode && locationId) {
@@ -420,7 +280,7 @@ export function LocationsPage() {
                     actionsWidth={176}
                 />
             ) : (
-                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     {locations.map((item) => (
                         <LocationCard
                             key={item.id}
@@ -429,7 +289,6 @@ export function LocationsPage() {
                             address={item.address}
                             deleted_at={item.deleted_at}
                             selected={String(item.id) === String(locationId)}
-                            photoId={locationPhotos[item.id] ?? null}
                             onClick={() => navigate({ pathname: `/events/${eventId}/location/${item.id}`, search: location.search })}
                         />
                     ))}

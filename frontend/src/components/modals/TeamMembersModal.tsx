@@ -77,30 +77,26 @@ export function TeamMembersModal() {
                     </button>
                 </div>
 
-                <div className="mt-5 flex-1 space-y-5 overflow-y-auto pr-1">
-                    <div className="space-y-3">
-                        {members.map((participant, index) => (
-                            <div
-                                key={index}
-                                className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4"
-                            >
-                                <div className="text-sm font-semibold text-[var(--color-text-main)]">
-                                    Участник {index + 1}
-                                </div>
-                                <label className="block space-y-2">
-                                    <span className="text-sm text-[var(--color-text-secondary)]">ФИО</span>
-                                    <input
-                                        value={participant}
-                                        onChange={(event) => {
-                                            setMembers((prev) => prev.map((item, itemIndex) => itemIndex === index ? event.target.value : item));
-                                        }}
-                                        readOnly={!isEditing}
-                                        className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
-                                    />
-                                </label>
-                            </div>
-                        ))}
-                    </div>
+                <div className="mt-5 flex-1 space-y-3 overflow-y-auto pr-1">
+                    {members.map((participant, index) => (
+                        <label
+                            key={index}
+                            className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4"
+                        >
+                            <span className="text-sm font-semibold text-[var(--color-text-main)]">
+                                Участник {index + 1}
+                            </span>
+                            <input
+                                value={participant}
+                                onChange={(event) => {
+                                    setMembers((prev) => prev.map((item, itemIndex) => itemIndex === index ? event.target.value : item));
+                                }}
+                                readOnly={!isEditing}
+                                placeholder="ФИО"
+                                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
+                            />
+                        </label>
+                    ))}
                 </div>
 
                 <div className="mt-5 flex shrink-0 justify-end gap-2 border-t border-[var(--color-border)] pt-4">

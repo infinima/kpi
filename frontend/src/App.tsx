@@ -19,6 +19,7 @@ import { EventTeamsPage } from "@/pages/event/EventTeamsPage";
 
 export default function App() {
     const fetchUser = useUser((state) => state.fetchUser);
+    const clearSession = useUser((state) => state.clearSession);
 
     useEffect(() => {
         const storedToken = localStorage.getItem("auth_token");
@@ -29,11 +30,13 @@ export default function App() {
 
         useUser.setState({token: storedToken, guest: false});
 
-        void fetchUser().catch(() => {
-            localStorage.removeItem("auth_token");
-            useUser.setState({token: null, user: null, guest: true});
+        void fetchUser().catch((error) => {
+            const code = error?.error?.code;
+            if (code === "INVALID_TOKEN" || code === "INVALID_SESSION" || code === "SESSION_NOT_FOUND") {
+                clearSession();
+            }
         });
-    }, [fetchUser]);
+    }, [clearSession, fetchUser]);
 
     return (
         <BrowserRouter>

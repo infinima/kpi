@@ -3,6 +3,11 @@ import { showApiError } from "./errorHelper";
 import { apiPost } from "@/api";
 
 const BASE_URL = window.location.origin + "/api/";
+const SESSION_ERROR_CODES = new Set([
+    "INVALID_TOKEN",
+    "INVALID_SESSION",
+    "SESSION_NOT_FOUND",
+]);
 
 async function parseResponse(res: Response) {
     try {
@@ -27,14 +32,17 @@ export async function apiDelete(path: string, restoreId?: number): Promise<void>
 
         const res = await fetch(url, {
             method: "DELETE",
-            headers: { Authorization: token ? `Bearer ${token}` : "" },
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
 
         const json = await parseResponse(res);
 
         if (res.status === 401) {
-            useUser.getState().logout();
-            throw { error: { code: "NO_TOKEN" } };
+            const code = json?.error?.code;
+            if (token && code && SESSION_ERROR_CODES.has(code)) {
+                useUser.getState().clearSession();
+            }
+            throw json || { error: { code: "NO_TOKEN" } };
         }
 
         if (!res.ok) {

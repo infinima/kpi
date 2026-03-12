@@ -441,7 +441,7 @@ export default function LkPage() {
     );
 
     const activeSection = useMemo<CabinetSection>(() => {
-        if (location.pathname === "/lk/reg_tezm" || location.pathname === "/lk/reg_team") {
+        if ( location.pathname === "/lk/reg_team") {
             return "reg_team";
         }
 
@@ -617,10 +617,9 @@ export default function LkPage() {
             !teamForm.name.trim() ||
             !teamForm.school.trim() ||
             !teamForm.region.trim() ||
-            !teamForm.maintainer_full_name.trim() ||
             !teamForm.maintainer_activity
         ) {
-            notify({ type: "warning", text: "Заполните обязательные поля команды и сопровождающего" });
+            notify({ type: "warning", text: "Заполните обязательные поля команды и выберите активность сопровождающего" });
             return;
         }
 
@@ -767,7 +766,7 @@ export default function LkPage() {
         <div className="relative min-h-screen overflow-hidden">
             <Background active />
 
-            <section className="relative mx-auto max-w-7xl px-6 pb-20 pt-12">
+            <section className="relative mx-auto max-w-8xl px-6 pb-20 pt-12">
                 <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                     <div className="max-w-3xl">
                         <AnimatedText
@@ -778,6 +777,13 @@ export default function LkPage() {
                     </div>
 
                     <div className="flex flex-wrap gap-3">
+                        <Link to="/">
+                            <OutlineButton
+                                active
+                            >
+                                На главную
+                            </OutlineButton>
+                        </Link>
                         <OutlineButton
                             active
                             leftIcon={<LogOut size={16} />}
@@ -790,7 +796,7 @@ export default function LkPage() {
                     </div>
                 </div>
 
-                <div className="mt-10 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
+                <div className="mt-10 grid gap-8 lg:grid-cols-[320px_minmax(0,1fr)]">
                     <aside className="rounded-[32px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.80)] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
                         <Link
                             to="/lk/me"
@@ -1084,19 +1090,6 @@ export default function LkPage() {
                                             Регистрация команды
                                         </h2>
                                     </div>
-
-                                    {selectedLeague ? (
-                                        <div className="grid gap-2 sm:grid-cols-2">
-                                            <InfoBadge
-                                                icon={<Users size={14} />}
-                                                text={`Осталось мест: ${availablePlaces ?? 0}`}
-                                            />
-                                            <InfoBadge
-                                                icon={<Users size={14} />}
-                                                text={`В резерве: ${selectedLeague.reserve_teams_count}`}
-                                            />
-                                        </div>
-                                    ) : null}
                                 </div>
 
                                 {registrationLoading ? (
@@ -1215,6 +1208,33 @@ export default function LkPage() {
                                                         text={`Адрес: ${selectedLocation.address}`}
                                                     />
                                                 ) : null}
+                                                {selectedLeague ? (
+                                                    <InfoBadge
+                                                        icon={<Users size={14} />}
+                                                        text={`Осталось мест: ${availablePlaces ?? 0}`}
+                                                    />
+                                                ) : null}
+                                            </div>
+                                        ) : null}
+
+                                        {!editingTeam && selectedLeague && availablePlaces === 0 ? (
+                                            <div className="mt-6 flex items-center justify-between gap-4 rounded-[24px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.10)] px-5 py-4">
+                                                <div>
+                                                    <p className="text-sm font-medium text-[var(--color-text-main)]">
+                                                        Свободные места закончились. Сейчас доступна регистрация в резерв.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    role="switch"
+                                                    aria-checked={teamForm.isReserve}
+                                                    onClick={() => setTeamForm((prev) => ({ ...prev, isReserve: !prev.isReserve }))}
+                                                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${teamForm.isReserve ? "bg-[var(--color-primary)]" : "bg-[rgba(148,163,184,0.45)]"}`}
+                                                >
+                                                    <span
+                                                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${teamForm.isReserve ? "left-6" : "left-1"}`}
+                                                    />
+                                                </button>
                                             </div>
                                         ) : null}
 
@@ -1342,31 +1362,12 @@ export default function LkPage() {
                                                 />
                                             </label>
 
-                                            {!editingTeam && availablePlaces === 0 ? (
-                                                <label className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] px-4 py-3 sm:col-span-2">
-                                                    <span className="text-sm font-medium text-[var(--color-text-main)]">
-                                                        Записаться в резерв
-                                                    </span>
-                                                    <button
-                                                        type="button"
-                                                        role="switch"
-                                                        aria-checked={teamForm.isReserve}
-                                                        onClick={() => setTeamForm((prev) => ({ ...prev, isReserve: !prev.isReserve }))}
-                                                        className={`relative h-7 w-12 rounded-full transition ${teamForm.isReserve ? "bg-[var(--color-primary)]" : "bg-[rgba(148,163,184,0.45)]"}`}
-                                                    >
-                                                        <span
-                                                            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${teamForm.isReserve ? "left-6" : "left-1"}`}
-                                                        />
-                                                    </button>
-                                                </label>
-                                            ) : null}
-
                                             <label className="block space-y-2 sm:col-span-2">
                                                 <span className="text-sm text-[var(--color-text-secondary)]">Благодарности</span>
                                                 <textarea
                                                     value={teamForm.appreciationsText}
                                                     onChange={(event) => setTeamForm((prev) => ({ ...prev, appreciationsText: event.target.value }))}
-                                                    placeholder="По одной строке на каждую благодарность"
+                                                    placeholder={`По одной строчке на каждого человека, например:\nИванов Иван Сергеевич\nПетрова Мария Алексеевна\nСмирнов Алексей Дмитриевич`}
                                                     rows={4}
                                                     className={`${inputClassName} resize-none`}
                                                 />
@@ -1382,10 +1383,10 @@ export default function LkPage() {
                                                     className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
                                                 />
                                                 <span className="text-sm text-[var(--color-text-secondary)]">
-                                                    Вы подтверждаете{" "}
-                                                    <Link to="/offer" className="text-[var(--color-primary)] underline underline-offset-2">
-                                                        оферту
-                                                    </Link>
+                                                    Подавая заявку на регистрацию вы автоматически соглашаетесь с {" "}
+                                                    <a href="/offer" target="_blank" rel="noreferrer" className="text-[var(--color-primary)] underline underline-offset-2">
+                                                        офертой
+                                                    </a>
                                                     .
                                                 </span>
                                             </label>
@@ -1393,12 +1394,14 @@ export default function LkPage() {
 
                                         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex flex-col gap-3 sm:flex-row">
-                                                <OutlineButton
-                                                    active
-                                                    onClick={editingTeam ? resetTeamEditor : () => setTeamForm(emptyTeamForm())}
-                                                >
-                                                    {editingTeam ? "Отменить" : "Сбросить"}
-                                                </OutlineButton>
+                                                {editingTeam ? (
+                                                    <OutlineButton
+                                                        active
+                                                        onClick={resetTeamEditor}
+                                                    >
+                                                        Отменить
+                                                    </OutlineButton>
+                                                ) : null}
                                                 <PrimaryButton
                                                     active
                                                     loading={teamSaving}

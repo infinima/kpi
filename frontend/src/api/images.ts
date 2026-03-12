@@ -3,6 +3,12 @@ import { BASE_URL, parseJsonResponse } from "./request";
 import { useUser } from "@/store";
 import { showApiError } from "./errorHelper";
 
+const SESSION_ERROR_CODES = new Set([
+    "INVALID_TOKEN",
+    "INVALID_SESSION",
+    "SESSION_NOT_FOUND",
+]);
+
 export async function getImage(path: string, notify?: ApiNotifyOptions): Promise<string | null> {
     try {
         const token = useUser.getState().token;
@@ -21,8 +27,11 @@ export async function getImage(path: string, notify?: ApiNotifyOptions): Promise
         if (!res.ok) {
             const json = await parseJsonResponse(res);
             if (res.status === 401) {
-                useUser.getState().logout();
-                throw { error: { code: "NO_TOKEN", message: "Unauthorized" } };
+                const code = json?.error?.code;
+                if (token && code && SESSION_ERROR_CODES.has(code)) {
+                    useUser.getState().clearSession();
+                }
+                throw json || { error: { code: "NO_TOKEN", message: "Unauthorized" } };
             }
             throw json || { error: { code: "INTERNAL_ERROR" } };
         }

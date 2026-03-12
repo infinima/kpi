@@ -21,9 +21,11 @@ const inputClassName = `
 
 function formatRussianPhone(value: string) {
     const digits = value.replace(/\D/g, "");
-    const normalized = digits.startsWith("7")
-        ? `8${digits.slice(1, 11)}`
-        : digits.slice(0, 11);
+    const normalized = digits.startsWith("8")
+        ? `7${digits.slice(1, 11)}`
+        : digits.startsWith("7")
+            ? digits.slice(0, 11)
+            : digits.slice(0, 11);
 
     if (!normalized) {
         return "";
@@ -35,7 +37,7 @@ function formatRussianPhone(value: string) {
     const part4 = normalized.slice(7, 9);
     const part5 = normalized.slice(9, 11);
 
-    let formatted = part1;
+    let formatted = `+${part1}`;
     if (part2) formatted += ` (${part2}`;
     if (part2.length === 3) formatted += ")";
     if (part3) formatted += ` ${part3}`;
@@ -51,12 +53,12 @@ function getRussianPhoneDigits(value: string) {
         return null;
     }
 
-    if (digits.startsWith("8")) {
+    if (digits.startsWith("7")) {
         return digits;
     }
 
-    if (digits.startsWith("7")) {
-        return `8${digits.slice(1)}`;
+    if (digits.startsWith("8")) {
+        return `7${digits.slice(1)}`;
     }
 
     return null;
@@ -129,7 +131,7 @@ export default function AuthPage() {
         }
 
         if (!normalizedPhone) {
-            notify({type: "warning", text: "Введите телефон в формате 8 (800) 555-35-35 или +7 (800) 555-35-35"});
+            notify({type: "warning", text: "Введите телефон в формате +7 (800) 555-35-35"});
             return;
         }
 
@@ -301,7 +303,7 @@ export default function AuthPage() {
                                                     ...prev,
                                                     phone_number: formatRussianPhone(event.target.value),
                                                 }))}
-                                                placeholder="8 (800) 555-35-35"
+                                                placeholder="+7 (800) 555-35-35"
                                                 className={inputClassName}
                                             />
                                         </label>

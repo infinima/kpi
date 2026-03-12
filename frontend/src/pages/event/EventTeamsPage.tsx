@@ -3,13 +3,14 @@ import { useParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import { TeamTable } from "@/components/ui/table/TeamTable";
 import type { TeamMembersValue, TeamTableRowData } from "@/components/ui/table/TeamTableRow";
+import { useUser } from "@/store";
 
 type TeamResponseRow = {
     id: number;
     league_id: number;
-    league_name?: string;
+    league_name?: string | null;
     owner_user_id: number | null;
-    owner_name?: string;
+    owner_full_name?: string | null;
     name: string;
     members: unknown;
     appreciations: string[] | string;
@@ -95,8 +96,13 @@ function buildMembersRequestValue(row: TeamTableRowData): TeamMembersValue {
 
 export function EventTeamsPage() {
     const { eventId, locationId, leagueId } = useParams();
+    const can = useUser((state) => state.can);
     const [rows, setRows] = useState<TeamResponseRow[]>([]);
     const [loading, setLoading] = useState(false);
+
+    function canEditRestrictedFields(teamId: number) {
+        return can("teams", "update", teamId);
+    }
 
     const tableRows = useMemo<TeamTableRowData[]>(() => {
         return rows.map((row) => ({
@@ -104,7 +110,7 @@ export function EventTeamsPage() {
             league_id: row.league_id,
             league_name: row.league_name ?? `Лига #${row.league_id}`,
             owner_user_id: row.owner_user_id,
-            owner_name: row.owner_name ?? (row.owner_user_id ? `Пользователь #${row.owner_user_id}` : ""),
+            owner_full_name: row.owner_full_name || "",
             name: row.name ?? "",
             members: parseMembers(row.members),
             appreciations: parseStringArray(row.appreciations),
@@ -159,7 +165,7 @@ export function EventTeamsPage() {
     }, [eventId, locationId, leagueId]);
 
     async function handleUpdate(row: TeamTableRowData) {
-        await apiPatch(`teams/${row.id}`, {
+        const payload: Record<string, unknown> = {
             name: row.name,
             members: buildMembersRequestValue(row),
             appreciations: row.appreciations,
@@ -168,10 +174,15 @@ export function EventTeamsPage() {
             meals_count: row.meals_count,
             maintainer_full_name: row.maintainer_full_name || null,
             maintainer_activity: row.maintainer_activity || null,
-            status: row.status || undefined,
-            diploma: row.diploma || null,
-            special_nominations: row.special_nominations,
-        }, {
+        };
+
+        if (canEditRestrictedFields(row.id)) {
+            payload.status = row.status || undefined;
+            payload.diploma = row.diploma || null;
+            payload.special_nominations = row.special_nominations;
+        }
+
+        await apiPatch(`teams/${row.id}`, payload, {
             success: "Команда обновлена",
             error: true,
         });
@@ -186,9 +197,9 @@ export function EventTeamsPage() {
             meals_count: row.meals_count,
             maintainer_full_name: row.maintainer_full_name,
             maintainer_activity: row.maintainer_activity,
-            status: row.status,
-            diploma: row.diploma || null,
-            special_nominations: row.special_nominations,
+            status: canEditRestrictedFields(row.id) ? row.status : item.status,
+            diploma: canEditRestrictedFields(row.id) ? row.diploma || null : item.diploma,
+            special_nominations: canEditRestrictedFields(row.id) ? row.special_nominations : item.special_nominations,
         } : item));
     }
 
@@ -230,6 +241,13 @@ export function EventTeamsPage() {
                 onCreate={handleCreate}
                 defaultLeagueId={leagueId ? Number(leagueId) : null}
                 defaultLeagueName={leagueId ? tableRows[0]?.league_name ?? "" : ""}
+                isColumnEditable={(columnKey, row) => {
+                    if (columnKey === "status" || columnKey === "diploma" || columnKey === "special_nominations") {
+                        return canEditRestrictedFields(row.id);
+                    }
+
+                    return true;
+                }}
             />
         </section>
     );

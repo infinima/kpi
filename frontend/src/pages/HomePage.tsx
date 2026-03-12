@@ -112,7 +112,7 @@ export default function HomePage() {
                             Открыть мероприятия
                         </OutlineButton>
                     </Link>
-                    <Link to="/lk">
+                    <Link to="/lk/reg_team">
                         <PrimaryButton
                             active={true}
                             leftIcon={<UserPlus size={18}/>}

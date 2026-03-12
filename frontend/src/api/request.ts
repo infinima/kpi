@@ -19,6 +19,12 @@ type RequestOptions = {
     notify?: ApiNotifyOptions;
 };
 
+const SESSION_ERROR_CODES = new Set([
+    "INVALID_TOKEN",
+    "INVALID_SESSION",
+    "SESSION_NOT_FOUND",
+]);
+
 async function parseJsonResponse(res: Response) {
     try {
         return await res.json();
@@ -71,8 +77,14 @@ export async function request<T = unknown>({
         });
 
         if (res.status === 401) {
-            useUser.getState().logout();
-            throw { error: { code: "NO_TOKEN", message: "Unauthorized" } };
+            const data = await parseJsonResponse(res);
+            const code = data?.error?.code;
+
+            if (token && code && SESSION_ERROR_CODES.has(code)) {
+                useUser.getState().clearSession();
+            }
+
+            throw data || { error: { code: "NO_TOKEN", message: "Unauthorized" } };
         }
 
         if (!res.ok) {

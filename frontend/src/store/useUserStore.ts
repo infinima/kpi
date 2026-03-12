@@ -53,6 +53,7 @@ interface UserState {
 
   login: (token: string) => Promise<void>;
   logout: () => void;
+  clearSession: () => void;
   fetchUser: () => Promise<void>;
 
   can: (entity: PermissionEntity, action: PermissionAction, objectId?: number) => boolean;
@@ -108,6 +109,11 @@ export const useUser = create<UserState>((set, get) => ({
       });
     }
 
+    localStorage.removeItem("auth_token");
+    set({user: null, token: null, guest: true});
+  },
+
+  clearSession: () => {
     localStorage.removeItem("auth_token");
     set({user: null, token: null, guest: true});
   },

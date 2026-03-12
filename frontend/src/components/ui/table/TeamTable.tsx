@@ -11,6 +11,7 @@ type Props = {
     onCreate?: (row: TeamTableRowData) => Promise<void> | void;
     defaultLeagueId?: number | null;
     defaultLeagueName?: string;
+    isColumnEditable?: (columnKey: keyof TeamTableRowData, row: TeamTableRowData) => boolean;
 };
 
 type SortDirection = "asc" | "desc" | null;
@@ -36,7 +37,7 @@ function createEmptyTeam(defaultLeagueId?: number | null, defaultLeagueName?: st
         league_id: defaultLeagueId ?? 0,
         league_name: defaultLeagueName ?? "",
         owner_user_id: null,
-        owner_name: "",
+        owner_full_name: "",
         name: "",
         members: Array.from({ length: 4 }, () => ""),
         appreciations: [],
@@ -54,7 +55,7 @@ function createEmptyTeam(defaultLeagueId?: number | null, defaultLeagueName?: st
     };
 }
 
-export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId, defaultLeagueName }: Props) {
+export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId, defaultLeagueName, isColumnEditable }: Props) {
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -196,6 +197,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                                 actionsWidth={actionsWidth}
                                 isCreating
                                 onCreated={() => setShowCreateRow(false)}
+                                isColumnEditable={isColumnEditable}
                             />
                         ) : null}
                         {filteredData.map((row) => (
@@ -206,6 +208,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                                 onSave={onUpdate}
                                 onDelete={onDelete}
                                 actionsWidth={actionsWidth}
+                                isColumnEditable={isColumnEditable}
                             />
                         ))}
                     </div>

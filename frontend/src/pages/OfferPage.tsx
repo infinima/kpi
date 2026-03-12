@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import Background from "@/components/layout/Background";
 import AnimatedText from "@/components/ui/AnimatedText";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import OutlineButton from "@/components/ui/OutlineButton";
 
 export default function OfferPage() {
     return (
@@ -22,15 +21,10 @@ export default function OfferPage() {
                     </p>
 
                     <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                        <Link to="/lk">
-                            <PrimaryButton active>
-                                Вернуться в личный кабинет
-                            </PrimaryButton>
-                        </Link>
                         <Link to="/">
-                            <OutlineButton active>
-                                На главную
-                            </OutlineButton>
+                            <PrimaryButton active>
+                                Назад
+                            </PrimaryButton>
                         </Link>
                     </div>
                 </div>

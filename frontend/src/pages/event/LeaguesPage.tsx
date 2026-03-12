@@ -181,7 +181,7 @@ export function LeaguesPage() {
                     actionsWidth={176}
                 />
             ) : (
-                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     {leagues.map((league) => (
                         <LeagueCard
                             key={league.id}

@@ -331,7 +331,7 @@ export default function EventsSidebar() {
         >
             <div className={`flex flex-col gap-3 ${effectiveCollapsed ? "items-center" : ""}`}>
                 <div className={`flex w-full items-center ${effectiveCollapsed ? "justify-center gap-3" : "gap-2"}`}>
-                    {guest ? (
+                    {guest && !effectiveCollapsed ? (
                         <Link to="/auth" className="block">
                             <PrimaryButton
                                 active
@@ -341,7 +341,7 @@ export default function EventsSidebar() {
                                 Войти
                             </PrimaryButton>
                         </Link>
-                    ) : !effectiveCollapsed ? (
+                    ) : !guest && !effectiveCollapsed ? (
                         <Link to="/lk" className={effectiveCollapsed ? "block" : "flex-1"}>
                             <OutlineButton
                                 active

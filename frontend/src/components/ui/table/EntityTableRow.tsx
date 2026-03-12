@@ -65,6 +65,10 @@ function renderValue(value: unknown, column: EntityTableColumn) {
     return String(value ?? "");
 }
 
+function isCellChanged(left: unknown, right: unknown) {
+    return JSON.stringify(left ?? null) !== JSON.stringify(right ?? null);
+}
+
 export function EntityTableRow({
     row,
     columns,
@@ -150,43 +154,60 @@ export function EntityTableRow({
             {columns.map((column) => (
                 <div key={column.key} className="min-w-0 self-center">
                     {isEditing && (column.editable !== false || column.renderEditor) ? (
-                        column.renderEditor ? (
-                            column.renderEditor({
-                                row: draft,
-                                value: draft[column.key],
-                                setValue: (value) => {
-                                    setDraft((prev) => ({ ...prev, [column.key]: value }));
-                                },
-                                isCreating,
-                            })
-                        ) : column.type === "select" ? (
-                            <select
-                                value={String(draft[column.key] ?? "")}
-                                onChange={(event) => {
-                                    setDraft((prev) => ({ ...prev, [column.key]: event.target.value }));
-                                }}
-                                className="block w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary-light)]"
-                            >
-                                <option value="">Выбрать</option>
-                                {column.options?.map((option) => (
-                                    <option key={option.value} value={option.value}>
-                                        {option.label}
-                                    </option>
-                                ))}
-                            </select>
-                        ) : (
-                            <input
-                                type={column.type === "number" ? "number" : column.type === "date" ? "date" : "text"}
-                                value={String(draft[column.key] ?? "")}
-                                onChange={(event) => {
-                                    const nextValue = column.type === "number"
-                                        ? Number(event.target.value || 0)
-                                        : event.target.value;
-                                    setDraft((prev) => ({ ...prev, [column.key]: nextValue }));
-                                }}
-                                className="block w-full min-w-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary-light)]"
-                            />
-                        )
+                        (() => {
+                            const changed = isCreating || isCellChanged(draft[column.key], row[column.key]);
+                            const changedClass = changed
+                                ? "border-amber-300 bg-[rgba(253,224,71,0.16)]"
+                                : "border-[var(--color-border)] bg-[var(--color-background)]";
+
+                            if (column.renderEditor) {
+                                return (
+                                    <div className={`rounded-xl border p-1 ${changedClass}`}>
+                                        {column.renderEditor({
+                                            row: draft,
+                                            value: draft[column.key],
+                                            setValue: (value) => {
+                                                setDraft((prev) => ({ ...prev, [column.key]: value }));
+                                            },
+                                            isCreating,
+                                        })}
+                                    </div>
+                                );
+                            }
+
+                            if (column.type === "select") {
+                                return (
+                                    <select
+                                        value={String(draft[column.key] ?? "")}
+                                        onChange={(event) => {
+                                            setDraft((prev) => ({ ...prev, [column.key]: event.target.value }));
+                                        }}
+                                        className={`block w-full min-w-0 rounded-xl border px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary-light)] ${changedClass}`}
+                                    >
+                                        <option value="">Выбрать</option>
+                                        {column.options?.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                );
+                            }
+
+                            return (
+                                <input
+                                    type={column.type === "number" ? "number" : column.type === "date" ? "date" : "text"}
+                                    value={String(draft[column.key] ?? "")}
+                                    onChange={(event) => {
+                                        const nextValue = column.type === "number"
+                                            ? Number(event.target.value || 0)
+                                            : event.target.value;
+                                        setDraft((prev) => ({ ...prev, [column.key]: nextValue }));
+                                    }}
+                                    className={`block w-full min-w-0 rounded-xl border px-2.5 py-1.5 text-sm outline-none focus:border-[var(--color-primary-light)] ${changedClass}`}
+                                />
+                            );
+                        })()
                     ) : (
                         column.renderCell ? (
                             <div className="min-w-0 text-sm font-medium sm:text-[15px]">
