@@ -34,6 +34,37 @@ type EntitySummary = {
     name: string;
 };
 
+type LeagueSidebarSummary = EntitySummary & {
+    status: string;
+};
+
+const LEAGUE_STATUS_ORDER = [
+    "NOT_STARTED",
+    "REGISTRATION_IN_PROGRESS",
+    "REGISTRATION_ENDED",
+    "TEAMS_FIXED",
+    "ARRIVAL_IN_PROGRESS",
+    "ARRIVAL_ENDED",
+    "KVARTALY_GAME",
+    "LUNCH",
+    "FUDZI_GAME",
+    "FUDZI_GAME_BREAK",
+    "GAMES_ENDED",
+    "AWARDING_IN_PROGRESS",
+    "ENDED",
+] as const;
+
+function isLeagueStatusAtLeast(currentStatus: string | undefined, requiredStatus: string) {
+    const currentIndex = LEAGUE_STATUS_ORDER.indexOf((currentStatus ?? "") as (typeof LEAGUE_STATUS_ORDER)[number]);
+    const requiredIndex = LEAGUE_STATUS_ORDER.indexOf(requiredStatus as (typeof LEAGUE_STATUS_ORDER)[number]);
+
+    if (currentIndex === -1 || requiredIndex === -1) {
+        return false;
+    }
+
+    return currentIndex >= requiredIndex;
+}
+
 type SidebarItemProps = {
     to: string;
     label: string;
@@ -175,7 +206,7 @@ export default function EventsSidebar() {
     const [isDesktop, setIsDesktop] = useState(false);
     const [eventInfo, setEventInfo] = useState<EntitySummary | null>(null);
     const [locationInfo, setLocationInfo] = useState<EntitySummary | null>(null);
-    const [leagueInfo, setLeagueInfo] = useState<EntitySummary | null>(null);
+    const [leagueInfo, setLeagueInfo] = useState<LeagueSidebarSummary | null>(null);
 
     useEffect(() => {
         setCollapsed(window.localStorage.getItem("events_sidebar_collapsed") === "true");
@@ -253,9 +284,9 @@ export default function EventsSidebar() {
             }
 
             try {
-                const data = await apiGet<EntitySummary>(`leagues/${leagueId}`);
+                const data = await apiGet<LeagueSidebarSummary>(`leagues/${leagueId}`);
                 if (!ignore) {
-                    setLeagueInfo({ id: data.id, name: data.name });
+                    setLeagueInfo({ id: data.id, name: data.name, status: data.status });
                 }
             } catch {
                 if (!ignore) {
@@ -284,6 +315,10 @@ export default function EventsSidebar() {
     const locationNumber = locationInfo?.id ?? (locationId ? Number(locationId) : undefined);
     const leagueNumber = leagueInfo?.id ?? (leagueId ? Number(leagueId) : undefined);
     const rights = user?.rights;
+    const canSeeTeams = !guest;
+    const canSeeKvartalyResults = isLeagueStatusAtLeast(leagueInfo?.status, "KVARTALY_GAME");
+    const canSeeFudziResults = isLeagueStatusAtLeast(leagueInfo?.status, "FUDZI_GAME");
+    const canSeeOverallResults = leagueInfo?.status === "ENDED";
 
     return (
         <aside
@@ -354,12 +389,14 @@ export default function EventsSidebar() {
                                     />
                                 ) : null}
 
-                                <SidebarItem
-                                    to={`/events/${eventInfo.id}/teams`}
-                                    label="Команды"
-                                    icon={<Users size={16} />}
-                                    collapsed={effectiveCollapsed}
-                                />
+                                {canSeeTeams ? (
+                                    <SidebarItem
+                                        to={`/events/${eventInfo.id}/teams`}
+                                        label="Команды"
+                                        icon={<Users size={16} />}
+                                        collapsed={effectiveCollapsed}
+                                    />
+                                ) : null}
 
                                 <SidebarItem
                                     to={`/events/${eventInfo.id}/location`}
@@ -392,12 +429,14 @@ export default function EventsSidebar() {
                                             />
                                         ) : null}
 
-                                        <SidebarItem
-                                            to={`/events/${eventInfo.id}/location/${locationInfo.id}/teams`}
-                                            label="Команды"
-                                            icon={<Users size={16} />}
-                                            collapsed={effectiveCollapsed}
-                                        />
+                                        {canSeeTeams ? (
+                                            <SidebarItem
+                                                to={`/events/${eventInfo.id}/location/${locationInfo.id}/teams`}
+                                                label="Команды"
+                                                icon={<Users size={16} />}
+                                                collapsed={effectiveCollapsed}
+                                            />
+                                        ) : null}
 
                                         <SidebarItem
                                             to={`/events/${eventInfo.id}/location/${locationInfo.id}/photos`}
@@ -437,26 +476,32 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                <SidebarItem
-                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/kvartaly`}
-                                                    label="Результаты кварталов"
-                                                    icon={<Rows3 size={16} />}
-                                                    collapsed={effectiveCollapsed}
-                                                />
+                                                {canSeeKvartalyResults ? (
+                                                    <SidebarItem
+                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/kvartaly`}
+                                                        label="Результаты кварталов"
+                                                        icon={<Rows3 size={16} />}
+                                                        collapsed={effectiveCollapsed}
+                                                    />
+                                                ) : null}
 
-                                                <SidebarItem
-                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/fudzi`}
-                                                    label="Результаты фудзи"
-                                                    icon={<Rows3 size={16} />}
-                                                    collapsed={effectiveCollapsed}
-                                                />
+                                                {canSeeFudziResults ? (
+                                                    <SidebarItem
+                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/fudzi`}
+                                                        label="Результаты фудзи"
+                                                        icon={<Rows3 size={16} />}
+                                                        collapsed={effectiveCollapsed}
+                                                    />
+                                                ) : null}
 
-                                                <SidebarItem
-                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/overall`}
-                                                    label="Результаты общие"
-                                                    icon={<Rows3 size={16} />}
-                                                    collapsed={effectiveCollapsed}
-                                                />
+                                                {canSeeOverallResults ? (
+                                                    <SidebarItem
+                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/results/overall`}
+                                                        label="Результаты общие"
+                                                        icon={<Rows3 size={16} />}
+                                                        collapsed={effectiveCollapsed}
+                                                    />
+                                                ) : null}
 
                                                 {leagueNumber && can("leagues", "update", leagueNumber) ? (
                                                     <SidebarItem
@@ -467,12 +512,14 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                <SidebarItem
-                                                    to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/teams`}
-                                                    label="Команды"
-                                                    icon={<Users size={16} />}
-                                                    collapsed={effectiveCollapsed}
-                                                />
+                                                {canSeeTeams ? (
+                                                    <SidebarItem
+                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/teams`}
+                                                        label="Команды"
+                                                        icon={<Users size={16} />}
+                                                        collapsed={effectiveCollapsed}
+                                                    />
+                                                ) : null}
 
                                                 {leagueNumber && can("leagues", "get_show", leagueNumber) ? (
                                                     <SidebarItem
