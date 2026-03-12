@@ -27,14 +27,23 @@ teamsRouter.get(
         const userId = (req as any).user_id;
 
         const rows = await query(
-            `SELECT id, league_id, owner_user_id, name, members, appreciations,
-                    school, region, meals_count, maintainer_full_name, maintainer_activity,
-                    status,
-                    answers_kvartaly, answers_fudzi,
-                    diploma, special_nominations,
-                    created_at, updated_at, deleted_at
-             FROM teams
-             WHERE owner_user_id = ? AND deleted_at IS NULL`,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status,
+                    t.answers_kvartaly, t.answers_fudzi,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at,
+                    CASE
+                        WHEN l.status IN ('REGISTRATION_IN_PROGRESS', 'REGISTRATION_ENDED') THEN 1
+                        ELSE 0
+                    END AS owner_can_edit
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.owner_user_id = ? AND t.deleted_at IS NULL`,
             [userId],
             userId
         );
@@ -53,14 +62,19 @@ teamsRouter.get(
         const { league_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT id, league_id, owner_user_id, name, members, appreciations,
-                    school, region, meals_count, maintainer_full_name, maintainer_activity,
-                    status,
-                    answers_kvartaly, answers_fudzi,
-                    diploma, special_nominations,
-                    created_at, updated_at, deleted_at
-             FROM teams
-             WHERE league_id = ? AND deleted_at IS NULL`,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status,
+                    t.answers_kvartaly, t.answers_fudzi,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.league_id = ? AND t.deleted_at IS NULL`,
             [league_id], (req as any).user_id
         );
 
@@ -78,14 +92,19 @@ teamsRouter.get(
         const { league_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT id, league_id, owner_user_id, name, members, appreciations,
-                    school, region, meals_count, maintainer_full_name, maintainer_activity,
-                    status,
-                    answers_kvartaly, answers_fudzi,
-                    diploma, special_nominations,
-                    created_at, updated_at, deleted_at
-             FROM teams
-             WHERE league_id = ? AND deleted_at IS NOT NULL`,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status,
+                    t.answers_kvartaly, t.answers_fudzi,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.league_id = ? AND t.deleted_at IS NOT NULL`,
             [league_id], (req as any).user_id
         );
 
@@ -103,7 +122,10 @@ teamsRouter.get(
         const { location_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT t.id, t.league_id, t.owner_user_id, t.name, t.members, t.appreciations,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.answers_kvartaly, t.answers_fudzi,
@@ -111,6 +133,7 @@ teamsRouter.get(
                     t.created_at, t.updated_at, t.deleted_at
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
              WHERE l.location_id = ?
                AND t.deleted_at IS NULL
                AND l.deleted_at IS NULL`,
@@ -131,7 +154,10 @@ teamsRouter.get(
         const { location_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT t.id, t.league_id, t.owner_user_id, t.name, t.members, t.appreciations,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.answers_kvartaly, t.answers_fudzi,
@@ -139,6 +165,7 @@ teamsRouter.get(
                     t.created_at, t.updated_at, t.deleted_at
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
              WHERE l.location_id = ?
                AND t.deleted_at IS NOT NULL
                AND l.deleted_at IS NULL`,
@@ -159,7 +186,10 @@ teamsRouter.get(
         const { event_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT t.id, t.league_id, t.owner_user_id, t.name, t.members, t.appreciations,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.answers_kvartaly, t.answers_fudzi,
@@ -168,6 +198,7 @@ teamsRouter.get(
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
                       JOIN locations lo ON lo.id = l.location_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
              WHERE lo.event_id = ?
                AND t.deleted_at IS NULL
                AND l.deleted_at IS NULL
@@ -189,7 +220,10 @@ teamsRouter.get(
         const { event_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT t.id, t.league_id, t.owner_user_id, t.name, t.members, t.appreciations,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.answers_kvartaly, t.answers_fudzi,
@@ -198,6 +232,7 @@ teamsRouter.get(
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
                       JOIN locations lo ON lo.id = l.location_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
              WHERE lo.event_id = ?
                AND t.deleted_at IS NOT NULL
                AND l.deleted_at IS NULL
@@ -219,14 +254,19 @@ teamsRouter.get(
         const { id } = (req as any).validated.params;
 
         const [row] = await query(
-            `SELECT id, league_id, owner_user_id, name, members, appreciations,
-                    school, region, meals_count, maintainer_full_name, maintainer_activity,
-                    status,
-                    answers_kvartaly, answers_fudzi,
-                    diploma, special_nominations,
-                    created_at, updated_at, deleted_at
-             FROM teams
-             WHERE id = ?`,
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status,
+                    t.answers_kvartaly, t.answers_fudzi,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.id = ?`,
             [id], (req as any).user_id
         );
 

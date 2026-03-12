@@ -23,7 +23,10 @@ export const AnswersFudziSchema = z.object({
 export const TeamSchema = z.object({
     id: z.coerce.number().int().positive(),
     league_id: z.coerce.number().int().positive(),
+    league_name: z.string().min(1).nullable(),
     owner_user_id: z.coerce.number().int().positive().nullable(),
+    owner_full_name: z.string().min(1).nullable(),
+    owner_can_edit: z.coerce.boolean().optional(),
     name: z.string().min(1),
     members: MembersSchema,
     appreciations: z.array(z.string()),
@@ -71,10 +74,12 @@ export const GetTeamsByLocationInput = z.object({
 export const CreateTeamInput = TeamSchema
     .omit({
         id: true,
+        league_name: true,
         created_at: true,
         updated_at: true,
         deleted_at: true,
         owner_user_id: true,
+        owner_full_name: true,
         status: true,
         answers_kvartaly: true,
         penalty_kvartaly: true,
