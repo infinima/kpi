@@ -22,7 +22,6 @@ export const teamsRouter = express.Router();
 // GET /api/teams/my
 teamsRouter.get(
     "/my",
-    checkPermission("teams", "get"),
     async (req, res) => {
         const userId = (req as any).user_id;
 

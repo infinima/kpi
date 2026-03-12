@@ -94,6 +94,8 @@ export const CreateTeamInput = TeamSchema
     .extend({
         members: MembersSchema,
         owner_user_id: z.coerce.number().int().positive().nullable().optional(),
+        maintainer_full_name: z.string().min(1).nullable().optional(),
+        maintainer_activity: TeamSchema.shape.maintainer_activity,
         is_reserve: z.boolean().optional(),
     });
 export const UpdateTeamInput = CreateTeamInput

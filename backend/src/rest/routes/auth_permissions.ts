@@ -159,6 +159,7 @@ authPermissionsRouter.get(
             leagues: {},
             teams: {},
             users: {},
+            mailings: {},
             permissions: {}
         };
 
