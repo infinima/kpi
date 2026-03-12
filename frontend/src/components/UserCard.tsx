@@ -6,6 +6,7 @@ import {apiDelete, apiPost} from "@/api";
 import {BaseImage} from "@/components/BaseImage";
 import {formatDate} from "@/helpers/formatDate";
 import {userForm} from "@/config/userForm";
+import { confirmWithNotification } from "@/utils/confirmWithNotification";
 
 export interface User {
   tg_id: number;
@@ -34,6 +35,10 @@ export function UserCard({user, onRefresh, isDeleted = false}: UserCardProps) {
   const {can} = useUser();
 
   async function handleDelete() {
+    if (!await confirmWithNotification({ text: "Точно удалить?" })) {
+      return;
+    }
+
     try {
       await apiDelete(`users/${user.id}`, user.id);
       onRefresh();

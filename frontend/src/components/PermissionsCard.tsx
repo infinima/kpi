@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiPatch, apiPost, apiDelete, apiGet } from "@/api";
 import { useNotifications } from "@/store";
+import { confirmWithNotification } from "@/utils/confirmWithNotification";
 
 import {
   Save,
@@ -230,6 +231,10 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
   }
 
   async function remove() {
+    if (!await confirmWithNotification({ text: "Точно удалить?" })) {
+      return;
+    }
+
     if (data.id !== null) {
       try {
         await apiDelete(`permissions/${data.id}`);

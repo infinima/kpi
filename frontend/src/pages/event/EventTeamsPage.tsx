@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import { TeamTable } from "@/components/ui/table/TeamTable";
@@ -128,10 +128,33 @@ export function EventTeamsPage() {
         }));
     }, [rows]);
 
+    const loadTeams = useCallback(async () => {
+        const path = leagueId
+            ? `teams/league/${leagueId}`
+            : locationId
+                ? `teams/location/${locationId}`
+                : eventId
+                    ? `teams/event/${eventId}`
+                    : null;
+
+        if (!path) {
+            setRows([]);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await apiGet<TeamResponseRow[]>(path, { error: true });
+            setRows(data);
+        } finally {
+            setLoading(false);
+        }
+    }, [eventId, locationId, leagueId]);
+
     useEffect(() => {
         let ignore = false;
 
-        async function loadTeams() {
+        async function load() {
             const path = leagueId
                 ? `teams/league/${leagueId}`
                 : locationId
@@ -158,7 +181,7 @@ export function EventTeamsPage() {
             }
         }
 
-        void loadTeams();
+        void load();
         return () => {
             ignore = true;
         };
@@ -205,7 +228,7 @@ export function EventTeamsPage() {
 
     async function handleDelete(row: TeamTableRowData) {
         await apiDelete(`teams/${row.id}`, row.id);
-        setRows((prev) => prev.filter((item) => item.id !== row.id));
+        await loadTeams();
     }
 
     async function handleCreate(row: TeamTableRowData) {

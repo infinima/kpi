@@ -3,6 +3,7 @@ import { Pencil, Plus, Save, Trash2, Users, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { useModalStore } from "@/store";
+import { confirmWithNotification } from "@/utils/confirmWithNotification";
 
 export type TeamMembersValue = string[];
 
@@ -194,6 +195,10 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
     }
 
     async function handleDelete() {
+        if (!await confirmWithNotification({ text: "Точно удалить?" })) {
+            return;
+        }
+
         try {
             setLoading(true);
             await onDelete(row);
@@ -367,21 +372,21 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
 
 export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "id", label: "ID", width: 0.55, editable: false, type: "number" },
-    { key: "league_id", label: "ID лиги", width: 0.8, editable: true, type: "number" },
-    { key: "league_name", label: "Лига", width: 1.45, editable: false, type: "text" },
-    { key: "owner_full_name", label: "Руководитель", width: 1.7, editable: false, type: "text" },
-    { key: "name", label: "Команда", width: 1.6, editable: true, type: "text" },
-    { key: "members", label: "Участники", width: 2.6, editable: true, type: "text" },
-    { key: "appreciations", label: "Благодарности", width: 1.75, editable: true, type: "text" },
-    { key: "school", label: "Учебное заведение", width: 2.2, editable: true, type: "text" },
-    { key: "region", label: "Регион", width: 1.25, editable: true, type: "text" },
-    { key: "meals_count", label: "Обеды", width: 0.95, editable: true, type: "number" },
-    { key: "maintainer_full_name", label: "Сопровождающий", width: 2.1, editable: true, type: "text" },
-    { key: "maintainer_activity", label: "Активность", width: 2, editable: true, type: "select", options: maintainerActivityOptions },
+    { key: "league_id", label: "ID лиги", width: 0.9, editable: true, type: "number" },
+    { key: "league_name", label: "Лига", width: 1.8, editable: false, type: "text" },
+    { key: "owner_full_name", label: "Руководитель", width: 2.1, editable: false, type: "text" },
+    { key: "name", label: "Команда", width: 1.9, editable: true, type: "text" },
+    { key: "members", label: "Участники", width: 3, editable: true, type: "text" },
+    { key: "appreciations", label: "Благодарности", width: 2.2, editable: true, type: "text" },
+    { key: "school", label: "Учебное заведение", width: 5.8, editable: true, type: "text" },
+    { key: "region", label: "Регион", width: 3.1, editable: true, type: "text" },
+    { key: "meals_count", label: "Обеды", width: 1.15, editable: true, type: "number" },
+    { key: "maintainer_full_name", label: "Сопровождающий", width: 4.9, editable: true, type: "text" },
+    { key: "maintainer_activity", label: "Активность", width: 4.9, editable: true, type: "select", options: maintainerActivityOptions },
     {
         key: "status",
         label: "Статус",
-        width: 1.1,
+        width: 1.25,
         editable: true,
         type: "select",
         options: [
@@ -394,7 +399,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     {
         key: "diploma",
         label: "Диплом",
-        width: 1.1,
+        width: 1.2,
         editable: true,
         type: "select",
         options: [
@@ -405,8 +410,8 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "Участник", value: "PARTICIPANT" },
         ],
     },
-    { key: "special_nominations", label: "Номинации", width: 1.7, editable: true, type: "text" },
-    { key: "created_at", label: "Создание", width: 1.15, editable: false, type: "text" },
-    { key: "updated_at", label: "Апдейт", width: 1.15, editable: false, type: "text" },
-    { key: "deleted_at", label: "Удалено", width: 1.15, editable: false, type: "text" },
+    { key: "special_nominations", label: "Номинации", width: 2, editable: true, type: "text" },
+    { key: "created_at", label: "Создание", width: 1.3, editable: false, type: "text" },
+    { key: "updated_at", label: "Апдейт", width: 1.3, editable: false, type: "text" },
+    { key: "deleted_at", label: "Удалено", width: 1.3, editable: false, type: "text" },
 ];

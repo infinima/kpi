@@ -88,15 +88,34 @@ function NotificationItem({
                     </div>
 
                     {msg.actionText && msg.action && (
-                        <button
-                            onClick={msg.action}
-                            className="
-                                mt-3 rounded-lg px-3 py-1 text-xs shadow-sm hover:opacity-90 sm:text-sm
-                                bg-[var(--color-surface)] text-[var(--color-text-main)]
-                            "
-                        >
-                            {msg.actionText}
-                        </button>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                            <button
+                                onClick={() => {
+                                    msg.action?.();
+                                    handleRemove();
+                                }}
+                                className="
+                                    rounded-lg px-3 py-1 text-xs shadow-sm hover:opacity-90 sm:text-sm
+                                    bg-[var(--color-surface)] text-[var(--color-text-main)]
+                                "
+                            >
+                                {msg.actionText}
+                            </button>
+
+                            {msg.secondaryActionText && msg.secondaryAction ? (
+                                <button
+                                    onClick={() => {
+                                        msg.secondaryAction?.();
+                                        handleRemove();
+                                    }}
+                                    className="
+                                        rounded-lg border border-white/40 px-3 py-1 text-xs shadow-sm hover:bg-white/10 sm:text-sm
+                                    "
+                                >
+                                    {msg.secondaryActionText}
+                                </button>
+                            ) : null}
+                        </div>
                     )}
                 </div>
 

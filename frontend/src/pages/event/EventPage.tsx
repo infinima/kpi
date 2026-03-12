@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, ImagePlus, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
@@ -160,6 +160,18 @@ export function EventsPage() {
 
     const rows = useMemo(() => mapEventEntityRows(events), [events]);
 
+    const loadEvents = useCallback(async () => {
+        setLoading(true);
+        try {
+            const data = await apiGet<EventItem[]>(
+                effectiveVisibility === "deleted" ? "events/deleted" : "events"
+            );
+            setEvents(data);
+        } finally {
+            setLoading(false);
+        }
+    }, [effectiveVisibility]);
+
     useEffect(() => {
         let ignore = false;
 
@@ -205,7 +217,7 @@ export function EventsPage() {
 
     async function handleDelete(row: EntityTableRowData) {
         await apiDelete(`events/${row.id}`, Number(row.id));
-        setEvents((prev) => prev.filter((event) => String(event.id) !== String(row.id)));
+        await loadEvents();
 
         if (String(eventId) === String(row.id)) {
             navigate("/events");
@@ -217,7 +229,7 @@ export function EventsPage() {
             success: "Мероприятие восстановлено",
             error: true,
         });
-        setEvents((prev) => prev.filter((event) => String(event.id) !== String(row.id)));
+        await loadEvents();
     }
 
     async function handleCreate(newRow: EntityTableRowData) {

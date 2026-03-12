@@ -85,7 +85,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
         });
     }, [data, filters, sortDirection, sortKey]);
 
-    const actionsWidth = 168;
+    const actionsWidth = 184;
     const createRow = useMemo(() => createEmptyTeam(defaultLeagueId, defaultLeagueName), [defaultLeagueId, defaultLeagueName]);
 
     return (
@@ -107,7 +107,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
             </div>
 
             <div className="overflow-x-auto">
-                <div className="min-w-[2260px] overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.86)] backdrop-blur-sm">
+                <div className="min-w-[2520px] overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.86)] backdrop-blur-sm">
                     <div
                         className="grid items-center gap-2 border-b border-[var(--color-border)] px-6 py-1 font-semibold text-[var(--color-text-main)]"
                         style={{

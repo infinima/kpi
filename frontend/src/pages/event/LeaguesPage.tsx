@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
@@ -64,6 +64,25 @@ export function LeaguesPage() {
         };
     }, [effectiveVisibility, locationId]);
 
+    const loadLeagues = useCallback(async () => {
+        if (!locationId) {
+            setLeagues([]);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await apiGet<LeagueItem[]>(
+                effectiveVisibility === "deleted"
+                    ? `leagues/location/${locationId}/deleted`
+                    : `leagues/location/${locationId}`
+            );
+            setLeagues(data);
+        } finally {
+            setLoading(false);
+        }
+    }, [effectiveVisibility, locationId]);
+
     const rows = useMemo(() => mapLeagueEntityRows(leagues), [leagues]);
     const visibilityFilter = (
         canSeeDeleted ? (
@@ -119,7 +138,7 @@ export function LeaguesPage() {
 
     async function handleDelete(row: EntityTableRowData) {
         await apiDelete(`leagues/${row.id}`, Number(row.id));
-        setLeagues((prev) => prev.filter((league) => String(league.id) !== String(row.id)));
+        await loadLeagues();
     }
 
     async function handleRestore(row: EntityTableRowData) {
@@ -127,7 +146,7 @@ export function LeaguesPage() {
             success: "Лига восстановлена",
             error: true,
         });
-        setLeagues((prev) => prev.filter((league) => String(league.id) !== String(row.id)));
+        await loadLeagues();
     }
 
     async function handleCreate(newRow: EntityTableRowData) {

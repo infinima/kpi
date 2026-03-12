@@ -6,8 +6,11 @@ export interface Notification {
     id: string;
     type: NotificationType;
     text: string;
+    duration?: number | null;
     actionText?: string;
     action?: () => void;
+    secondaryActionText?: string;
+    secondaryAction?: () => void;
 }
 
 interface NotificationState {
@@ -27,9 +30,11 @@ export const useNotifications = create<NotificationState>((set, get) => ({
 
         set({ messages: [newMsg, ...get().messages] });
 
-        setTimeout(() => {
-            get().removeMessage(id);
-        }, 2000);
+        if (msg.duration !== null) {
+            setTimeout(() => {
+                get().removeMessage(id);
+            }, msg.duration ?? 2000);
+        }
     },
 
     removeMessage: (id) => {

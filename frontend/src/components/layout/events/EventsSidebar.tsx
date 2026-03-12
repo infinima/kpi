@@ -181,19 +181,13 @@ function SidebarCollapseToggle({
     onToggle: () => void;
 }) {
     return (
-        <button
-            type="button"
+        <OutlineButton
+            active
             onClick={onToggle}
-            title={collapsed ? "Развернуть меню" : "Свернуть меню"}
-            className={`
-                flex items-center justify-center rounded-xl border border-[var(--color-border)]
-                bg-[rgba(255,255,255,0.72)] text-[var(--color-text-secondary)] transition
-                ${collapsed ? "h-10 w-10" : "h-10 w-full"}
-                hover:bg-[rgba(255,255,255,0.95)] hover:text-[var(--color-text-main)]
-            `}
+            className={collapsed ? "h-10 w-10 px-0 py-0" : "h-10 w-full px-4 py-2.5"}
         >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
+        </OutlineButton>
     );
 }
 
@@ -364,15 +358,24 @@ export default function EventsSidebar() {
                         to="/"
                         title="На главную"
                         aria-label="На главную"
-                        className={`
-                            flex items-center justify-center rounded-xl border border-[var(--color-border)]
-                            bg-[rgba(255,255,255,0.72)] text-[var(--color-text-secondary)] transition
-                            ${effectiveCollapsed ? "h-10 w-10" : "h-10 w-full gap-2 px-4 text-sm font-medium"}
-                            hover:bg-[rgba(255,255,255,0.95)] hover:text-[var(--color-text-main)]
-                        `}
+                        className={effectiveCollapsed ? "block" : "w-full"}
                     >
-                        <House size={16} />
-                        {!effectiveCollapsed ? <span>На главную</span> : null}
+                        {effectiveCollapsed ? (
+                            <OutlineButton
+                                active
+                                className="h-10 w-10 px-0 py-0"
+                            >
+                                <House size={16} />
+                            </OutlineButton>
+                        ) : (
+                            <OutlineButton
+                                active
+                                leftIcon={<House size={16} />}
+                                className="h-10 w-full px-4 py-2.5 text-sm"
+                            >
+                                На главную
+                            </OutlineButton>
+                        )}
                     </Link>
                 </div>
 

@@ -3,6 +3,7 @@ import { Pencil, Save, Trash2, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import type { TableColumnConfig, TableRowData } from "@/components/ui/data-table/types";
+import { confirmWithNotification } from "@/utils/confirmWithNotification";
 
 type Props = {
     columns: TableColumnConfig[];
@@ -149,8 +150,11 @@ export function DataTableRow({
                         {onDelete ? (
                             <PrimaryButton
                                 active
-                                onClick={(event) => {
+                                onClick={async (event) => {
                                     event.stopPropagation();
+                                    if (!await confirmWithNotification({ text: "Точно удалить?" })) {
+                                        return;
+                                    }
                                     void onDelete(row);
                                 }}
                                 className="bg-[var(--color-error)] px-2.5 py-1.5 text-sm shadow-none hover:bg-[color:var(--color-error)]/90"

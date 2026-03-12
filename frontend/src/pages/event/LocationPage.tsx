@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
@@ -94,6 +94,25 @@ export function LocationsPage() {
         };
     }, [effectiveVisibility, eventId, isPhotosMode, locationId]);
 
+    const loadLocations = useCallback(async () => {
+        if (!eventId) {
+            setLocations([]);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const data = await apiGet<LocationItem[]>(
+                effectiveVisibility === "deleted"
+                    ? `locations/event/${eventId}/deleted`
+                    : `locations/event/${eventId}`
+            );
+            setLocations(data);
+        } finally {
+            setLoading(false);
+        }
+    }, [effectiveVisibility, eventId]);
+
     useEffect(() => {
         let ignore = false;
 
@@ -169,7 +188,7 @@ export function LocationsPage() {
 
     async function handleDelete(row: EntityTableRowData) {
         await apiDelete(`locations/${row.id}`, Number(row.id));
-        setLocations((prev) => prev.filter((location) => String(location.id) !== String(row.id)));
+        await loadLocations();
 
         if (String(locationId) === String(row.id)) {
             navigate(`/events/${eventId}/location`);
@@ -181,7 +200,7 @@ export function LocationsPage() {
             success: "Площадка восстановлена",
             error: true,
         });
-        setLocations((prev) => prev.filter((location) => String(location.id) !== String(row.id)));
+        await loadLocations();
     }
 
     async function handleCreate(newRow: EntityTableRowData) {

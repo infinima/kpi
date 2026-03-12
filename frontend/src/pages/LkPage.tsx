@@ -423,12 +423,18 @@ export default function LkPage() {
         [selectedLocation, teamForm.leagueId]
     );
 
+    const hasUnlimitedPlaces = Boolean(selectedLeague && selectedLeague.max_teams_count <= 0);
+
     const availablePlaces = useMemo(() => {
         if (editingTeamId) {
             return null;
         }
 
         if (!selectedLeague) {
+            return null;
+        }
+
+        if (selectedLeague.max_teams_count <= 0) {
             return null;
         }
 
@@ -501,10 +507,10 @@ export default function LkPage() {
         }
 
         setTeamForm((prev) => {
-            const shouldReserve = availablePlaces === 0;
+            const shouldReserve = !hasUnlimitedPlaces && availablePlaces === 0;
             return prev.isReserve === shouldReserve ? prev : { ...prev, isReserve: shouldReserve };
         });
-    }, [availablePlaces, editingTeamId]);
+    }, [availablePlaces, editingTeamId, hasUnlimitedPlaces]);
 
     function handleProfileFieldChange(field: keyof ProfileFormState, value: string) {
         setProfileForm((prev) => ({ ...prev, [field]: value }));
@@ -1186,7 +1192,7 @@ export default function LkPage() {
                                                         <option value="">Выберите лигу</option>
                                                         {selectedLocation?.leagues.map((league) => (
                                                             <option key={league.id} value={league.id}>
-                                                                {league.name}
+                                                                {league.name}{league.max_teams_count > 0 && league.teams_count >= league.max_teams_count ? " (резерв)" : ""}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -1209,13 +1215,13 @@ export default function LkPage() {
                                                 {selectedLeague ? (
                                                     <InfoBadge
                                                         icon={<Users size={14} />}
-                                                        text={availablePlaces === 0 ? "Мест неограниченно" : `Осталось мест: ${availablePlaces ?? 0}`}
+                                                        text={hasUnlimitedPlaces ? "Мест неограниченно" : `Осталось мест: ${availablePlaces ?? 0}`}
                                                     />
                                                 ) : null}
                                             </div>
                                         ) : null}
 
-                                        {!editingTeam && selectedLeague && availablePlaces === 0 ? (
+                                        {!editingTeam && selectedLeague && !hasUnlimitedPlaces && availablePlaces === 0 ? (
                                             <div className="mt-6 rounded-[24px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.10)] px-5 py-4">
                                                 <p className="text-sm font-medium text-[var(--color-text-main)]">
                                                     Свободные места закончились. Сейчас доступна регистрация ТОЛЬКО в резерв.
@@ -1400,6 +1406,12 @@ export default function LkPage() {
                                                 </PrimaryButton>
                                             </div>
                                         </div>
+
+                                        {!editingTeam ? (
+                                            <p className="mt-4 text-sm text-[var(--color-text-secondary)]">
+                                                Заявка поступит на рассмотрение. Вы получите уведомление о результате рассмотрения на электронную почту.
+                                            </p>
+                                        ) : null}
                                     </>
                                 )}
                             </div>

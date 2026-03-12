@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pencil, Plus, RotateCcw, Save, Trash2, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
+import { confirmWithNotification } from "@/utils/confirmWithNotification";
 
 export type EntityTableRowData = Record<string, string | number | null | undefined>;
 
@@ -119,6 +120,10 @@ export function EntityTableRow({
 
     async function handleDelete() {
         if (!onDelete) {
+            return;
+        }
+
+        if (!await confirmWithNotification({ text: "Точно удалить?" })) {
             return;
         }
 
