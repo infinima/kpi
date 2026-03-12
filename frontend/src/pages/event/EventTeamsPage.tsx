@@ -39,16 +39,7 @@ type LeagueSummary = {
 };
 
 function createEmptyMembers(): TeamMembersValue {
-    return {
-        coach: {
-            email: "",
-            full_name: "",
-        },
-        participants: Array.from({ length: 4 }, () => ({
-            school: "",
-            full_name: "",
-        })),
-    };
+    return Array.from({ length: 4 }, () => "");
 }
 
 function parseStringArray(value: string[] | string | null | undefined) {
@@ -82,26 +73,27 @@ function buildOwnerName(user: UserSummary | null, fallbackId: number | null) {
 function parseMembers(value: unknown): TeamMembersValue {
     const fallback = createEmptyMembers();
 
+    const normalizeArray = (raw: unknown[]) =>
+        Array.from({ length: 4 }, (_, index) => typeof raw[index] === "string" ? raw[index] : "");
+
     const normalize = (raw: unknown) => {
+        if (Array.isArray(raw)) {
+            return normalizeArray(raw);
+        }
+
         if (!raw || typeof raw !== "object") {
             return fallback;
         }
 
         const objectValue = raw as {
-            coach?: { email?: unknown; full_name?: unknown };
-            participants?: Array<{ school?: unknown; full_name?: unknown }>;
+            participants?: Array<{ full_name?: unknown }>;
         };
 
-        return {
-            coach: {
-                email: typeof objectValue.coach?.email === "string" ? objectValue.coach.email : "",
-                full_name: typeof objectValue.coach?.full_name === "string" ? objectValue.coach.full_name : "",
-            },
-            participants: Array.from({ length: 4 }, (_, index) => ({
-                school: typeof objectValue.participants?.[index]?.school === "string" ? objectValue.participants[index].school : "",
-                full_name: typeof objectValue.participants?.[index]?.full_name === "string" ? objectValue.participants[index].full_name : "",
-            })),
-        };
+        return Array.from({ length: 4 }, (_, index) =>
+            typeof objectValue.participants?.[index]?.full_name === "string"
+                ? objectValue.participants[index].full_name
+                : ""
+        );
     };
 
     if (typeof value === "string") {
@@ -116,16 +108,7 @@ function parseMembers(value: unknown): TeamMembersValue {
 }
 
 function buildMembersRequestValue(row: TeamTableRowData): TeamMembersValue {
-    return {
-        coach: {
-            email: row.members.coach.email.trim(),
-            full_name: row.members.coach.full_name.trim(),
-        },
-        participants: row.members.participants.map((participant) => ({
-            school: participant.school.trim() || row.school.trim(),
-            full_name: participant.full_name.trim(),
-        })),
-    };
+    return row.members.map((member) => member.trim());
 }
 
 export function EventTeamsPage() {

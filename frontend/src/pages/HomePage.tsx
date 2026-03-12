@@ -1,10 +1,11 @@
 import {motion} from "framer-motion"
-import {FileText, LogIn, UserPlus} from "lucide-react"
+import {FileText, LogIn, LogOut, UserPlus} from "lucide-react"
 import Background from "@/components/layout/Background"
 import PrimaryButton from "@/components/ui/PrimaryButton"
 import AnimatedText from "@/components/ui/AnimatedText";
 import OutlineButton from "@/components/ui/OutlineButton";
 import {Link} from "react-router-dom";
+import {useUser} from "@/store";
 
 function downloadFile(url: string, filename?: string) {
     const link = document.createElement("a")
@@ -38,19 +39,34 @@ const leagues = [
 ]
 
 export default function HomePage() {
+    const guest = useUser((state) => state.guest);
+    const logout = useUser((state) => state.logout);
+
     return (
         <div className="relative min-h-screen overflow-hidden">
             <Background active={true}/>
 
             <div className="absolute right-6 top-6 z-20">
-                <Link to="/auth">
-                    <PrimaryButton
+                {guest ? (
+                    <Link to="/auth">
+                        <PrimaryButton
+                            active={true}
+                            leftIcon={<LogIn size={18}/>}
+                        >
+                            Войти / зарегистрироваться
+                        </PrimaryButton>
+                    </Link>
+                ) : (
+                    <OutlineButton
                         active={true}
-                        leftIcon={<LogIn size={18}/>}
+                        leftIcon={<LogOut size={18}/>}
+                        onClick={() => {
+                            void logout();
+                        }}
                     >
-                        Войти / зарегистрироваться
-                    </PrimaryButton>
-                </Link>
+                        Выйти
+                    </OutlineButton>
+                )}
             </div>
 
             <section className="relative mx-auto max-w-6xl px-6 pt-28 pb-24 text-center">

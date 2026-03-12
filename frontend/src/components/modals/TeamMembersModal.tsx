@@ -6,16 +6,7 @@ import type { TeamMembersValue } from "@/components/ui/table/TeamTableRow";
 import { useModalStore } from "@/store";
 
 function createEmptyMembers(): TeamMembersValue {
-    return {
-        coach: {
-            email: "",
-            full_name: "",
-        },
-        participants: Array.from({ length: 4 }, () => ({
-            school: "",
-            full_name: "",
-        })),
-    };
+    return Array.from({ length: 4 }, () => "");
 }
 
 export function TeamMembersModal() {
@@ -29,16 +20,7 @@ export function TeamMembersModal() {
             return createEmptyMembers();
         }
 
-        return {
-            coach: {
-                email: payload.members.coach.email ?? "",
-                full_name: payload.members.coach.full_name ?? "",
-            },
-            participants: Array.from({ length: 4 }, (_, index) => ({
-                school: payload.members.participants[index]?.school ?? "",
-                full_name: payload.members.participants[index]?.full_name ?? "",
-            })),
-        };
+        return Array.from({ length: 4 }, (_, index) => payload.members[index] ?? "");
     }, [payload]);
 
     const [members, setMembers] = useState<TeamMembersValue>(initialMembers);
@@ -60,16 +42,7 @@ export function TeamMembersModal() {
     };
 
     const handleSave = () => {
-        payload.onSave?.({
-            coach: {
-                email: members.coach.email.trim(),
-                full_name: members.coach.full_name.trim(),
-            },
-            participants: members.participants.map((participant) => ({
-                school: participant.school.trim(),
-                full_name: participant.full_name.trim(),
-            })),
-        });
+        payload.onSave?.(members.map((member) => member.trim()));
         closeModal();
     };
 
@@ -105,48 +78,8 @@ export function TeamMembersModal() {
                 </div>
 
                 <div className="mt-5 flex-1 space-y-5 overflow-y-auto pr-1">
-                    <div className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4">
-                        <div className="text-sm font-semibold text-[var(--color-text-main)]">
-                            Тренер
-                        </div>
-                        <label className="block space-y-2">
-                            <span className="text-sm text-[var(--color-text-secondary)]">ФИО</span>
-                            <input
-                                value={members.coach.full_name}
-                                onChange={(event) => {
-                                    setMembers((prev) => ({
-                                        ...prev,
-                                        coach: {
-                                            ...prev.coach,
-                                            full_name: event.target.value,
-                                        },
-                                    }));
-                                }}
-                                readOnly={!isEditing}
-                                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
-                            />
-                        </label>
-                        <label className="block space-y-2">
-                            <span className="text-sm text-[var(--color-text-secondary)]">Email</span>
-                            <input
-                                value={members.coach.email}
-                                onChange={(event) => {
-                                    setMembers((prev) => ({
-                                        ...prev,
-                                        coach: {
-                                            ...prev.coach,
-                                            email: event.target.value,
-                                        },
-                                    }));
-                                }}
-                                readOnly={!isEditing}
-                                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
-                            />
-                        </label>
-                    </div>
-
                     <div className="space-y-3">
-                        {members.participants.map((participant, index) => (
+                        {members.map((participant, index) => (
                             <div
                                 key={index}
                                 className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4"
@@ -157,32 +90,9 @@ export function TeamMembersModal() {
                                 <label className="block space-y-2">
                                     <span className="text-sm text-[var(--color-text-secondary)]">ФИО</span>
                                     <input
-                                        value={participant.full_name}
+                                        value={participant}
                                         onChange={(event) => {
-                                            setMembers((prev) => ({
-                                                ...prev,
-                                                participants: prev.participants.map((item, itemIndex) => itemIndex === index ? {
-                                                    ...item,
-                                                    full_name: event.target.value,
-                                                } : item),
-                                            }));
-                                        }}
-                                        readOnly={!isEditing}
-                                        className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
-                                    />
-                                </label>
-                                <label className="block space-y-2">
-                                    <span className="text-sm text-[var(--color-text-secondary)]">Школа</span>
-                                    <input
-                                        value={participant.school}
-                                        onChange={(event) => {
-                                            setMembers((prev) => ({
-                                                ...prev,
-                                                participants: prev.participants.map((item, itemIndex) => itemIndex === index ? {
-                                                    ...item,
-                                                    school: event.target.value,
-                                                } : item),
-                                            }));
+                                            setMembers((prev) => prev.map((item, itemIndex) => itemIndex === index ? event.target.value : item));
                                         }}
                                         readOnly={!isEditing}
                                         className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"

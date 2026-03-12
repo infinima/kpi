@@ -531,6 +531,7 @@ export default function LkPage() {
     function resetTeamEditor() {
         setEditingTeamId(null);
         setTeamForm(emptyTeamForm());
+        void navigate("/lk/my_team");
     }
 
     function handleMemberChange(index: number, value: string) {
@@ -700,26 +701,9 @@ export default function LkPage() {
 
             setRegistrationData(updatedRegistrationData);
             setOwnedTeams(updatedOwnedTeams);
-
-            if (editingTeamId) {
-                const freshTeam = updatedOwnedTeams.find((team) => team.id === editingTeamId);
-                if (freshTeam) {
-                    applyTeamToForm(freshTeam);
-                } else {
-                    resetTeamEditor();
-                }
-            } else {
-                const currentEventId = teamForm.eventId;
-                const currentLocationId = teamForm.locationId;
-                const currentLeagueId = teamForm.leagueId;
-
-                setTeamForm({
-                    ...emptyTeamForm(),
-                    eventId: currentEventId,
-                    locationId: currentLocationId,
-                    leagueId: currentLeagueId,
-                });
-            }
+            setEditingTeamId(null);
+            setTeamForm(emptyTeamForm());
+            void navigate("/lk/my_team");
         } finally {
             setTeamSaving(false);
         }

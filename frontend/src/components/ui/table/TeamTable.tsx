@@ -38,16 +38,7 @@ function createEmptyTeam(defaultLeagueId?: number | null, defaultLeagueName?: st
         owner_user_id: null,
         owner_name: "",
         name: "",
-        members: {
-            coach: {
-                email: "",
-                full_name: "",
-            },
-            participants: Array.from({ length: 4 }, () => ({
-                school: "",
-                full_name: "",
-            })),
-        },
+        members: Array.from({ length: 4 }, () => ""),
         appreciations: [],
         school: "",
         region: "",

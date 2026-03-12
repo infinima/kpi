@@ -4,20 +4,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { useModalStore } from "@/store";
 
-export type TeamMemberCoach = {
-    email: string;
-    full_name: string;
-};
-
-export type TeamMemberParticipant = {
-    school: string;
-    full_name: string;
-};
-
-export type TeamMembersValue = {
-    coach: TeamMemberCoach;
-    participants: TeamMemberParticipant[];
-};
+export type TeamMembersValue = string[];
 
 export type TeamTableRowData = {
     id: number;
@@ -101,28 +88,23 @@ const diplomaLabels: Record<string, string> = {
 };
 
 function getMembersPreview(members: TeamMembersValue) {
-    const coachName = members.coach.full_name.trim();
-    const participantNames = members.participants
-        .map((participant) => participant.full_name.trim())
+    const participantNames = members
+        .map((participant) => participant.trim())
         .filter(Boolean);
 
-    return [coachName ? `Тренер: ${coachName}` : "", ...participantNames].filter(Boolean).join(", ");
+    return participantNames.join(", ");
 }
 
 function getMembersSummary(members: TeamMembersValue) {
-    const coachName = members.coach.full_name.trim();
-    const participantNames = members.participants
-        .map((participant) => participant.full_name.trim())
+    const participantNames = members
+        .map((participant) => participant.trim())
         .filter(Boolean);
 
-    if (!coachName && participantNames.length === 0) {
+    if (participantNames.length === 0) {
         return "Состав не заполнен";
     }
 
-    return [
-        coachName ? `Тренер: ${coachName}` : null,
-        participantNames.length > 0 ? `Участники: ${participantNames.join(", ")}` : null,
-    ].filter(Boolean).join(" | ");
+    return participantNames.join(", ");
 }
 
 function formatDateTime(value: string | null) {
@@ -141,7 +123,7 @@ function formatDateTime(value: string | null) {
 function displayValue(row: TeamTableRowData, key: TeamColumnKey) {
     switch (key) {
         case "members":
-            return `${row.members.participants.filter((participant) => participant.full_name.trim()).length} участника`;
+            return `${row.members.filter((participant) => participant.trim()).length} участника`;
         case "appreciations":
             return row.appreciations.join(", ");
         case "special_nominations":
@@ -180,9 +162,8 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
             draft.region.trim() &&
             draft.maintainer_full_name.trim() &&
             draft.maintainer_activity.trim() &&
-            draft.members.coach.full_name.trim() &&
-            draft.members.participants.length === 4 &&
-            draft.members.participants.every((participant) => participant.full_name.trim())
+            draft.members.length === 4 &&
+            draft.members.every((participant) => participant.trim())
         );
     }, [draft]);
 
@@ -362,14 +343,14 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "id", label: "ID", width: 0.55, editable: false, type: "number" },
     { key: "league_id", label: "ID лиги", width: 0.8, editable: true, type: "number" },
     { key: "league_name", label: "Лига", width: 1.45, editable: false, type: "text" },
-    { key: "owner_name", label: "Владелец", width: 1.7, editable: false, type: "text" },
+    { key: "owner_name", label: "Руководитель", width: 1.7, editable: false, type: "text" },
     { key: "name", label: "Команда", width: 1.6, editable: true, type: "text" },
     { key: "members", label: "Участники", width: 2.6, editable: true, type: "text" },
-    { key: "appreciations", label: "Благодарности", width: 1.4, editable: true, type: "text" },
-    { key: "school", label: "Учебное заведение", width: 1.9, editable: true, type: "text" },
+    { key: "appreciations", label: "Благодарности", width: 1.75, editable: true, type: "text" },
+    { key: "school", label: "Учебное заведение", width: 2.2, editable: true, type: "text" },
     { key: "region", label: "Регион", width: 1.25, editable: true, type: "text" },
-    { key: "meals_count", label: "Обеды", width: 0.7, editable: true, type: "number" },
-    { key: "maintainer_full_name", label: "Сопровождающий", width: 1.8, editable: true, type: "text" },
+    { key: "meals_count", label: "Обеды", width: 0.95, editable: true, type: "number" },
+    { key: "maintainer_full_name", label: "Сопровождающий", width: 2.1, editable: true, type: "text" },
     { key: "maintainer_activity", label: "Активность", width: 2, editable: true, type: "select", options: maintainerActivityOptions },
     {
         key: "status",
@@ -399,7 +380,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
         ],
     },
     { key: "special_nominations", label: "Номинации", width: 1.7, editable: true, type: "text" },
-    { key: "created_at", label: "Создано", width: 1.15, editable: false, type: "text" },
-    { key: "updated_at", label: "Обновлено", width: 1.15, editable: false, type: "text" },
+    { key: "created_at", label: "Создание", width: 1.15, editable: false, type: "text" },
+    { key: "updated_at", label: "Апдейт", width: 1.15, editable: false, type: "text" },
     { key: "deleted_at", label: "Удалено", width: 1.15, editable: false, type: "text" },
 ];
