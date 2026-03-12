@@ -207,23 +207,27 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
         }
     }
 
+    const rowBaseBackgroundClass = row.status === "ON_CHECKING" && !isEditing
+        ? "bg-[rgba(250,204,21,0.10)]"
+        : "bg-[rgba(255,255,255,0.96)]";
+    const rowHoverClass = !isEditing ? "hover:bg-[rgba(148,163,184,0.08)]" : "";
+    const stickyBackgroundClass = row.status === "ON_CHECKING" && !isEditing
+        ? "bg-[rgba(250,204,21,0.10)] group-hover:bg-[rgba(148,163,184,0.08)]"
+        : "bg-[rgba(255,255,255,0.96)] group-hover:bg-[rgba(148,163,184,0.08)]";
+
     return (
         <>
             <div
-                className={`grid items-center gap-2 px-4 py-1 text-[var(--color-text-main)] hover:bg-[rgba(148,163,184,0.08)] ${
-                    row.status === "ON_CHECKING" && !isEditing
-                        ? "bg-[rgba(250,204,21,0.10)]"
-                        : ""
-                }`}
+                className={`group grid items-center gap-0 px-4 py-1 text-[var(--color-text-main)] ${rowBaseBackgroundClass} ${rowHoverClass}`}
                 style={{
-                    gridTemplateColumns: `${columns.map((column) => `${column.width}fr`).join(" ")} ${actionsWidth}px`,
+                    gridTemplateColumns: `${columns.map((column) => `${column.width}px`).join(" ")} ${actionsWidth}px`,
                 }}
             >
                 {columns.map((column) => {
                     if (column.key === "members") {
                         const changed = isCreating || isTeamCellChanged(draft.members, row.members);
                         return (
-                            <div key={column.key} className="min-w-0">
+                            <div key={column.key} className="min-w-0 px-1">
                                 <button
                                     type="button"
                                     onClick={() => {
@@ -256,7 +260,7 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                     const value = draft[column.key];
 
                     return (
-                        <div key={column.key} className="min-w-0 self-center">
+                        <div key={column.key} className="min-w-0 self-center px-1">
                             {editable ? (
                                 (() => {
                                     const changed = isCreating || isTeamCellChanged(value, row[column.key]);
@@ -311,7 +315,7 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                     );
                 })}
 
-                <div className="flex min-w-0 flex-nowrap items-center justify-end gap-2 whitespace-nowrap">
+                <div className={`sticky right-0 z-10 flex min-w-0 flex-nowrap items-center justify-end gap-2 whitespace-nowrap pl-3 pr-3`}>
                     {isEditing ? (
                         <>
                             <PrimaryButton
@@ -371,22 +375,22 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
 }
 
 export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
-    { key: "id", label: "ID", width: 0.55, editable: false, type: "number" },
-    { key: "league_id", label: "ID лиги", width: 0.9, editable: true, type: "number" },
-    { key: "league_name", label: "Лига", width: 1.8, editable: false, type: "text" },
-    { key: "owner_full_name", label: "Руководитель", width: 2.1, editable: false, type: "text" },
-    { key: "name", label: "Команда", width: 1.9, editable: true, type: "text" },
-    { key: "members", label: "Участники", width: 3, editable: true, type: "text" },
-    { key: "appreciations", label: "Благодарности", width: 2.2, editable: true, type: "text" },
-    { key: "school", label: "Учебное заведение", width: 5.8, editable: true, type: "text" },
-    { key: "region", label: "Регион", width: 3.1, editable: true, type: "text" },
-    { key: "meals_count", label: "Обеды", width: 1.15, editable: true, type: "number" },
-    { key: "maintainer_full_name", label: "Сопровождающий", width: 4.9, editable: true, type: "text" },
-    { key: "maintainer_activity", label: "Активность", width: 4.9, editable: true, type: "select", options: maintainerActivityOptions },
+    { key: "id", label: "ID", width: 70, editable: false, type: "number" },
+    { key: "league_id", label: "ID лиги", width: 83, editable: true, type: "number" },
+    { key: "league_name", label: "Лига", width: 110, editable: false, type: "text" },
+    { key: "owner_full_name", label: "Руководитель", width: 225, editable: false, type: "text" },
+    { key: "name", label: "Команда", width: 110, editable: true, type: "text" },
+    { key: "members", label: "Участники", width: 170, editable: true, type: "text" },
+    { key: "appreciations", label: "Благодарности", width: 210, editable: true, type: "text" },
+    { key: "school", label: "Учебное заведение", width: 420, editable: true, type: "text" },
+    { key: "region", label: "Регион", width: 150, editable: true, type: "text" },
+    { key: "meals_count", label: "Обеды", width: 180, editable: true, type: "number" },
+    { key: "maintainer_full_name", label: "Сопровождающий", width: 230, editable: true, type: "text" },
+    { key: "maintainer_activity", label: "Активность", width: 230, editable: true, type: "select", options: maintainerActivityOptions },
     {
         key: "status",
         label: "Статус",
-        width: 1.25,
+        width: 105,
         editable: true,
         type: "select",
         options: [
@@ -399,7 +403,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     {
         key: "diploma",
         label: "Диплом",
-        width: 1.2,
+        width: 90,
         editable: true,
         type: "select",
         options: [
@@ -410,8 +414,8 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "Участник", value: "PARTICIPANT" },
         ],
     },
-    { key: "special_nominations", label: "Номинации", width: 2, editable: true, type: "text" },
-    { key: "created_at", label: "Создание", width: 1.3, editable: false, type: "text" },
-    { key: "updated_at", label: "Апдейт", width: 1.3, editable: false, type: "text" },
-    { key: "deleted_at", label: "Удалено", width: 1.3, editable: false, type: "text" },
+    { key: "special_nominations", label: "Номинации", width: 150, editable: true, type: "text" },
+    { key: "created_at", label: "Создание", width: 160, editable: false, type: "text" },
+    { key: "updated_at", label: "Обновлено", width: 160, editable: false, type: "text" },
+    { key: "deleted_at", label: "Удалено", width: 160, editable: false, type: "text" },
 ];
