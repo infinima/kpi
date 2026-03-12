@@ -1,7 +1,7 @@
 import {useEffect} from "react";
 import NotificationCenter from "@/components/services/NotificationCenter";
 import { ModalContainer } from "@/components/modals/ModalContainer";
-import {BrowserRouter, Route, Routes} from "react-router-dom";
+import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
 import ExamplePage from "@/pages/ExamplePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import HomePage from "@/pages/HomePage";
@@ -45,7 +45,8 @@ export default function App() {
                 <Route path="/indev" element={<NotReadyPage pageName={"В разработке"} />} />
                 <Route path="/example" element={<ExamplePage />} />
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/lk" element={<LkPage />} />
+                <Route path="/lk" element={<Navigate to="/lk/me" replace />} />
+                <Route path="/lk/*" element={<LkPage />} />
                 <Route path="/offer" element={<OfferPage />} />
                 <Route path="*" element={<NotFoundPage />} />
 

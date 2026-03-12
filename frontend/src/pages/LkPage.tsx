@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
     CalendarDays,
@@ -9,6 +9,8 @@ import {
     LogIn,
     LogOut,
     MapPin,
+    Pencil,
+    PlusSquare,
     Trophy,
     Users
 } from "lucide-react";
@@ -19,7 +21,7 @@ import OutlineButton from "@/components/ui/OutlineButton";
 import { apiGet, apiPatch, apiPost } from "@/api";
 import { useNotifications, useUser } from "@/store";
 
-type CabinetTab = "profile" | "registration";
+type CabinetSection = "me" | "my_team" | "reg_team";
 
 type ProfileResponse = {
     id: number;
@@ -55,6 +57,51 @@ type RegistrationEvent = {
     name: string;
     date: string;
     locations: RegistrationLocation[];
+};
+
+type OwnedTeam = {
+    id: number;
+    league_id: number;
+    owner_user_id: number | null;
+    name: string;
+    members: string[];
+    appreciations: string[];
+    school: string;
+    region: string;
+    meals_count: number;
+    maintainer_full_name: string | null;
+    maintainer_activity: string | null;
+    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID";
+    created_at: string;
+    updated_at: string;
+    event_id?: number;
+    event_name?: string;
+    event_date?: string;
+    location_id?: number;
+    location_name?: string;
+    location_address?: string;
+    league_name?: string;
+    league_status?: string;
+};
+
+type LeagueDetails = {
+    id: number;
+    location_id: number;
+    name: string;
+    status: string;
+};
+
+type LocationDetails = {
+    id: number;
+    event_id: number;
+    name: string;
+    address: string;
+};
+
+type EventDetails = {
+    id: number;
+    name: string;
+    date: string;
 };
 
 type ProfileFormState = {
@@ -142,6 +189,21 @@ const regionOptions = [
 const customSchoolValue = "свое название";
 const customRegionValue = "свой регион";
 
+const teamStatusLabels: Record<OwnedTeam["status"], string> = {
+    IN_RESERVE: "В резерве",
+    ON_CHECKING: "На проверке",
+    ACCEPTED: "Принята",
+    PAID: "Оплачена",
+};
+
+function getTeamStatusLabel(status: OwnedTeam["status"] | undefined) {
+    if (!status) {
+        return "Неизвестно";
+    }
+
+    return teamStatusLabels[status] ?? status;
+}
+
 const emptyTeamForm = (): TeamFormState => ({
     eventId: "",
     locationId: "",
@@ -181,14 +243,28 @@ function formatEventDate(value: string) {
     }
 }
 
+function formatDateTime(value: string) {
+    try {
+        return new Date(value).toLocaleString("ru-RU", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    } catch {
+        return value;
+    }
+}
+
 export default function LkPage() {
+    const location = useLocation();
+    const navigate = useNavigate();
     const user = useUser((state) => state.user);
     const token = useUser((state) => state.token);
     const fetchUser = useUser((state) => state.fetchUser);
     const logout = useUser((state) => state.logout);
     const notify = useNotifications((state) => state.addMessage);
-
-    const [activeTab, setActiveTab] = useState<CabinetTab>("profile");
 
     const [profileForm, setProfileForm] = useState<ProfileFormState>({
         first_name: "",
@@ -202,8 +278,11 @@ export default function LkPage() {
 
     const [registrationData, setRegistrationData] = useState<RegistrationEvent[]>([]);
     const [registrationLoading, setRegistrationLoading] = useState(false);
+    const [ownedTeams, setOwnedTeams] = useState<OwnedTeam[]>([]);
+    const [ownedTeamsLoading, setOwnedTeamsLoading] = useState(false);
     const [teamSaving, setTeamSaving] = useState(false);
     const [teamForm, setTeamForm] = useState<TeamFormState>(emptyTeamForm);
+    const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
 
     useEffect(() => {
         if (!user?.id) {
@@ -273,6 +352,61 @@ export default function LkPage() {
         };
     }, [token]);
 
+    useEffect(() => {
+        if (!token) {
+            return;
+        }
+
+        let cancelled = false;
+
+        async function loadOwnedTeams() {
+            try {
+                setOwnedTeamsLoading(true);
+                const data = await apiGet<OwnedTeam[]>("teams/my", { error: true });
+
+                const enrichedTeams = await Promise.all(
+                    data.map(async (team) => {
+                        try {
+                            const league = await apiGet<LeagueDetails>(`leagues/${team.league_id}`);
+                            const location = await apiGet<LocationDetails>(`locations/${league.location_id}`);
+                            const event = await apiGet<EventDetails>(`events/${location.event_id}`);
+
+                            return {
+                                ...team,
+                                league_name: league.name,
+                                league_status: league.status,
+                                location_id: location.id,
+                                location_name: location.name,
+                                location_address: location.address,
+                                event_id: event.id,
+                                event_name: event.name,
+                                event_date: event.date,
+                            };
+                        } catch {
+                            return team;
+                        }
+                    })
+                );
+
+                if (cancelled) {
+                    return;
+                }
+
+                setOwnedTeams(enrichedTeams);
+            } finally {
+                if (!cancelled) {
+                    setOwnedTeamsLoading(false);
+                }
+            }
+        }
+
+        void loadOwnedTeams();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [token]);
+
     const selectedEvent = useMemo(
         () => registrationData.find((event) => String(event.id) === teamForm.eventId) ?? null,
         [registrationData, teamForm.eventId]
@@ -289,12 +423,33 @@ export default function LkPage() {
     );
 
     const availablePlaces = useMemo(() => {
+        if (editingTeamId) {
+            return null;
+        }
+
         if (!selectedLeague) {
             return null;
         }
 
         return Math.max(0, selectedLeague.max_teams_count - selectedLeague.teams_count);
-    }, [selectedLeague]);
+    }, [editingTeamId, selectedLeague]);
+
+    const editingTeam = useMemo(
+        () => ownedTeams.find((team) => team.id === editingTeamId) ?? null,
+        [editingTeamId, ownedTeams]
+    );
+
+    const activeSection = useMemo<CabinetSection>(() => {
+        if (location.pathname === "/lk/reg_tezm" || location.pathname === "/lk/reg_team") {
+            return "reg_team";
+        }
+
+        if (location.pathname === "/lk/my_team") {
+            return "my_team";
+        }
+
+        return "me";
+    }, [location.pathname]);
 
     useEffect(() => {
         if (registrationData.length === 0) {
@@ -349,6 +504,33 @@ export default function LkPage() {
 
     function handleProfileFieldChange(field: keyof ProfileFormState, value: string) {
         setProfileForm((prev) => ({ ...prev, [field]: value }));
+    }
+
+    function applyTeamToForm(team: OwnedTeam) {
+        setEditingTeamId(team.id);
+        setTeamForm({
+            eventId: team.event_id ? String(team.event_id) : "",
+            locationId: team.location_id ? String(team.location_id) : "",
+            leagueId: String(team.league_id),
+            name: team.name ?? "",
+            school: team.school ?? "",
+            schoolMode: schoolOptions.includes(team.school) ? team.school : customSchoolValue,
+            region: team.region ?? "",
+            regionMode: regionOptions.includes(team.region) ? team.region : customRegionValue,
+            members: Array.isArray(team.members) && team.members.length === 4 ? team.members : ["", "", "", ""],
+            appreciationsText: Array.isArray(team.appreciations) ? team.appreciations.join("\n") : "",
+            meals_count: String(team.meals_count ?? 0),
+            maintainer_full_name: team.maintainer_full_name ?? "",
+            maintainer_activity: team.maintainer_activity ?? "",
+            isReserve: team.status === "IN_RESERVE",
+            acceptedOffer: true,
+        });
+        void navigate("/lk/reg_team");
+    }
+
+    function resetTeamEditor() {
+        setEditingTeamId(null);
+        setTeamForm(emptyTeamForm());
     }
 
     function handleMemberChange(index: number, value: string) {
@@ -419,12 +601,12 @@ export default function LkPage() {
     }
 
     async function handleTeamSubmit() {
-        if (!teamForm.eventId || !teamForm.locationId || !teamForm.leagueId) {
+        if (!editingTeamId && (!teamForm.eventId || !teamForm.locationId || !teamForm.leagueId)) {
             notify({ type: "warning", text: "Выберите мероприятие, площадку и лигу" });
             return;
         }
 
-        if (availablePlaces === 0 && !teamForm.isReserve) {
+        if (!editingTeamId && availablePlaces === 0 && !teamForm.isReserve) {
             notify({ type: "warning", text: "Свободных мест нет. Включите запись в очередь." });
             return;
         }
@@ -445,7 +627,7 @@ export default function LkPage() {
             return;
         }
 
-        if (!teamForm.acceptedOffer) {
+        if (!editingTeamId && !teamForm.acceptedOffer) {
             notify({ type: "warning", text: "Подтвердите согласие с офертой" });
             return;
         }
@@ -458,10 +640,7 @@ export default function LkPage() {
 
         try {
             setTeamSaving(true);
-            await apiPost("teams", {
-                league_id: Number(teamForm.leagueId),
-                owner_user_id: user.id,
-                is_reserve: teamForm.isReserve,
+            const payload = {
                 name: teamForm.name.trim(),
                 members: teamForm.members.map((member) => member.trim()),
                 appreciations: teamForm.appreciationsText
@@ -473,24 +652,74 @@ export default function LkPage() {
                 meals_count: mealsCount,
                 maintainer_full_name: teamForm.maintainer_full_name.trim() || null,
                 maintainer_activity: teamForm.maintainer_activity || null,
-            }, {
-                success: "Команда зарегистрирована",
-                error: true,
-            });
+            };
 
-            const currentEventId = teamForm.eventId;
-            const currentLocationId = teamForm.locationId;
-            const currentLeagueId = teamForm.leagueId;
+            if (editingTeamId) {
+                await apiPatch(`teams/${editingTeamId}`, payload, {
+                    success: "Команда обновлена",
+                    error: true,
+                });
+            } else {
+                await apiPost("teams", {
+                    league_id: Number(teamForm.leagueId),
+                    owner_user_id: user?.id,
+                    is_reserve: teamForm.isReserve,
+                    ...payload,
+                }, {
+                    success: "Команда зарегистрирована",
+                    error: true,
+                });
+            }
 
-            setTeamForm({
-                ...emptyTeamForm(),
-                eventId: currentEventId,
-                locationId: currentLocationId,
-                leagueId: currentLeagueId,
-            });
+            const [updatedRegistrationData, updatedOwnedTeams] = await Promise.all([
+                apiGet<RegistrationEvent[]>("events/registration"),
+                apiGet<OwnedTeam[]>("teams/my").then(async (teams) => Promise.all(
+                    teams.map(async (team) => {
+                        try {
+                            const league = await apiGet<LeagueDetails>(`leagues/${team.league_id}`);
+                            const location = await apiGet<LocationDetails>(`locations/${league.location_id}`);
+                            const event = await apiGet<EventDetails>(`events/${location.event_id}`);
 
-            const updatedRegistrationData = await apiGet<RegistrationEvent[]>("events/registration");
+                            return {
+                                ...team,
+                                league_name: league.name,
+                                league_status: league.status,
+                                location_id: location.id,
+                                location_name: location.name,
+                                location_address: location.address,
+                                event_id: event.id,
+                                event_name: event.name,
+                                event_date: event.date,
+                            };
+                        } catch {
+                            return team;
+                        }
+                    })
+                )),
+            ]);
+
             setRegistrationData(updatedRegistrationData);
+            setOwnedTeams(updatedOwnedTeams);
+
+            if (editingTeamId) {
+                const freshTeam = updatedOwnedTeams.find((team) => team.id === editingTeamId);
+                if (freshTeam) {
+                    applyTeamToForm(freshTeam);
+                } else {
+                    resetTeamEditor();
+                }
+            } else {
+                const currentEventId = teamForm.eventId;
+                const currentLocationId = teamForm.locationId;
+                const currentLeagueId = teamForm.leagueId;
+
+                setTeamForm({
+                    ...emptyTeamForm(),
+                    eventId: currentEventId,
+                    locationId: currentLocationId,
+                    leagueId: currentLeagueId,
+                });
+            }
         } finally {
             setTeamSaving(false);
         }
@@ -578,38 +807,47 @@ export default function LkPage() {
 
                 <div className="mt-10 grid gap-8 lg:grid-cols-[260px_minmax(0,1fr)]">
                     <aside className="rounded-[32px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.80)] p-4 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("profile")}
-                            className={`flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeTab === "profile" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                        <Link
+                            to="/lk/me"
+                            className={`flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeSection === "me" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
                         >
                             <span className="flex items-center gap-3">
                                 <CircleUserRound size={18} />
                                 <span>Личные данные</span>
                             </span>
                             <ChevronRight size={16} />
-                        </button>
+                        </Link>
 
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("registration")}
-                            className={`mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeTab === "registration" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                        <Link
+                            to="/lk/my_team"
+                            className={`mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeSection === "my_team" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
                         >
                             <span className="flex items-center gap-3">
                                 <Trophy size={18} />
-                                <span>Регистрация на турнир</span>
+                                <span>Мои команды</span>
                             </span>
                             <ChevronRight size={16} />
-                        </button>
+                        </Link>
+
+                        <Link
+                            to="/lk/reg_team"
+                            className={`mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeSection === "reg_team" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                        >
+                            <span className="flex items-center gap-3">
+                                <PlusSquare size={18} />
+                                <span>Регистрация команды</span>
+                            </span>
+                            <ChevronRight size={16} />
+                        </Link>
                     </aside>
 
                     <motion.div
-                        key={activeTab}
+                        key={activeSection}
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="rounded-[36px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] p-6 shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8"
                     >
-                        {activeTab === "profile" ? (
+                        {activeSection === "me" ? (
                             <div>
                                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                     <div>
@@ -684,12 +922,179 @@ export default function LkPage() {
                                     </PrimaryButton>
                                 </div>
                             </div>
+                        ) : activeSection === "my_team" ? (
+                            <div>
+                                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                    <div className="max-w-2xl">
+                                        <h2 className="text-2xl font-semibold text-[var(--color-text-main)]">
+                                            Мои команды
+                                        </h2>
+                                        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                                            Здесь собраны все ваши заявки. Можно посмотреть текущий статус и открыть нужную команду на редактирование.
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                                        <InfoBadge
+                                            icon={<Users size={14} />}
+                                            text={`Команд: ${ownedTeams.length}`}
+                                        />
+                                        <Link to="/lk/reg_team">
+                                            <PrimaryButton active leftIcon={<PlusSquare size={16} />}>
+                                                Новая команда
+                                            </PrimaryButton>
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                {ownedTeamsLoading ? (
+                                    <div className="mt-8 rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.65)] p-6 text-sm text-[var(--color-text-secondary)]">
+                                        Загружаем ваши команды...
+                                    </div>
+                                ) : ownedTeams.length === 0 ? (
+                                    <div className="mt-8 rounded-[32px] border border-dashed border-[var(--color-border)] bg-[rgba(255,255,255,0.55)] p-8">
+                                        <h3 className="text-lg font-semibold text-[var(--color-text-main)]">
+                                            Команд пока нет
+                                        </h3>
+                                        <p className="mt-2 max-w-xl text-sm text-[var(--color-text-secondary)]">
+                                            Создайте первую заявку на турнир. После отправки она появится на этой странице со статусом и возможностью редактирования.
+                                        </p>
+                                        <div className="mt-6">
+                                            <Link to="/lk/reg_team">
+                                                <PrimaryButton active leftIcon={<PlusSquare size={16} />}>
+                                                    Перейти к регистрации
+                                                </PrimaryButton>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="mt-8 grid gap-5">
+                                        {ownedTeams.map((team) => (
+                                            <div
+                                                key={team.id}
+                                                className={`rounded-[32px] border p-6 transition ${
+                                                    editingTeamId === team.id
+                                                        ? "border-[var(--color-primary)] bg-[rgba(255,255,255,0.96)] shadow-[0_18px_50px_rgba(15,23,42,0.10)]"
+                                                        : "border-[var(--color-border)] bg-[rgba(255,255,255,0.74)]"
+                                                }`}
+                                            >
+                                                <div className="flex flex-col gap-6">
+                                                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                                                        <div className="space-y-4">
+                                                            <div className="flex flex-wrap items-center gap-3">
+                                                                <h4 className="text-lg font-semibold text-[var(--color-text-main)]">
+                                                                    {team.name}
+                                                                </h4>
+                                                                <span className="rounded-full bg-[rgba(15,23,42,0.06)] px-3 py-1 text-xs font-medium text-[var(--color-text-secondary)]">
+                                                                    {getTeamStatusLabel(team.status)}
+                                                                </span>
+                                                                {editingTeamId === team.id ? (
+                                                                    <span className="rounded-full bg-[rgba(14,116,144,0.12)] px-3 py-1 text-xs font-medium text-[var(--color-primary)]">
+                                                                        Сейчас редактируется
+                                                                    </span>
+                                                                ) : null}
+                                                            </div>
+
+                                                            <div className="flex flex-wrap gap-3">
+                                                                <InfoBadge
+                                                                    icon={<Trophy size={14} />}
+                                                                    text={team.event_name}
+                                                                />
+                                                                <InfoBadge
+                                                                    icon={<MapPin size={14} />}
+                                                                    text={team.location_name}
+                                                                />
+                                                                <InfoBadge
+                                                                    icon={<Users size={14} />}
+                                                                    text={team.league_name}
+                                                                />
+                                                                <InfoBadge
+                                                                    icon={<CalendarDays size={14} />}
+                                                                    text={formatEventDate(team.event_date)}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex flex-col gap-3 sm:flex-row">
+                                                            <OutlineButton
+                                                                active
+                                                                leftIcon={<Pencil size={16} />}
+                                                                onClick={() => applyTeamToForm(team)}
+                                                            >
+                                                                Изменить
+                                                            </OutlineButton>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                                                        <div className="rounded-[24px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] p-5">
+                                                            <p className="text-sm font-medium text-[var(--color-text-main)]">
+                                                                Состав команды
+                                                            </p>
+                                                            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                                                                {team.members.map((member, index) => (
+                                                                    <div
+                                                                        key={`${team.id}-${index}`}
+                                                                        className="rounded-2xl bg-white/80 px-4 py-3 text-sm text-[var(--color-text-main)]"
+                                                                    >
+                                                                        <span className="block text-xs text-[var(--color-text-secondary)]">
+                                                                            Участник {index + 1}
+                                                                        </span>
+                                                                        <span className="mt-1 block font-medium">
+                                                                            {member}
+                                                                        </span>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="rounded-[24px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] p-5">
+                                                            <p className="text-sm font-medium text-[var(--color-text-main)]">
+                                                                Данные заявки
+                                                            </p>
+                                                            <div className="mt-4 space-y-3 text-sm">
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Статус</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{getTeamStatusLabel(team.status)}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Учебное заведение</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{team.school}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Регион</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{team.region}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Сопровождающий</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{team.maintainer_full_name || "Не указан"}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Активность сопровождающего</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{team.maintainer_activity || "Не выбрана"}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Количество обедов</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{team.meals_count}</p>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[var(--color-text-secondary)]">Обновлено</span>
+                                                                    <p className="mt-1 text-[var(--color-text-main)]">{formatDateTime(team.updated_at)}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         ) : (
                             <div>
                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                                     <div className="max-w-2xl">
                                         <h2 className="text-2xl font-semibold text-[var(--color-text-main)]">
-                                            Регистрация на турнир
+                                            Регистрация команды
                                         </h2>
                                     </div>
 
@@ -711,65 +1116,107 @@ export default function LkPage() {
                                     <p className="mt-8 text-sm text-[var(--color-text-secondary)]">
                                         Загружаем доступные турниры...
                                     </p>
-                                ) : registrationData.length === 0 ? (
+                                ) : registrationData.length === 0 && !editingTeam ? (
                                     <div className="mt-8 rounded-[28px] border border-dashed border-[var(--color-border)] bg-[rgba(255,255,255,0.55)] p-6 text-sm text-[var(--color-text-secondary)]">
                                         Сейчас нет лиг с открытой регистрацией.
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="mt-8 grid gap-5 lg:grid-cols-3">
-                                            <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Мероприятие</span>
-                                                <select
-                                                    value={teamForm.eventId}
-                                                    onChange={(event) => handleEventChange(event.target.value)}
-                                                    className={inputClassName}
-                                                >
-                                                    <option value="">Выберите мероприятие</option>
-                                                    {registrationData.map((event) => (
-                                                        <option key={event.id} value={event.id}>
-                                                            {event.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </label>
+                                        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                            <div>
+                                                <h3 className="text-lg font-semibold text-[var(--color-text-main)]">
+                                                    {editingTeam ? `Редактирование команды «${editingTeam.name}»` : "Новая заявка"}
+                                                </h3>
+                                            </div>
 
-                                            <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Площадка</span>
-                                                <select
-                                                    value={teamForm.locationId}
-                                                    onChange={(event) => handleLocationChange(event.target.value)}
-                                                    className={inputClassName}
-                                                    disabled={!selectedEvent}
+                                            {editingTeam ? (
+                                                <OutlineButton
+                                                    active
+                                                    onClick={resetTeamEditor}
                                                 >
-                                                    <option value="">Выберите площадку</option>
-                                                    {selectedEvent?.locations.map((location) => (
-                                                        <option key={location.id} value={location.id}>
-                                                            {location.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </label>
-
-                                            <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Лига</span>
-                                                <select
-                                                    value={teamForm.leagueId}
-                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, leagueId: event.target.value }))}
-                                                    className={inputClassName}
-                                                    disabled={!selectedLocation}
-                                                >
-                                                    <option value="">Выберите лигу</option>
-                                                    {selectedLocation?.leagues.map((league) => (
-                                                        <option key={league.id} value={league.id}>
-                                                            {league.name}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </label>
+                                                    Отменить редактирование
+                                                </OutlineButton>
+                                            ) : null}
                                         </div>
 
-                                        {selectedEvent ? (
+                                        {editingTeam ? (
+                                            <div className="mt-6 flex flex-wrap gap-3">
+                                                <InfoBadge
+                                                    icon={<Check size={14} />}
+                                                    text={`Статус: ${getTeamStatusLabel(editingTeam.status)}`}
+                                                />
+                                                <InfoBadge
+                                                    icon={<CalendarDays size={14} />}
+                                                    text={`Дата: ${formatEventDate(editingTeam.event_date)}`}
+                                                />
+                                                <InfoBadge
+                                                    icon={<Trophy size={14} />}
+                                                    text={`Мероприятие: ${editingTeam.event_name}`}
+                                                />
+                                                <InfoBadge
+                                                    icon={<MapPin size={14} />}
+                                                    text={`Площадка: ${editingTeam.location_name}`}
+                                                />
+                                                <InfoBadge
+                                                    icon={<Users size={14} />}
+                                                    text={`Лига: ${editingTeam.league_name}`}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <div className="mt-8 grid gap-5 lg:grid-cols-3">
+                                                <label className="block space-y-2">
+                                                    <span className="text-sm text-[var(--color-text-secondary)]">Мероприятие</span>
+                                                    <select
+                                                        value={teamForm.eventId}
+                                                        onChange={(event) => handleEventChange(event.target.value)}
+                                                        className={inputClassName}
+                                                    >
+                                                        <option value="">Выберите мероприятие</option>
+                                                        {registrationData.map((event) => (
+                                                            <option key={event.id} value={event.id}>
+                                                                {event.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+
+                                                <label className="block space-y-2">
+                                                    <span className="text-sm text-[var(--color-text-secondary)]">Площадка</span>
+                                                    <select
+                                                        value={teamForm.locationId}
+                                                        onChange={(event) => handleLocationChange(event.target.value)}
+                                                        className={inputClassName}
+                                                        disabled={!selectedEvent}
+                                                    >
+                                                        <option value="">Выберите площадку</option>
+                                                        {selectedEvent?.locations.map((location) => (
+                                                            <option key={location.id} value={location.id}>
+                                                                {location.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+
+                                                <label className="block space-y-2">
+                                                    <span className="text-sm text-[var(--color-text-secondary)]">Лига</span>
+                                                    <select
+                                                        value={teamForm.leagueId}
+                                                        onChange={(event) => setTeamForm((prev) => ({ ...prev, leagueId: event.target.value }))}
+                                                        className={inputClassName}
+                                                        disabled={!selectedLocation}
+                                                    >
+                                                        <option value="">Выберите лигу</option>
+                                                        {selectedLocation?.leagues.map((league) => (
+                                                            <option key={league.id} value={league.id}>
+                                                                {league.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </label>
+                                            </div>
+                                        )}
+
+                                        {!editingTeam && selectedEvent ? (
                                             <div className="mt-6 flex flex-wrap gap-3">
                                                 <InfoBadge
                                                     icon={<CalendarDays size={14} />}
@@ -908,7 +1355,7 @@ export default function LkPage() {
                                                 />
                                             </label>
 
-                                            {availablePlaces === 0 ? (
+                                            {!editingTeam && availablePlaces === 0 ? (
                                                 <label className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] px-4 py-3 sm:col-span-2">
                                                     <span className="text-sm font-medium text-[var(--color-text-main)]">
                                                         Записаться в резерв
@@ -939,38 +1386,42 @@ export default function LkPage() {
                                             </label>
                                         </div>
 
-                                        <label className="mt-6 flex items-start gap-3 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] px-4 py-4">
-                                            <input
-                                                type="checkbox"
-                                                checked={teamForm.acceptedOffer}
-                                                onChange={(event) => setTeamForm((prev) => ({ ...prev, acceptedOffer: event.target.checked }))}
-                                                className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
-                                            />
-                                            <span className="text-sm text-[var(--color-text-secondary)]">
-                                                Вы подтверждаете{" "}
-                                                <Link to="/offer" className="text-[var(--color-primary)] underline underline-offset-2">
-                                                    оферту
-                                                </Link>
-                                                .
-                                            </span>
-                                        </label>
+                                        {!editingTeam ? (
+                                            <label className="mt-6 flex items-start gap-3 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] px-4 py-4">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={teamForm.acceptedOffer}
+                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, acceptedOffer: event.target.checked }))}
+                                                    className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
+                                                />
+                                                <span className="text-sm text-[var(--color-text-secondary)]">
+                                                    Вы подтверждаете{" "}
+                                                    <Link to="/offer" className="text-[var(--color-primary)] underline underline-offset-2">
+                                                        оферту
+                                                    </Link>
+                                                    .
+                                                </span>
+                                            </label>
+                                        ) : null}
 
                                         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                             <div className="flex flex-col gap-3 sm:flex-row">
                                                 <OutlineButton
                                                     active
-                                                    onClick={() => setTeamForm(emptyTeamForm())}
+                                                    onClick={editingTeam ? resetTeamEditor : () => setTeamForm(emptyTeamForm())}
                                                 >
-                                                    Сбросить
+                                                    {editingTeam ? "Отменить" : "Сбросить"}
                                                 </OutlineButton>
                                                 <PrimaryButton
                                                     active
                                                     loading={teamSaving}
-                                                    loadingText={teamForm.isReserve ? "Записываем в очередь..." : "Отправляем..."}
+                                                    loadingText={editingTeam ? "Сохраняем..." : (teamForm.isReserve ? "Записываем в очередь..." : "Отправляем...")}
                                                     leftIcon={<Check size={18} />}
                                                     onClick={handleTeamSubmit}
                                                 >
-                                                    {teamForm.isReserve ? "Зарегистрироваться в очередь" : "Подать заявку"}
+                                                    {editingTeam
+                                                        ? "Сохранить изменения"
+                                                        : (teamForm.isReserve ? "Зарегистрироваться в очередь" : "Подать заявку")}
                                                 </PrimaryButton>
                                             </div>
                                         </div>

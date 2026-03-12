@@ -1,189 +1,234 @@
 import { create } from "zustand";
-import {PhotosModal} from "@/components/layout/PhotosModal";
+import { useModalStore } from "./useModalStore";
 
 interface UIState {
-  mobileMenuOpen: boolean;
-  toggleMobileMenu: () => void;
-  closeMobileMenu: () => void;
+    mobileMenuOpen: boolean;
+    toggleMobileMenu: () => void;
+    closeMobileMenu: () => void;
 
-  loginModalOpen: boolean;
-  openLoginModal: () => void;
-  closeLoginModal: () => void;
+    loginModalOpen: boolean;
+    openLoginModal: () => void;
+    closeLoginModal: () => void;
 
-  theme: "light" | "dark";
-  toggleTheme: () => void;
+    theme: "light" | "dark";
+    toggleTheme: () => void;
 
-  // FORM MODAL
-  formModalOpen: boolean;
-  formConfig: any | null;
-  formData: any | null;
-  openFormModal: (config: any, data: any | null) => void;
-  closeFormModal: () => void;
+    formModalOpen: boolean;
+    formConfig: any | null;
+    formData: any | null;
+    openFormModal: (config: any, data: any | null) => void;
+    closeFormModal: () => void;
 
-  // PROFILE
-  profileModalOpen: boolean;
-  openProfileModal: () => void;
-  closeProfileModal: () => void;
+    profileModalOpen: boolean;
+    openProfileModal: () => void;
+    closeProfileModal: () => void;
 
-  // 🔥 RIGHTS MODAL
-  rightsModalOpen: boolean;
-  rightsUserId: number | null;
-  rightsUserName: string | null;
-  openRightsModal: (userId: number, userName: string ) => void;
-  closeRightsModal: () => void;
+    rightsModalOpen: boolean;
+    rightsUserId: number | null;
+    rightsUserName: string | null;
+    openRightsModal: (userId: number, userName: string) => void;
+    closeRightsModal: () => void;
 
-  hoveredColumn: number | null;
-  setHoveredColumn: (col: number | null) => void;
+    hoveredColumn: number | null;
+    setHoveredColumn: (col: number | null) => void;
 
-  dualMode: boolean;
-  toggleDualMode: () => void;
+    dualMode: boolean;
+    toggleDualMode: () => void;
 
-  logModal: boolean;
-  logModalId: number | null;
-  logModalName: string | null;
-  openLogModal: (id: number, name: string) => void;
-  closeLogModal: () => void;
+    logModal: boolean;
+    logModalId: number | null;
+    logModalName: string | null;
+    openLogModal: (id: number, name: string) => void;
+    closeLogModal: () => void;
 
-  logUserModal: boolean;
-  logUserModalId: number | null;
-  openUserLogModal: (id: number) => void;
-  closeUserLogModal: () => void;
+    logUserModal: boolean;
+    logUserModalId: number | null;
+    openUserLogModal: (id: number) => void;
+    closeUserLogModal: () => void;
 
-  importZuevaOpen: boolean,
-  openImportZueva: () => void,
-  closeImportZueva: () => void,
+    importZuevaOpen: boolean;
+    openImportZueva: () => void;
+    closeImportZueva: () => void;
 
-  PhotosModal: boolean,
-  openPhotoModal: () => void,
-  closePhotoModal: () => void,
+    PhotosModal: boolean;
+    openPhotoModal: () => void;
+    closePhotoModal: () => void;
 
-  logTableModal: boolean;
-  logTableModalType: "fudzi" |"kvartaly" | null;
-  logTableModalId: number | null;
-  openTableLogModal: (type: "fudzi" |"kvartaly", id: number) => void;
-  closeTableLogModal: () => void;
+    logTableModal: boolean;
+    logTableModalType: "fudzi" | "kvartaly" | null;
+    logTableModalId: number | null;
+    openTableLogModal: (type: "fudzi" | "kvartaly", id: number) => void;
+    closeTableLogModal: () => void;
 
-  // in useUI store
-  openLeagueAccountsModal: (leagueId: number) => void,
-  closeLeagueAccountsModal: () => void,
-  leagueAccountsModal: {
-    open: boolean,
-    leagueId: number | null
-  }
+    openLeagueAccountsModal: (leagueId: number) => void;
+    closeLeagueAccountsModal: () => void;
+    leagueAccountsModal: {
+        open: boolean;
+        leagueId: number | null;
+    };
+}
+
+function closeAllGlobalModals(set: (partial: Partial<UIState>) => void) {
+    set({
+        loginModalOpen: false,
+        profileModalOpen: false,
+        rightsModalOpen: false,
+        rightsUserId: null,
+        rightsUserName: null,
+        logModal: false,
+        logModalId: null,
+        logModalName: null,
+        logUserModal: false,
+        logUserModalId: null,
+        PhotosModal: false,
+        logTableModal: false,
+        logTableModalType: null,
+        logTableModalId: null,
+        leagueAccountsModal: { open: false, leagueId: null },
+    });
 }
 
 export const useUI = create<UIState>((set, get) => ({
-  // MENU
-  mobileMenuOpen: false,
-  toggleMobileMenu: () =>
-    set((s) => ({ mobileMenuOpen: !s.mobileMenuOpen })),
-  closeMobileMenu: () => set({ mobileMenuOpen: false }),
+    mobileMenuOpen: false,
+    toggleMobileMenu: () => set((state) => ({ mobileMenuOpen: !state.mobileMenuOpen })),
+    closeMobileMenu: () => set({ mobileMenuOpen: false }),
 
-  // LOGIN
-  loginModalOpen: false,
-  openLoginModal: () => set({ loginModalOpen: true }),
-  closeLoginModal: () => set({ loginModalOpen: false }),
+    loginModalOpen: false,
+    openLoginModal: () => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("login");
+        set({ loginModalOpen: true });
+    },
+    closeLoginModal: () => {
+        useModalStore.getState().closeModal();
+        set({ loginModalOpen: false });
+    },
 
-  // THEME
-  theme: localStorage.getItem("theme") === "dark" ? "dark" : "light",
-  toggleTheme: () => {
-    const next = get().theme === "dark" ? "light" : "dark";
-    set({ theme: next });
-    localStorage.setItem("theme", next);
-    document.documentElement.classList.toggle("dark", next === "dark");
-  },
+    theme: localStorage.getItem("theme") === "dark" ? "dark" : "light",
+    toggleTheme: () => {
+        const next = get().theme === "dark" ? "light" : "dark";
+        set({ theme: next });
+        localStorage.setItem("theme", next);
+        document.documentElement.classList.toggle("dark", next === "dark");
+    },
 
-  // FORM MODAL
-  formModalOpen: false,
-  formConfig: null,
-  formData: null,
+    formModalOpen: false,
+    formConfig: null,
+    formData: null,
+    openFormModal: (config, data) => {
+        set({
+            formModalOpen: true,
+            formConfig: config,
+            formData: data,
+        });
+    },
+    closeFormModal: () => {
+        set({
+            formModalOpen: false,
+            formConfig: null,
+            formData: null,
+        });
+    },
 
-  openFormModal: (config, data) =>
-    set({
-      formModalOpen: true,
-      formConfig: config,
-      formData: data,
-    }),
+    profileModalOpen: false,
+    openProfileModal: () => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("profile");
+        set({ profileModalOpen: true });
+    },
+    closeProfileModal: () => {
+        useModalStore.getState().closeModal();
+        set({ profileModalOpen: false });
+    },
 
-  closeFormModal: () =>
-    set({
-      formModalOpen: false,
-      formConfig: null,
-      formData: null,
-    }),
+    rightsModalOpen: false,
+    rightsUserId: null,
+    rightsUserName: null,
+    openRightsModal: (userId, userName) => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("rights", { userId, userName });
+        set({
+            rightsModalOpen: true,
+            rightsUserId: userId,
+            rightsUserName: userName,
+        });
+    },
+    closeRightsModal: () => {
+        useModalStore.getState().closeModal();
+        set({
+            rightsModalOpen: false,
+            rightsUserId: null,
+            rightsUserName: null,
+        });
+    },
 
-  // PROFILE
-  profileModalOpen: false,
-  openProfileModal: () => set({ profileModalOpen: true }),
-  closeProfileModal: () => set({ profileModalOpen: false }),
+    hoveredColumn: null,
+    setHoveredColumn: (col) => set({ hoveredColumn: col }),
 
-  // 🔥 RIGHTS MODAL (новое)
-  rightsModalOpen: false,
-  rightsUserId: null,
-  rightsUserName: null,
+    dualMode: false,
+    toggleDualMode: () => set((state) => ({ dualMode: !state.dualMode })),
 
-  openRightsModal: (userId: number, userName: string) =>
-    set({
-      rightsModalOpen: true,
-      rightsUserId: userId,
-      rightsUserName: userName,
-    }),
+    logModal: false,
+    logModalId: null,
+    logModalName: null,
+    openLogModal: (id, name) => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("log", { id, name });
+        set({ logModal: true, logModalId: id, logModalName: name, logUserModal: false });
+    },
+    closeLogModal: () => {
+        useModalStore.getState().closeModal();
+        set({ logModal: false, logModalId: null, logModalName: null });
+    },
 
-  closeRightsModal: () =>
-    set({
-      rightsModalOpen: false,
-      rightsUserId: null,
-      rightsUserName: null,
-    }),
+    logUserModal: false,
+    logUserModalId: null,
+    openUserLogModal: (id) => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("user-log", { id });
+        set({ logUserModal: true, logUserModalId: id, logModal: false, logModalId: null, logModalName: null });
+    },
+    closeUserLogModal: () => {
+        useModalStore.getState().closeModal();
+        set({ logUserModal: false, logUserModalId: null });
+    },
 
-  hoveredColumn: null,
-  setHoveredColumn: (col) => set({ hoveredColumn: col }),
+    importZuevaOpen: false,
+    openImportZueva: () => set({ importZuevaOpen: true }),
+    closeImportZueva: () => set({ importZuevaOpen: false }),
 
-  dualMode: false,
-  toggleDualMode: () => set((state) => ({ dualMode: !state.dualMode })),
+    PhotosModal: false,
+    openPhotoModal: () => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("photos");
+        set({ PhotosModal: true });
+    },
+    closePhotoModal: () => {
+        useModalStore.getState().closeModal();
+        set({ PhotosModal: false });
+    },
 
-  logModal: false,
-  logModalId: null,
-  logModalName: null,
-  openLogModal: (id: number, name: string) => {
-    set({ logModal: true, logModalId: id, logModalName: name, logUserModal: false  });
-  },
-  closeLogModal: () => {
-    set({ logModal: false, logModalId: null, logModalName: null });
-  },
+    logTableModal: false,
+    logTableModalType: null,
+    logTableModalId: null,
+    openTableLogModal: (type, id) => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("table-log", { type, id });
+        set({ logTableModal: true, logTableModalType: type, logTableModalId: id });
+    },
+    closeTableLogModal: () => {
+        useModalStore.getState().closeModal();
+        set({ logTableModal: false, logTableModalType: null, logTableModalId: null });
+    },
 
-  logUserModal: false,
-  logUserModalId: null,
-  openUserLogModal: (id: number) => {
-    set({ logUserModal: true, logUserModalId: id, logModal: false });
-  },
-  closeUserLogModal: () => {
-    set({ logUserModal: false, logModalId: null });
-  },
-
-  importZuevaOpen: false,
-  openImportZueva: () => set({ importZuevaOpen: true }),
-  closeImportZueva: () => set({ importZuevaOpen: false }),
-
-  PhotosModal: false,
-  openPhotoModal: () => set({ PhotosModal: true }),
-  closePhotoModal: () => set({ PhotosModal: false }),
-
-  logTableModal: false,
-  logTableModalType: null,
-  logTableModalId: null,
-  openTableLogModal: (type: "fudzi" |"kvartaly", id: number) => {
-    set({ logTableModal: true, logTableModalType: type, logTableModalId: id });
-  },
-  closeTableLogModal: () => {
-    set({ logTableModal: false, logTableModalType: null, logTableModalId: null });
-  },
-
-  leagueAccountsModal: { open: false, leagueId: null },
-
-  openLeagueAccountsModal: (leagueId) =>
-    set({ leagueAccountsModal: { open: true, leagueId } }),
-
-  closeLeagueAccountsModal: () =>
-    set({ leagueAccountsModal: { open: false, leagueId: null } }),
+    leagueAccountsModal: { open: false, leagueId: null },
+    openLeagueAccountsModal: (leagueId) => {
+        closeAllGlobalModals(set);
+        useModalStore.getState().openModal("league-accounts", { leagueId });
+        set({ leagueAccountsModal: { open: true, leagueId } });
+    },
+    closeLeagueAccountsModal: () => {
+        useModalStore.getState().closeModal();
+        set({ leagueAccountsModal: { open: false, leagueId: null } });
+    },
 }));
