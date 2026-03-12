@@ -1,7 +1,5 @@
-import { Link } from "react-router-dom";
 import Background from "@/components/layout/Background";
 import AnimatedText from "@/components/ui/AnimatedText";
-import PrimaryButton from "@/components/ui/PrimaryButton";
 
 export default function OfferPage() {
     return (
@@ -19,14 +17,6 @@ export default function OfferPage() {
                     <p className="mt-6 text-base leading-7 text-[var(--color-text-secondary)]">
                         Здесь будет размещён текст оферты. Пока это заглушка для будущего юридического текста.
                     </p>
-
-                    <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                        <Link to="/">
-                            <PrimaryButton active>
-                                Назад
-                            </PrimaryButton>
-                        </Link>
-                    </div>
                 </div>
             </main>
         </div>

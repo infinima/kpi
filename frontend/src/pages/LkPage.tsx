@@ -496,12 +496,15 @@ export default function LkPage() {
     }, [selectedEvent]);
 
     useEffect(() => {
-        if (availablePlaces === 0 || !teamForm.isReserve) {
+        if (editingTeamId) {
             return;
         }
 
-        setTeamForm((prev) => ({ ...prev, isReserve: false }));
-    }, [availablePlaces, teamForm.isReserve]);
+        setTeamForm((prev) => {
+            const shouldReserve = availablePlaces === 0;
+            return prev.isReserve === shouldReserve ? prev : { ...prev, isReserve: shouldReserve };
+        });
+    }, [availablePlaces, editingTeamId]);
 
     function handleProfileFieldChange(field: keyof ProfileFormState, value: string) {
         setProfileForm((prev) => ({ ...prev, [field]: value }));
@@ -605,11 +608,6 @@ export default function LkPage() {
     async function handleTeamSubmit() {
         if (!editingTeamId && (!teamForm.eventId || !teamForm.locationId || !teamForm.leagueId)) {
             notify({ type: "warning", text: "Выберите мероприятие, площадку и лигу" });
-            return;
-        }
-
-        if (!editingTeamId && availablePlaces === 0 && !teamForm.isReserve) {
-            notify({ type: "warning", text: "Свободных мест нет. Включите запись в очередь." });
             return;
         }
 
@@ -1211,30 +1209,17 @@ export default function LkPage() {
                                                 {selectedLeague ? (
                                                     <InfoBadge
                                                         icon={<Users size={14} />}
-                                                        text={`Осталось мест: ${availablePlaces ?? 0}`}
+                                                        text={availablePlaces === 0 ? "Мест неограниченно" : `Осталось мест: ${availablePlaces ?? 0}`}
                                                     />
                                                 ) : null}
                                             </div>
                                         ) : null}
 
                                         {!editingTeam && selectedLeague && availablePlaces === 0 ? (
-                                            <div className="mt-6 flex items-center justify-between gap-4 rounded-[24px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.10)] px-5 py-4">
-                                                <div>
-                                                    <p className="text-sm font-medium text-[var(--color-text-main)]">
-                                                        Свободные места закончились. Сейчас доступна регистрация в резерв.
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    role="switch"
-                                                    aria-checked={teamForm.isReserve}
-                                                    onClick={() => setTeamForm((prev) => ({ ...prev, isReserve: !prev.isReserve }))}
-                                                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${teamForm.isReserve ? "bg-[var(--color-primary)]" : "bg-[rgba(148,163,184,0.45)]"}`}
-                                                >
-                                                    <span
-                                                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow transition ${teamForm.isReserve ? "left-6" : "left-1"}`}
-                                                    />
-                                                </button>
+                                            <div className="mt-6 rounded-[24px] border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.10)] px-5 py-4">
+                                                <p className="text-sm font-medium text-[var(--color-text-main)]">
+                                                    Свободные места закончились. Сейчас доступна регистрация ТОЛЬКО в резерв.
+                                                </p>
                                             </div>
                                         ) : null}
 

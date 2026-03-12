@@ -7,6 +7,7 @@ import {
     ChevronRight,
     Clock3,
     CircleUserRound,
+    House,
     LayoutGrid,
     LogIn,
     MapPin,
@@ -326,7 +327,7 @@ export default function EventsSidebar() {
                 w-full shrink-0 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.82)]
                 p-2.5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl
                 lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:overflow-y-auto
-                ${effectiveCollapsed ? "lg:w-[72px]" : "lg:w-[248px]"}
+                ${effectiveCollapsed ? "lg:w-[72px]" : "lg:w-[288px]"}
             `}
         >
             <div className={`flex flex-col gap-3 ${effectiveCollapsed ? "items-center" : ""}`}>
@@ -356,6 +357,23 @@ export default function EventsSidebar() {
                     {isDesktop ? (
                         <SidebarCollapseToggle collapsed={effectiveCollapsed} onToggle={handleToggleCollapse} />
                     ) : null}
+                </div>
+
+                <div className={`flex w-full ${effectiveCollapsed ? "justify-center" : ""}`}>
+                    <Link
+                        to="/"
+                        title="На главную"
+                        aria-label="На главную"
+                        className={`
+                            flex items-center justify-center rounded-xl border border-[var(--color-border)]
+                            bg-[rgba(255,255,255,0.72)] text-[var(--color-text-secondary)] transition
+                            ${effectiveCollapsed ? "h-10 w-10" : "h-10 w-full gap-2 px-4 text-sm font-medium"}
+                            hover:bg-[rgba(255,255,255,0.95)] hover:text-[var(--color-text-main)]
+                        `}
+                    >
+                        <House size={16} />
+                        {!effectiveCollapsed ? <span>На главную</span> : null}
+                    </Link>
                 </div>
 
                 <div className={`w-full rounded-[20px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.92)] ${effectiveCollapsed ? "p-2" : "p-3"}`}>
