@@ -66,7 +66,8 @@ export const KPIObjectEnum = z.enum([
     "leagues",
     "teams",
     "users",
-    "permissions"
+    "permissions",
+    "mailings"
 ]);
 export const PermissionOutput = z.record(
     KPIObjectEnum,

@@ -4,7 +4,7 @@ import { getScopeChain } from "../../rest/middlewares/check-permission.js";
 
 export async function checkSocketPermission(
     user_id: number | null,
-    object: "events" | "locations" | "leagues" | "teams" | "users" | "permissions",
+    object: "events" | "locations" | "leagues" | "teams" | "users" | "permissions" | "mailings",
     permission: "get" | "create" | "update" | "delete" | "access_history" | "restore" | "print_documents" | "edit_answers" | "get_show" | "control_show" | "edit_penalties" | "edit_photos",
     objectId?: number
 ) {

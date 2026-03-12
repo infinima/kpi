@@ -8,7 +8,8 @@ export const KPIObjectEnum = z.enum([
     "leagues",
     "teams",
     "users",
-    "permissions"
+    "permissions",
+    "mailings"
 ]);
 export const LogSchema = z.object({
     id: z.number(),

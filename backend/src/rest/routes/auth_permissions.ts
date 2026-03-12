@@ -8,7 +8,7 @@ export const authPermissionsRouter = express.Router();
 // Типы
 // -----------------------------------------------------
 
-export type KPIObject = "events" | "locations" | "leagues" | "teams" | "users" | "permissions";
+export type KPIObject = "events" | "locations" | "leagues" | "teams" | "users" | "permissions" | "mailings";
 
 export type KPIPermission =
     | "get"

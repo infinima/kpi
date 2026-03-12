@@ -7,7 +7,8 @@ export const PermissionObjectEnum = z.enum([
     "leagues",
     "teams",
     "users",
-    "permissions"
+    "permissions",
+    "mailings"
 ]);
 export const PermissionScopeEnum = z.enum([
     "events",
