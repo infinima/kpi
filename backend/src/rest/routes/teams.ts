@@ -22,6 +22,7 @@ export const teamsRouter = express.Router();
 // GET /api/teams/my
 teamsRouter.get(
     "/my",
+    authRequired,
     async (req, res) => {
         const userId = (req as any).user_id;
 
@@ -42,7 +43,8 @@ teamsRouter.get(
              FROM teams t
                       LEFT JOIN leagues l ON l.id = t.league_id
                       LEFT JOIN users u ON u.id = t.owner_user_id
-             WHERE t.owner_user_id = ? AND t.deleted_at IS NULL`,
+             WHERE t.owner_user_id = ? AND t.deleted_at IS NULL
+             ORDER BY ID DESC`,
             [userId],
             userId
         );
@@ -73,7 +75,8 @@ teamsRouter.get(
              FROM teams t
                       LEFT JOIN leagues l ON l.id = t.league_id
                       LEFT JOIN users u ON u.id = t.owner_user_id
-             WHERE t.league_id = ? AND t.deleted_at IS NULL`,
+             WHERE t.league_id = ? AND t.deleted_at IS NULL
+             ORDER BY ID DESC`,
             [league_id], (req as any).user_id
         );
 
@@ -103,7 +106,8 @@ teamsRouter.get(
              FROM teams t
                       LEFT JOIN leagues l ON l.id = t.league_id
                       LEFT JOIN users u ON u.id = t.owner_user_id
-             WHERE t.league_id = ? AND t.deleted_at IS NOT NULL`,
+             WHERE t.league_id = ? AND t.deleted_at IS NOT NULL
+             ORDER BY ID DESC`,
             [league_id], (req as any).user_id
         );
 
@@ -135,7 +139,8 @@ teamsRouter.get(
                       LEFT JOIN users u ON u.id = t.owner_user_id
              WHERE l.location_id = ?
                AND t.deleted_at IS NULL
-               AND l.deleted_at IS NULL`,
+               AND l.deleted_at IS NULL
+             ORDER BY ID DESC`,
             [location_id], (req as any).user_id
         );
 
@@ -167,7 +172,8 @@ teamsRouter.get(
                       LEFT JOIN users u ON u.id = t.owner_user_id
              WHERE l.location_id = ?
                AND t.deleted_at IS NOT NULL
-               AND l.deleted_at IS NULL`,
+               AND l.deleted_at IS NULL
+             ORDER BY ID DESC`,
             [location_id], (req as any).user_id
         );
 
@@ -201,7 +207,8 @@ teamsRouter.get(
              WHERE lo.event_id = ?
                AND t.deleted_at IS NULL
                AND l.deleted_at IS NULL
-               AND lo.deleted_at IS NULL`,
+               AND lo.deleted_at IS NULL
+             ORDER BY ID DESC`,
             [event_id], (req as any).user_id
         );
 
@@ -235,7 +242,8 @@ teamsRouter.get(
              WHERE lo.event_id = ?
                AND t.deleted_at IS NOT NULL
                AND l.deleted_at IS NULL
-               AND lo.deleted_at IS NULL`,
+               AND lo.deleted_at IS NULL
+             ORDER BY ID DESC`,
             [event_id], (req as any).user_id
         );
 
