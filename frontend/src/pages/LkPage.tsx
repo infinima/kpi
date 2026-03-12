@@ -63,6 +63,7 @@ type OwnedTeam = {
     id: number;
     league_id: number;
     owner_user_id: number | null;
+    can_edit?: boolean;
     name: string;
     members: string[];
     appreciations: string[];
@@ -999,13 +1000,15 @@ export default function LkPage() {
                                                         </div>
 
                                                         <div className="flex flex-col gap-3 sm:flex-row">
-                                                            <OutlineButton
-                                                                active
-                                                                leftIcon={<Pencil size={16} />}
-                                                                onClick={() => applyTeamToForm(team)}
-                                                            >
-                                                                Изменить
-                                                            </OutlineButton>
+                                                            {team.can_edit ? (
+                                                                <OutlineButton
+                                                                    active
+                                                                    leftIcon={<Pencil size={16} />}
+                                                                    onClick={() => applyTeamToForm(team)}
+                                                                >
+                                                                    Изменить
+                                                                </OutlineButton>
+                                                            ) : null}
                                                         </div>
                                                     </div>
 

@@ -7,7 +7,9 @@ import type { TeamMembersValue, TeamTableRowData } from "@/components/ui/table/T
 type TeamResponseRow = {
     id: number;
     league_id: number;
+    league_name?: string;
     owner_user_id: number | null;
+    owner_name?: string;
     name: string;
     members: unknown;
     appreciations: string[] | string;
@@ -24,18 +26,6 @@ type TeamResponseRow = {
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
-};
-
-type UserSummary = {
-    id: number;
-    first_name: string;
-    last_name: string;
-    patronymic: string | null;
-};
-
-type LeagueSummary = {
-    id: number;
-    name: string;
 };
 
 function createEmptyMembers(): TeamMembersValue {
@@ -60,14 +50,6 @@ function parseStringArray(value: string[] | string | null | undefined) {
             .map((item) => item.trim())
             .filter(Boolean);
     }
-}
-
-function buildOwnerName(user: UserSummary | null, fallbackId: number | null) {
-    if (!user) {
-        return fallbackId ? `Пользователь #${fallbackId}` : "";
-    }
-
-    return [user.last_name, user.first_name, user.patronymic].filter(Boolean).join(" ");
 }
 
 function parseMembers(value: unknown): TeamMembersValue {
@@ -120,9 +102,9 @@ export function EventTeamsPage() {
         return rows.map((row) => ({
             id: row.id,
             league_id: row.league_id,
-            league_name: (row as TeamResponseRow & { league_name?: string }).league_name ?? `Лига #${row.league_id}`,
+            league_name: row.league_name ?? `Лига #${row.league_id}`,
             owner_user_id: row.owner_user_id,
-            owner_name: (row as TeamResponseRow & { owner_name?: string }).owner_name ?? buildOwnerName(null, row.owner_user_id),
+            owner_name: row.owner_name ?? (row.owner_user_id ? `Пользователь #${row.owner_user_id}` : ""),
             name: row.name ?? "",
             members: parseMembers(row.members),
             appreciations: parseStringArray(row.appreciations),
@@ -160,40 +142,8 @@ export function EventTeamsPage() {
             try {
                 setLoading(true);
                 const data = await apiGet<TeamResponseRow[]>(path, { error: true });
-
-                const uniqueLeagueIds = [...new Set(data.map((row) => row.league_id).filter(Boolean))];
-                const uniqueOwnerIds = [...new Set(data.map((row) => row.owner_user_id).filter((value): value is number => Boolean(value)))];
-
-                const [leagueEntries, ownerEntries] = await Promise.all([
-                    Promise.all(uniqueLeagueIds.map(async (id) => {
-                        try {
-                            const league = await apiGet<LeagueSummary>(`leagues/${id}`);
-                            return [id, league.name] as const;
-                        } catch {
-                            return [id, `Лига #${id}`] as const;
-                        }
-                    })),
-                    Promise.all(uniqueOwnerIds.map(async (id) => {
-                        try {
-                            const owner = await apiGet<UserSummary>(`users/${id}`);
-                            return [id, buildOwnerName(owner, id)] as const;
-                        } catch {
-                            return [id, `Пользователь #${id}`] as const;
-                        }
-                    })),
-                ]);
-
-                const leagueMap = new Map(leagueEntries);
-                const ownerMap = new Map(ownerEntries);
-
                 if (!ignore) {
-                    setRows(
-                        data.map((row) => ({
-                            ...row,
-                            league_name: leagueMap.get(row.league_id) ?? `Лига #${row.league_id}`,
-                            owner_name: row.owner_user_id ? ownerMap.get(row.owner_user_id) ?? `Пользователь #${row.owner_user_id}` : "",
-                        })) as TeamResponseRow[]
-                    );
+                    setRows(data);
                 }
             } finally {
                 if (!ignore) {
@@ -264,28 +214,9 @@ export function EventTeamsPage() {
         });
 
         const data = await apiGet<TeamResponseRow>(`teams/${created.id}`, { error: true });
-        let leagueName = `Лига #${data.league_id}`;
-        let ownerName = buildOwnerName(null, data.owner_user_id);
-
-        try {
-            const league = await apiGet<LeagueSummary>(`leagues/${data.league_id}`);
-            leagueName = league.name;
-        } catch {
-        }
-
-        if (data.owner_user_id) {
-            try {
-                const owner = await apiGet<UserSummary>(`users/${data.owner_user_id}`);
-                ownerName = buildOwnerName(owner, data.owner_user_id);
-            } catch {
-            }
-        }
-
         setRows((prev) => [{
             ...data,
-            league_name: leagueName,
-            owner_name: ownerName,
-        } as TeamResponseRow, ...prev]);
+        }, ...prev]);
     }
 
     return (
