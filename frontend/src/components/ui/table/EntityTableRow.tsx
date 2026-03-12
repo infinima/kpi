@@ -15,6 +15,13 @@ export type EntityTableColumn = {
     sortable?: boolean;
     type?: "text" | "number" | "date" | "select";
     options?: Array<{ label: string; value: string }>;
+    renderCell?: (row: EntityTableRowData) => React.ReactNode;
+    renderEditor?: (args: {
+        row: EntityTableRowData;
+        value: EntityTableRowData[string];
+        setValue: (value: string | number | null | undefined) => void;
+        isCreating: boolean;
+    }) => React.ReactNode;
 };
 
 type Props = {
@@ -142,8 +149,17 @@ export function EntityTableRow({
         >
             {columns.map((column) => (
                 <div key={column.key} className="min-w-0 self-center">
-                    {isEditing && column.editable !== false ? (
-                        column.type === "select" ? (
+                    {isEditing && (column.editable !== false || column.renderEditor) ? (
+                        column.renderEditor ? (
+                            column.renderEditor({
+                                row: draft,
+                                value: draft[column.key],
+                                setValue: (value) => {
+                                    setDraft((prev) => ({ ...prev, [column.key]: value }));
+                                },
+                                isCreating,
+                            })
+                        ) : column.type === "select" ? (
                             <select
                                 value={String(draft[column.key] ?? "")}
                                 onChange={(event) => {
@@ -172,9 +188,15 @@ export function EntityTableRow({
                             />
                         )
                     ) : (
-                        <div className="min-w-0 truncate text-sm font-medium sm:text-[15px]" title={renderValue(draft[column.key], column)}>
-                            {renderValue(draft[column.key], column)}
-                        </div>
+                        column.renderCell ? (
+                            <div className="min-w-0 text-sm font-medium sm:text-[15px]">
+                                {column.renderCell(draft)}
+                            </div>
+                        ) : (
+                            <div className="min-w-0 truncate text-sm font-medium sm:text-[15px]" title={renderValue(draft[column.key], column)}>
+                                {renderValue(draft[column.key], column)}
+                            </div>
+                        )
                     )}
                 </div>
             ))}

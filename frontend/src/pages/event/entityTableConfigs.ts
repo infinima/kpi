@@ -41,6 +41,7 @@ export const leagueEntityColumns: EntityTableColumn[] = [
     { key: "status", label: "Статус", width: 1.45, editable: true, searchable: true, sortable: true, type: "select", options: leagueStatusOptions },
     { key: "created_at", label: "Создано", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
     { key: "updated_at", label: "Обновлено", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
+    { key: "deleted_at", label: "Удалено", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
 ];
 
 export function mapEventEntityRows(rows: Array<{ id: number; name: string; date: string; created_at?: string; updated_at?: string; deleted_at?: string | null }>): EntityTableRowData[] {
@@ -73,5 +74,6 @@ export function mapLeagueEntityRows(rows: Array<{ id: number; location_id: numbe
         status: row.status,
         created_at: row.created_at ?? "",
         updated_at: row.updated_at ?? "",
+        deleted_at: row.deleted_at ?? "",
     }));
 }

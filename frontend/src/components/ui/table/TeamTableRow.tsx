@@ -109,6 +109,22 @@ function getMembersPreview(members: TeamMembersValue) {
     return [coachName ? `Тренер: ${coachName}` : "", ...participantNames].filter(Boolean).join(", ");
 }
 
+function getMembersSummary(members: TeamMembersValue) {
+    const coachName = members.coach.full_name.trim();
+    const participantNames = members.participants
+        .map((participant) => participant.full_name.trim())
+        .filter(Boolean);
+
+    if (!coachName && participantNames.length === 0) {
+        return "Состав не заполнен";
+    }
+
+    return [
+        coachName ? `Тренер: ${coachName}` : null,
+        participantNames.length > 0 ? `Участники: ${participantNames.join(", ")}` : null,
+    ].filter(Boolean).join(" | ");
+}
+
 function formatDateTime(value: string | null) {
     if (!value) return "";
     const date = new Date(value);
@@ -226,10 +242,10 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                                             },
                                         });
                                     }}
-                                    className="truncate text-sm font-medium text-[var(--color-primary)] hover:underline"
+                                    className="block w-full truncate text-left text-sm font-medium text-[var(--color-primary)] hover:underline"
                                     title={getMembersPreview(draft.members)}
                                 >
-                                    Подробнее
+                                    {getMembersSummary(draft.members)}
                                 </button>
                             </div>
                         );
@@ -344,17 +360,17 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
 
 export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "id", label: "ID", width: 0.55, editable: false, type: "number" },
-    { key: "league_id", label: "ID лиги", width: 0.7, editable: true, type: "number" },
-    { key: "league_name", label: "Лига", width: 1.2, editable: false, type: "text" },
-    { key: "owner_name", label: "Владелец", width: 1.4, editable: false, type: "text" },
-    { key: "name", label: "Команда", width: 1.4, editable: true, type: "text" },
-    { key: "members", label: "Участники", width: 1, editable: true, type: "text" },
+    { key: "league_id", label: "ID лиги", width: 0.8, editable: true, type: "number" },
+    { key: "league_name", label: "Лига", width: 1.45, editable: false, type: "text" },
+    { key: "owner_name", label: "Владелец", width: 1.7, editable: false, type: "text" },
+    { key: "name", label: "Команда", width: 1.6, editable: true, type: "text" },
+    { key: "members", label: "Участники", width: 2.6, editable: true, type: "text" },
     { key: "appreciations", label: "Благодарности", width: 1.4, editable: true, type: "text" },
-    { key: "school", label: "Учебное заведение", width: 1.6, editable: true, type: "text" },
-    { key: "region", label: "Регион", width: 1.1, editable: true, type: "text" },
+    { key: "school", label: "Учебное заведение", width: 1.9, editable: true, type: "text" },
+    { key: "region", label: "Регион", width: 1.25, editable: true, type: "text" },
     { key: "meals_count", label: "Обеды", width: 0.7, editable: true, type: "number" },
-    { key: "maintainer_full_name", label: "Сопровождающий", width: 1.5, editable: true, type: "text" },
-    { key: "maintainer_activity", label: "Активность", width: 1.7, editable: true, type: "select", options: maintainerActivityOptions },
+    { key: "maintainer_full_name", label: "Сопровождающий", width: 1.8, editable: true, type: "text" },
+    { key: "maintainer_activity", label: "Активность", width: 2, editable: true, type: "select", options: maintainerActivityOptions },
     {
         key: "status",
         label: "Статус",
@@ -382,8 +398,8 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "Участник", value: "PARTICIPANT" },
         ],
     },
-    { key: "special_nominations", label: "Номинации", width: 1.5, editable: true, type: "text" },
-    { key: "created_at", label: "Создано", width: 1, editable: false, type: "text" },
-    { key: "updated_at", label: "Обновлено", width: 1, editable: false, type: "text" },
-    { key: "deleted_at", label: "Удалено", width: 1, editable: false, type: "text" },
+    { key: "special_nominations", label: "Номинации", width: 1.7, editable: true, type: "text" },
+    { key: "created_at", label: "Создано", width: 1.15, editable: false, type: "text" },
+    { key: "updated_at", label: "Обновлено", width: 1.15, editable: false, type: "text" },
+    { key: "deleted_at", label: "Удалено", width: 1.15, editable: false, type: "text" },
 ];

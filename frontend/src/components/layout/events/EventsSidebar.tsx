@@ -303,7 +303,7 @@ export default function EventsSidebar() {
                                 leftIcon={<LogIn size={16} />}
                                 className={effectiveCollapsed ? "h-10 w-10 px-0 py-0 [&>span:last-child]:hidden" : "w-full justify-center px-4 py-2.5 text-sm"}
                             >
-                                Войти / зарегистрироваться
+                                Войти
                             </PrimaryButton>
                         </Link>
                     ) : !effectiveCollapsed ? (
@@ -313,7 +313,7 @@ export default function EventsSidebar() {
                                 leftIcon={<CircleUserRound size={16} />}
                                 className="w-full justify-center px-4 py-2.5 text-sm"
                             >
-                                Личный кабинет
+                                Профиль
                             </OutlineButton>
                         </Link>
                     ) : null}

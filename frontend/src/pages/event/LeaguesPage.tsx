@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Trophy } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
+import { LeagueCard } from "@/components/ui/cards/LeagueCard";
 import { EntityTable } from "@/components/ui/table/EntityTable";
 import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
 import { leagueEntityColumns, mapLeagueEntityRows } from "@/pages/event/entityTableConfigs";
@@ -28,6 +29,11 @@ export function LeaguesPage() {
     const [leagues, setLeagues] = useState<LeagueItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [visibility, setVisibility] = useState<"active" | "deleted">("active");
+    const canUseTable = canUseTableMode(user?.rights, "leagues");
+    const canManage = canUseTable && visibility === "active";
+    const canSeeDeleted = Boolean(user?.rights.leagues?.global?.includes("restore"));
+    const viewMode = getCollectionViewMode(searchParams, "leagues", canUseTable);
+    const effectiveVisibility = viewMode === "table" ? visibility : "active";
 
     useEffect(() => {
         let ignore = false;
@@ -38,7 +44,7 @@ export function LeaguesPage() {
             try {
                 setLoading(true);
                 const data = await apiGet<LeagueItem[]>(
-                    visibility === "deleted"
+                    effectiveVisibility === "deleted"
                         ? `leagues/location/${locationId}/deleted`
                         : `leagues/location/${locationId}`
                 );
@@ -56,21 +62,25 @@ export function LeaguesPage() {
         return () => {
             ignore = true;
         };
-    }, [locationId, visibility]);
+    }, [effectiveVisibility, locationId]);
 
     const rows = useMemo(() => mapLeagueEntityRows(leagues), [leagues]);
-    const canManage = canUseTableMode(user?.rights, "leagues") && visibility === "active";
-    const canSeeDeleted = Boolean(user?.rights.leagues?.global?.includes("restore"));
-    const viewMode = getCollectionViewMode(searchParams, "leagues", canManage);
     const visibilityFilter = (
-        <select
-            value={visibility}
-            onChange={(event) => setVisibility(event.target.value as "active" | "deleted")}
-            className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
-        >
-            <option value="active">Существующие</option>
-            {canSeeDeleted ? <option value="deleted">Удалённые</option> : null}
-        </select>
+        canSeeDeleted ? (
+            <button
+                type="button"
+                onClick={() => setVisibility((prev) => prev === "active" ? "deleted" : "active")}
+                aria-label={visibility === "active" ? "Показать удалённые" : "Показать существующие"}
+                title={visibility === "active" ? "Показать удалённые" : "Показать существующие"}
+                className={`inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] p-2 leading-none transition ${
+                    visibility === "active"
+                        ? "text-[var(--color-text-secondary)] hover:border-[var(--color-primary-light)] hover:bg-[rgba(255,255,255,0.95)] hover:text-[var(--color-text-main)]"
+                        : "border-[var(--color-primary-light)] bg-[rgba(14,116,144,0.12)] text-[var(--color-primary)]"
+                }`}
+            >
+                {visibility === "active" ? <FileText size={16} /> : <Trash2 size={16} />}
+            </button>
+        ) : null
     );
 
     async function handleUpdate(updatedRow: EntityTableRowData) {
@@ -165,60 +175,24 @@ export function LeaguesPage() {
                     onCreate={canManage ? handleCreate : undefined}
                     onUpdate={canManage ? handleUpdate : undefined}
                     onDelete={canManage ? handleDelete : undefined}
-                    onRestore={visibility === "deleted" ? handleRestore : undefined}
+                    onRestore={effectiveVisibility === "deleted" ? handleRestore : undefined}
                     onRowClick={(row) => navigate({ pathname: `/events/${eventId}/location/${locationId}/league/${row.id}`, search: location.search })}
                     toolbarContent={visibilityFilter}
-                    actionsWidth={136}
+                    actionsWidth={176}
                 />
             ) : (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        {visibilityFilter}
-                    </div>
-                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-                        {leagues.map((league) => {
-                            const selected = String(league.id) === String(leagueId);
-
-                            return (
-                                <button
-                                    key={league.id}
-                                    type="button"
-                                    onClick={() => navigate({ pathname: `/events/${eventId}/location/${locationId}/league/${league.id}`, search: location.search })}
-                                    className={`
-                                        rounded-[28px] border p-5 text-left transition
-                                        ${selected
-                                            ? "border-[var(--color-primary)] bg-[rgba(14,116,144,0.08)]"
-                                            : "border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] hover:border-[var(--color-primary-light)]"}
-                                    `}
-                                >
-                                    <div className="flex items-start gap-4">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(245,158,11,0.14)] text-[var(--color-warning)]">
-                                            <Trophy size={20} />
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                            <div className="truncate text-lg font-semibold text-[var(--color-text-main)]">
-                                                {league.name}
-                                            </div>
-                                            <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                                                Команд: {league.max_teams_count}
-                                            </div>
-                                            <div className="mt-1 text-sm text-[var(--color-text-secondary)]">
-                                                Статус: {league.status}
-                                            </div>
-                                            <div className="mt-1 text-sm text-[var(--color-text-muted)]">
-                                                ID: {league.id}
-                                            </div>
-                                            {league.deleted_at ? (
-                                                <div className="mt-1 text-sm text-[var(--color-error)]">
-                                                    Удалено: {new Date(league.deleted_at).toLocaleString("ru-RU")}
-                                                </div>
-                                            ) : null}
-                                        </div>
-                                    </div>
-                                </button>
-                            );
-                        })}
-                    </div>
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                    {leagues.map((league) => (
+                        <LeagueCard
+                            key={league.id}
+                            name={league.name}
+                            status={league.status}
+                            maxTeamsCount={league.max_teams_count}
+                            deleted_at={league.deleted_at}
+                            selected={String(league.id) === String(leagueId)}
+                            onClick={() => navigate({ pathname: `/events/${eventId}/location/${locationId}/league/${league.id}`, search: location.search })}
+                        />
+                    ))}
                 </div>
             )}
         </section>

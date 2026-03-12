@@ -10,7 +10,8 @@ export type ModalType =
     | "photos"
     | "table-log"
     | "league-accounts"
-    | "team-members";
+    | "team-members"
+    | "crop";
 
 type ModalPayloadMap = {
     login: undefined;
@@ -27,6 +28,14 @@ type ModalPayloadMap = {
         editable: boolean;
         onSave?: (members: TeamMembersValue) => void;
     };
+    crop: {
+        file: File;
+        title?: string;
+        description?: string;
+        aspect?: number;
+        confirmLabel?: string;
+        onCrop: (base64: string) => Promise<void> | void;
+    };
 };
 
 type ActiveModal =
@@ -38,7 +47,8 @@ type ActiveModal =
     | { type: "photos"; payload?: undefined }
     | { type: "table-log"; payload: ModalPayloadMap["table-log"] }
     | { type: "league-accounts"; payload: ModalPayloadMap["league-accounts"] }
-    | { type: "team-members"; payload: ModalPayloadMap["team-members"] };
+    | { type: "team-members"; payload: ModalPayloadMap["team-members"] }
+    | { type: "crop"; payload: ModalPayloadMap["crop"] };
 
 type ModalState = {
     activeModal: ActiveModal | null;

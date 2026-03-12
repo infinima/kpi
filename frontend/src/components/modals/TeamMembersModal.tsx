@@ -79,7 +79,7 @@ export function TeamMembersModal() {
             onClick={handleClose}
         >
             <div
-                className="w-full max-w-lg rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.96)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.20)]"
+                className="flex max-h-[calc(100vh-2rem)] w-full max-w-lg flex-col rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.96)] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.20)]"
                 onClick={(event) => event.stopPropagation()}
             >
                 <div className="flex items-center justify-between gap-4">
@@ -104,7 +104,7 @@ export function TeamMembersModal() {
                     </button>
                 </div>
 
-                <div className="mt-5 space-y-5">
+                <div className="mt-5 flex-1 space-y-5 overflow-y-auto pr-1">
                     <div className="space-y-3 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4">
                         <div className="text-sm font-semibold text-[var(--color-text-main)]">
                             Тренер
@@ -119,6 +119,23 @@ export function TeamMembersModal() {
                                         coach: {
                                             ...prev.coach,
                                             full_name: event.target.value,
+                                        },
+                                    }));
+                                }}
+                                readOnly={!isEditing}
+                                className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
+                            />
+                        </label>
+                        <label className="block space-y-2">
+                            <span className="text-sm text-[var(--color-text-secondary)]">Email</span>
+                            <input
+                                value={members.coach.email}
+                                onChange={(event) => {
+                                    setMembers((prev) => ({
+                                        ...prev,
+                                        coach: {
+                                            ...prev.coach,
+                                            email: event.target.value,
                                         },
                                     }));
                                 }}
@@ -154,12 +171,29 @@ export function TeamMembersModal() {
                                         className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
                                     />
                                 </label>
+                                <label className="block space-y-2">
+                                    <span className="text-sm text-[var(--color-text-secondary)]">Школа</span>
+                                    <input
+                                        value={participant.school}
+                                        onChange={(event) => {
+                                            setMembers((prev) => ({
+                                                ...prev,
+                                                participants: prev.participants.map((item, itemIndex) => itemIndex === index ? {
+                                                    ...item,
+                                                    school: event.target.value,
+                                                } : item),
+                                            }));
+                                        }}
+                                        readOnly={!isEditing}
+                                        className="block w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-2 text-sm outline-none focus:border-[var(--color-primary-light)]"
+                                    />
+                                </label>
                             </div>
                         ))}
                     </div>
                 </div>
 
-                <div className="mt-5 flex justify-end gap-2">
+                <div className="mt-5 flex shrink-0 justify-end gap-2 border-t border-[var(--color-border)] pt-4">
                     <OutlineButton active onClick={handleClose}>
                         Закрыть
                     </OutlineButton>

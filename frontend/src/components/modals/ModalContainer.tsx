@@ -9,6 +9,7 @@ import { useModalStore } from "@/store";
 // import { LogTableModal } from "@/components/TableLogsModal";
 // import { LeagueAccountsModal } from "@/components/LeagueAccountsModal";
 import { TeamMembersModal } from "@/components/modals/TeamMembersModal";
+import { CropModal } from "@/components/services/CropModal";
 
 export function ModalContainer() {
     const activeModal = useModalStore((state) => state.activeModal);
@@ -33,6 +34,8 @@ export function ModalContainer() {
             //     return <LeagueAccountsModal />;
             case "team-members":
                 return <TeamMembersModal />;
+            case "crop":
+                return <CropModal />;
             default:
                 return null;
         }

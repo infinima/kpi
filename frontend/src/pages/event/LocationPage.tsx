@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, MapPin } from "lucide-react";
+import { FileText, ImagePlus, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import { BaseImage } from "@/components/BaseImage";
+import { LocationCard } from "@/components/ui/cards/LocationCard";
 import { EntityTable } from "@/components/ui/table/EntityTable";
-import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import type { EntityTableColumn, EntityTableRowData } from "@/components/ui/table/EntityTableRow";
 import { locationEntityColumns, mapLocationEntityRows } from "@/pages/event/entityTableConfigs";
-import { useUser } from "@/store";
+import { useModalStore, useUser } from "@/store";
+import { pickImageFile } from "@/utils/pickImageFile";
 import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
 type LocationItem = {
@@ -30,7 +32,8 @@ export function LocationsPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { eventId, locationId } = useParams();
-    const { user } = useUser();
+    const { user, can } = useUser();
+    const openModal = useModalStore((state) => state.openModal);
     const isPhotosMode = location.pathname.endsWith("/photos");
 
     const [locations, setLocations] = useState<LocationItem[]>([]);
@@ -38,6 +41,41 @@ export function LocationsPage() {
     const [locationPhotos, setLocationPhotos] = useState<Record<number, number | null>>({});
     const [loading, setLoading] = useState(true);
     const [visibility, setVisibility] = useState<"active" | "deleted">("active");
+    const canUseTable = canUseTableMode(user?.rights, "locations");
+    const canManage = canUseTable && visibility === "active";
+    const canSeeDeleted = Boolean(user?.rights.locations?.global?.includes("restore"));
+    const viewMode = getCollectionViewMode(searchParams, "locations", canUseTable);
+    const effectiveVisibility = viewMode === "table" ? visibility : "active";
+
+    function handlePhotoChange(rowId: number, file: File) {
+        openModal("crop", {
+            file,
+            title: "Фото площадки",
+            confirmLabel: "Добавить фото",
+            onCrop: async (photo) => {
+                await apiPost("photos", {
+                    location_id: rowId,
+                    file: photo,
+                }, {
+                    success: "Фото площадки добавлено",
+                    error: true,
+                });
+                const refreshedPhotos = await apiGet<PhotoItem[]>(`photos/location/${rowId}`);
+                setLocationPhotos((prev) => ({ ...prev, [rowId]: refreshedPhotos[0]?.id ?? null }));
+            },
+        });
+    }
+
+    function handlePhotoDraftPick(setValue: (value: string | number | null | undefined) => void, file: File) {
+        openModal("crop", {
+            file,
+            title: "Фото площадки",
+            confirmLabel: "Использовать фото",
+            onCrop: async (photo) => {
+                setValue(photo);
+            },
+        });
+    }
 
     useEffect(() => {
         let ignore = false;
@@ -48,7 +86,7 @@ export function LocationsPage() {
             try {
                 setLoading(true);
                 const data = await apiGet<LocationItem[]>(
-                    visibility === "deleted"
+                    effectiveVisibility === "deleted"
                         ? `locations/event/${eventId}/deleted`
                         : `locations/event/${eventId}`
                 );
@@ -87,7 +125,7 @@ export function LocationsPage() {
         return () => {
             ignore = true;
         };
-    }, [eventId, isPhotosMode, locationId, visibility]);
+    }, [effectiveVisibility, eventId, isPhotosMode, locationId]);
 
     useEffect(() => {
         let ignore = false;
@@ -121,18 +159,117 @@ export function LocationsPage() {
     }, [isPhotosMode, locations]);
 
     const rows = useMemo(() => mapLocationEntityRows(locations), [locations]);
-    const canManage = canUseTableMode(user?.rights, "locations") && visibility === "active";
-    const canSeeDeleted = Boolean(user?.rights.locations?.global?.includes("restore"));
-    const viewMode = getCollectionViewMode(searchParams, "locations", canManage);
+    const columns = useMemo<EntityTableColumn[]>(() => [
+        {
+            key: "photo",
+            label: "Фото",
+            width: 0.72,
+            editable: false,
+            searchable: false,
+            sortable: false,
+            renderEditor: ({ value, setValue, isCreating }) => {
+                if (!isCreating) {
+                    return <div className="h-12 w-12" />;
+                }
+
+                const preview = typeof value === "string" ? value : "";
+
+                return (
+                    <button
+                        type="button"
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            pickImageFile((file) => handlePhotoDraftPick(setValue, file));
+                        }}
+                        className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg border border-[var(--color-border)] bg-[rgba(248,250,252,0.9)] transition hover:border-[var(--color-primary-light)] hover:bg-white"
+                        title={preview ? "Изменить фото" : "Добавить фото"}
+                        aria-label={preview ? "Изменить фото" : "Добавить фото"}
+                    >
+                        {preview ? (
+                            <img src={preview} alt="Фото" className="h-full w-full object-cover" />
+                        ) : (
+                            <ImagePlus size={14} className="text-[var(--color-text-secondary)]" />
+                        )}
+                    </button>
+                );
+            },
+            renderCell: (row) => {
+                const rowId = Number(row.id);
+                const photoId = locationPhotos[rowId];
+
+                return (
+                    <div className="flex items-center">
+                        <div className="h-12 w-16 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[rgba(248,250,252,0.9)]">
+                            {photoId ? (
+                                canManage ? (
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            pickImageFile((file) => handlePhotoChange(rowId, file));
+                                        }}
+                                        className="block h-full w-full transition hover:opacity-90"
+                                        title="Изменить фото"
+                                        aria-label="Изменить фото"
+                                    >
+                                        <BaseImage
+                                            path={`photos/${photoId}/preview`}
+                                            alt={String(row.name ?? "Фото")}
+                                            className="h-full w-full object-cover"
+                                            fallbackLetter="L"
+                                        />
+                                    </button>
+                                ) : (
+                                    <BaseImage
+                                        path={`photos/${photoId}/preview`}
+                                        alt={String(row.name ?? "Фото")}
+                                        className="h-full w-full object-cover"
+                                        fallbackLetter="L"
+                                    />
+                                )
+                            ) : (
+                                canManage ? (
+                                    <button
+                                        type="button"
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            pickImageFile((file) => handlePhotoChange(rowId, file));
+                                        }}
+                                        className="flex h-full w-full items-center justify-center text-xs text-[var(--color-text-muted)] transition hover:bg-[rgba(255,255,255,0.55)]"
+                                        title="Добавить фото"
+                                        aria-label="Добавить фото"
+                                    >
+                                        Нет
+                                    </button>
+                                ) : (
+                                    <div className="flex h-full w-full items-center justify-center text-xs text-[var(--color-text-muted)]">
+                                        Нет
+                                    </div>
+                                )
+                            )}
+                        </div>
+                    </div>
+                );
+            },
+        },
+        ...locationEntityColumns,
+    ], [canManage, locationPhotos]);
     const visibilityFilter = (
-        <select
-            value={visibility}
-            onChange={(event) => setVisibility(event.target.value as "active" | "deleted")}
-            className="rounded-lg border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
-        >
-            <option value="active">Существующие</option>
-            {canSeeDeleted ? <option value="deleted">Удалённые</option> : null}
-        </select>
+        canSeeDeleted ? (
+            <button
+                type="button"
+                onClick={() => setVisibility((prev) => prev === "active" ? "deleted" : "active")}
+                aria-label={visibility === "active" ? "Показать удалённые" : "Показать существующие"}
+                title={visibility === "active" ? "Показать удалённые" : "Показать существующие"}
+                className={`inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] p-2 leading-none transition ${
+                    visibility === "active"
+                        ? "text-[var(--color-text-secondary)] hover:border-[var(--color-primary-light)] hover:bg-[rgba(255,255,255,0.95)] hover:text-[var(--color-text-main)]"
+                        : "border-[var(--color-primary-light)] bg-[rgba(14,116,144,0.12)] text-[var(--color-primary)]"
+                }`}
+            >
+                {visibility === "active" ? <FileText size={16} /> : <Trash2 size={16} />}
+            </button>
+        ) : null
     );
 
     async function handleUpdate(updatedRow: EntityTableRowData) {
@@ -197,6 +334,19 @@ export function LocationsPage() {
                 address: String(newRow.address ?? ""),
             },
         ]);
+
+        if (typeof newRow.photo === "string" && newRow.photo) {
+            await apiPost("photos", {
+                location_id: response.id,
+                file: newRow.photo,
+            }, {
+                success: "Фото площадки добавлено",
+                error: true,
+            });
+
+            const refreshedPhotos = await apiGet<PhotoItem[]>(`photos/location/${response.id}`);
+            setLocationPhotos((prev) => ({ ...prev, [response.id]: refreshedPhotos[0]?.id ?? null }));
+        }
     }
 
     if (isPhotosMode && locationId) {
@@ -259,89 +409,30 @@ export function LocationsPage() {
                 </div>
             ) : viewMode === "table" ? (
                 <EntityTable
-                    columns={locationEntityColumns}
+                    columns={columns}
                     data={rows}
                     onCreate={canManage ? handleCreate : undefined}
                     onUpdate={canManage ? handleUpdate : undefined}
                     onDelete={canManage ? handleDelete : undefined}
-                    onRestore={visibility === "deleted" ? handleRestore : undefined}
+                    onRestore={effectiveVisibility === "deleted" ? handleRestore : undefined}
                     onRowClick={(row) => navigate({ pathname: `/events/${eventId}/location/${row.id}`, search: location.search })}
                     toolbarContent={visibilityFilter}
-                    actionsWidth={136}
+                    actionsWidth={176}
                 />
             ) : (
-                <div className="space-y-4">
-                    <div className="flex justify-end">
-                        {visibilityFilter}
-                    </div>
-                    <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-                        {locations.map((item) => {
-                            const selected = String(item.id) === String(locationId);
-
-                            return (
-                                <div
-                                    key={item.id}
-                                    className={`
-                                        rounded-[28px] border p-5 transition
-                                        ${selected
-                                            ? "border-[var(--color-primary)] bg-[rgba(14,116,144,0.08)]"
-                                            : "border-[var(--color-border)] bg-[rgba(255,255,255,0.84)]"}
-                                    `}
-                                >
-                                    <div className="mb-4 overflow-hidden rounded-[22px] border border-[var(--color-border)]">
-                                        {locationPhotos[item.id] ? (
-                                            <BaseImage
-                                                path={`photos/${locationPhotos[item.id]}/file`}
-                                                alt={item.name}
-                                                className="aspect-[16/9] w-full object-cover"
-                                                fallbackLetter="L"
-                                            />
-                                        ) : (
-                                            <div className="flex aspect-[16/9] items-center justify-center bg-[rgba(148,163,184,0.12)] text-[var(--color-text-muted)]">
-                                                Нет фото
-                                            </div>
-                                        )}
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate({ pathname: `/events/${eventId}/location/${item.id}`, search: location.search })}
-                                        className="w-full text-left"
-                                    >
-                                        <div className="flex items-start gap-4">
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[rgba(59,130,246,0.12)] text-[var(--color-info)]">
-                                                <MapPin size={20} />
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <div className="truncate text-lg font-semibold text-[var(--color-text-main)]">
-                                                    {item.name}
-                                                </div>
-                                                <div className="mt-2 text-sm text-[var(--color-text-secondary)]">
-                                                    {item.address}
-                                                </div>
-                                                <div className="mt-1 text-sm text-[var(--color-text-muted)]">
-                                                    ID: {item.id}
-                                                </div>
-                                                {item.deleted_at ? (
-                                                    <div className="mt-1 text-sm text-[var(--color-error)]">
-                                                        Удалено: {new Date(item.deleted_at).toLocaleString("ru-RU")}
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                        </div>
-                                    </button>
-
-                                    <button
-                                        type="button"
-                                        onClick={() => navigate({ pathname: `/events/${eventId}/location/${item.id}/photos`, search: location.search })}
-                                        className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-sm font-medium text-[var(--color-text-main)] transition hover:border-[var(--color-primary-light)] hover:bg-[var(--color-hover)]"
-                                    >
-                                        <Camera size={16} />
-                                        Фото
-                                    </button>
-                                </div>
-                            );
-                        })}
-                    </div>
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
+                    {locations.map((item) => (
+                        <LocationCard
+                            key={item.id}
+                            id={item.id}
+                            name={item.name}
+                            address={item.address}
+                            deleted_at={item.deleted_at}
+                            selected={String(item.id) === String(locationId)}
+                            photoId={locationPhotos[item.id] ?? null}
+                            onClick={() => navigate({ pathname: `/events/${eventId}/location/${item.id}`, search: location.search })}
+                        />
+                    ))}
                 </div>
             )}
         </section>
