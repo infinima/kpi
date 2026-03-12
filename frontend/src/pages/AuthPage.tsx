@@ -64,6 +64,10 @@ function getRussianPhoneDigits(value: string) {
     return null;
 }
 
+function isValidEmail(value: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
 export default function AuthPage() {
     const navigate = useNavigate();
     const notify = useNotifications((state) => state.addMessage);
@@ -106,9 +110,17 @@ export default function AuthPage() {
             return;
         }
 
+        if (!isValidEmail(loginForm.email)) {
+            notify({type: "warning", text: "Введите корректный email"});
+            return;
+        }
+
         try {
             setLoginLoading(true);
-            const data = await apiPost<{ token: string }>("auth/login", loginForm, { error: true });
+            const data = await apiPost<{ token: string }>("auth/login", {
+                ...loginForm,
+                email: loginForm.email.trim(),
+            }, { error: true });
             await loginUser(data.token);
             navigateAfterAuth();
         } finally {
@@ -135,6 +147,11 @@ export default function AuthPage() {
             return;
         }
 
+        if (!isValidEmail(registerForm.email)) {
+            notify({type: "warning", text: "Введите корректный email"});
+            return;
+        }
+
         if (registerForm.password !== registerForm.password_confirmation) {
             notify({type: "warning", text: "Пароли не совпадают"});
             return;
@@ -143,7 +160,7 @@ export default function AuthPage() {
         try {
             setRegisterLoading(true);
             await apiPost("auth/register/start", {
-                email: registerForm.email,
+                email: registerForm.email.trim(),
                 password: registerForm.password,
                 last_name: registerForm.last_name,
                 first_name: registerForm.first_name,
@@ -169,7 +186,7 @@ export default function AuthPage() {
         try {
             setRegisterLoading(true);
             const data = await apiPost<{ id: number; token: string }>("auth/register/confirm", {
-                email: registerForm.email,
+                email: registerForm.email.trim(),
                 code: confirmCode,
             }, { error: true });
             await loginUser(data.token);
