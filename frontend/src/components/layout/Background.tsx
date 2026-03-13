@@ -19,6 +19,7 @@ type BackgroundProps = {
 
 export default function Background({ active = false }: BackgroundProps) {
     const canvasRef = useRef<HTMLCanvasElement>(null)
+    active = false
 
     useEffect(() => {
         const canvasElement = canvasRef.current

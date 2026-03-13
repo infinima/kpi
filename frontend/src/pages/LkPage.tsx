@@ -146,6 +146,12 @@ const readOnlyClassName = `
     text-[var(--color-text-secondary)]
 `;
 
+const invalidInputClassName = `
+    border-[rgba(220,38,38,0.4)] bg-[rgba(254,242,242,0.95)]
+    text-[var(--color-text-main)] placeholder:text-[rgba(127,29,29,0.6)]
+    focus:border-[rgba(220,38,38,0.65)]
+`;
+
 const activityOptions = [
     "семинар учителей математики",
     "экскурсия по Технопарку (платно)",
@@ -220,6 +226,28 @@ function getTeamPaymentLink(team: OwnedTeam) {
     }
 
     return normalizedValue;
+}
+
+function isMealsCountInvalid(value: string) {
+    const mealsCount = Number(value);
+    return !Number.isInteger(mealsCount) || mealsCount < 0 || mealsCount > 5;
+}
+
+function getTeamFormMissingFields(form: TeamFormState, isEditing: boolean) {
+    const missingFields: string[] = [];
+    return missingFields;
+}
+
+function withValidationClass(baseClassName: string, isInvalid: boolean) {
+    return isInvalid ? `${baseClassName} ${invalidInputClassName}` : baseClassName;
+}
+
+function RequiredLabel({ children, invalid = false }: { children: ReactNode; invalid?: boolean }) {
+    return (
+        <span className={`text-sm ${invalid ? "text-[rgba(185,28,28,0.95)]" : "text-[var(--color-text-secondary)]"}`}>
+            {children} <span className="text-[rgba(220,38,38,0.9)]">*</span>
+        </span>
+    );
 }
 
 const emptyTeamForm = (): TeamFormState => ({
@@ -301,6 +329,7 @@ export default function LkPage() {
     const [teamSaving, setTeamSaving] = useState(false);
     const [teamForm, setTeamForm] = useState<TeamFormState>(emptyTeamForm);
     const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
+    const [teamSubmitAttempted, setTeamSubmitAttempted] = useState(false);
 
     useEffect(() => {
         if (!user?.id) {
@@ -535,6 +564,7 @@ export default function LkPage() {
 
     function applyTeamToForm(team: OwnedTeam) {
         setEditingTeamId(team.id);
+        setTeamSubmitAttempted(false);
         setTeamForm({
             eventId: team.event_id ? String(team.event_id) : "",
             locationId: team.location_id ? String(team.location_id) : "",
@@ -557,6 +587,7 @@ export default function LkPage() {
 
     function resetTeamEditor() {
         setEditingTeamId(null);
+        setTeamSubmitAttempted(false);
         setTeamForm(emptyTeamForm());
         void navigate("/lk/my_team");
     }
@@ -629,6 +660,8 @@ export default function LkPage() {
     }
 
     async function handleTeamSubmit() {
+        setTeamSubmitAttempted(true);
+
         if (!editingTeamId && (!teamForm.eventId || !teamForm.locationId || !teamForm.leagueId)) {
             notify({ type: "warning", text: "Выберите мероприятие, площадку и лигу" });
             return;
@@ -723,6 +756,7 @@ export default function LkPage() {
             setRegistrationData(updatedRegistrationData);
             setOwnedTeams(updatedOwnedTeams);
             setEditingTeamId(null);
+            setTeamSubmitAttempted(false);
             setTeamForm(emptyTeamForm());
             void navigate("/lk/my_team");
         } finally {
@@ -1199,11 +1233,11 @@ export default function LkPage() {
                                         ) : (
                                             <div className="mt-8 grid gap-5 lg:grid-cols-3">
                                                 <label className="block space-y-2">
-                                                    <span className="text-sm text-[var(--color-text-secondary)]">Мероприятие</span>
+                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.eventId}>Мероприятие</RequiredLabel>
                                                     <select
                                                         value={teamForm.eventId}
                                                         onChange={(event) => handleEventChange(event.target.value)}
-                                                        className={inputClassName}
+                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.eventId)}
                                                     >
                                                         <option value="">Выберите мероприятие</option>
                                                         {registrationData.map((event) => (
@@ -1215,11 +1249,11 @@ export default function LkPage() {
                                                 </label>
 
                                                 <label className="block space-y-2">
-                                                    <span className="text-sm text-[var(--color-text-secondary)]">Площадка</span>
+                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.locationId}>Площадка</RequiredLabel>
                                                     <select
                                                         value={teamForm.locationId}
                                                         onChange={(event) => handleLocationChange(event.target.value)}
-                                                        className={inputClassName}
+                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.locationId)}
                                                         disabled={!selectedEvent}
                                                     >
                                                         <option value="">Выберите площадку</option>
@@ -1232,11 +1266,11 @@ export default function LkPage() {
                                                 </label>
 
                                                 <label className="block space-y-2">
-                                                    <span className="text-sm text-[var(--color-text-secondary)]">Лига</span>
+                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.leagueId}>Лига</RequiredLabel>
                                                     <select
                                                         value={teamForm.leagueId}
                                                         onChange={(event) => setTeamForm((prev) => ({ ...prev, leagueId: event.target.value }))}
-                                                        className={inputClassName}
+                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.leagueId)}
                                                         disabled={!selectedLocation}
                                                     >
                                                         <option value="">Выберите лигу</option>
@@ -1281,21 +1315,21 @@ export default function LkPage() {
 
                                         <div className="mt-8 grid gap-5 sm:grid-cols-2">
                                             <label className="block space-y-2 sm:col-span-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Название команды</span>
+                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.name.trim()}>Название команды</RequiredLabel>
                                                 <input
                                                     value={teamForm.name}
                                                     onChange={(event) => setTeamForm((prev) => ({ ...prev, name: event.target.value }))}
                                                     placeholder="Пифагоры"
-                                                    className={inputClassName}
+                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.name.trim())}
                                                 />
                                             </label>
 
                                             <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Учебное заведение команды</span>
+                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.schoolMode}>Учебное заведение команды</RequiredLabel>
                                                 <select
                                                     value={teamForm.schoolMode}
                                                     onChange={(event) => handleSchoolModeChange(event.target.value)}
-                                                    className={inputClassName}
+                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.schoolMode)}
                                                 >
                                                     <option value="">Выберите учебное заведение</option>
                                                     {schoolOptions.map((option) => (
@@ -1308,11 +1342,11 @@ export default function LkPage() {
                                             </label>
 
                                             <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Регион</span>
+                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.regionMode}>Регион</RequiredLabel>
                                                 <select
                                                     value={teamForm.regionMode}
                                                     onChange={(event) => handleRegionModeChange(event.target.value)}
-                                                    className={inputClassName}
+                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.regionMode)}
                                                 >
                                                     <option value="">Выберите регион</option>
                                                     {regionOptions.map((option) => (
@@ -1326,36 +1360,34 @@ export default function LkPage() {
 
                                             {teamForm.schoolMode === customSchoolValue ? (
                                                 <label className="block space-y-2">
-                                                    <span className="text-sm text-[var(--color-text-secondary)]">Свое учебное заведение</span>
+                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.school.trim()}>Свое учебное заведение</RequiredLabel>
                                                     <input
                                                         value={teamForm.school}
                                                         onChange={(event) => setTeamForm((prev) => ({ ...prev, school: event.target.value }))}
-                                                        className={inputClassName}
+                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.school.trim())}
                                                     />
                                                 </label>
                                             ) : null}
 
                                             {teamForm.regionMode === customRegionValue ? (
                                                 <label className="block space-y-2">
-                                                    <span className="text-sm text-[var(--color-text-secondary)]">Свой регион</span>
+                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.region.trim()}>Свой регион</RequiredLabel>
                                                     <input
                                                         value={teamForm.region}
                                                         onChange={(event) => setTeamForm((prev) => ({ ...prev, region: event.target.value }))}
-                                                        className={inputClassName}
+                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.region.trim())}
                                                     />
                                                 </label>
                                             ) : null}
 
                                             {teamForm.members.map((member, index) => (
                                                 <label key={index} className="block space-y-2">
-                                                    <span className="text-sm text-[var(--color-text-secondary)]">
-                                                        Участник {index + 1}
-                                                    </span>
+                                                    <RequiredLabel invalid={teamSubmitAttempted && !member.trim()}>Участник {index + 1}</RequiredLabel>
                                                     <input
                                                         value={member}
                                                         onChange={(event) => handleMemberChange(index, event.target.value)}
                                                         placeholder="Фамилия Имя"
-                                                        className={inputClassName}
+                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !member.trim())}
                                                     />
                                                 </label>
                                             ))}
@@ -1372,12 +1404,12 @@ export default function LkPage() {
                                             </label>
 
                                             <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Активность сопровождающего</span>
+                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.maintainer_activity}>Активность сопровождающего</RequiredLabel>
                                                 <select
                                                     value={teamForm.maintainer_activity}
                                                     onChange={(event) => setTeamForm((prev) => ({ ...prev, maintainer_activity: event.target.value }))}
                                                     required
-                                                    className={inputClassName}
+                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.maintainer_activity)}
                                                 >
                                                     <option value="">Не выбрано</option>
                                                     {activityOptions.map((option) => (
@@ -1389,7 +1421,7 @@ export default function LkPage() {
                                             </label>
 
                                             <label className="block space-y-2">
-                                                <span className="text-sm text-[var(--color-text-secondary)]">Количество обедов</span>
+                                                <RequiredLabel invalid={teamSubmitAttempted && isMealsCountInvalid(teamForm.meals_count)}>Количество обедов</RequiredLabel>
                                                 <span className="block text-xs text-[var(--color-text-secondary)]">
                                                     Цена: 400 рублей за человека, сопровождающего тоже нужно учитывать.
                                                 </span>
@@ -1399,7 +1431,7 @@ export default function LkPage() {
                                                     max={5}
                                                     value={teamForm.meals_count}
                                                     onChange={(event) => setTeamForm((prev) => ({ ...prev, meals_count: event.target.value }))}
-                                                    className={inputClassName}
+                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && isMealsCountInvalid(teamForm.meals_count))}
                                                 />
                                             </label>
 
@@ -1416,7 +1448,11 @@ export default function LkPage() {
                                         </div>
 
                                         {!editingTeam ? (
-                                            <label className="mt-6 flex items-start gap-3 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] px-4 py-4">
+                                            <label className={`mt-6 flex items-start gap-3 rounded-[24px] border bg-[rgba(255,255,255,0.72)] px-4 py-4 ${
+                                                teamSubmitAttempted && !teamForm.acceptedOffer
+                                                    ? "border-[rgba(220,38,38,0.35)] bg-[rgba(254,242,242,0.92)]"
+                                                    : "border-[var(--color-border)]"
+                                            }`}>
                                                 <input
                                                     type="checkbox"
                                                     checked={teamForm.acceptedOffer}
@@ -1424,6 +1460,7 @@ export default function LkPage() {
                                                     className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
                                                 />
                                                 <span className="text-sm text-[var(--color-text-secondary)]">
+                                                    <span className="text-[rgba(220,38,38,0.9)]">*</span>{" "}
                                                     Подавая заявку на регистрацию вы автоматически соглашаетесь с {" "}
                                                     <a href="/offer" target="_blank" rel="noreferrer" className="text-[var(--color-primary)] underline underline-offset-2">
                                                         офертой
