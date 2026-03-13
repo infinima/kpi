@@ -46,6 +46,8 @@ jobs:
           cp backend/package.json release/package.json
           cp backend/package-lock.json release/package-lock.json
           cp -r backend/dist/* release/dist/
+          mkdir -p release/dist/db
+          cp -r backend/src/db/migrations release/dist/db/
           cp -r backend/src/static release/dist/
           cp -r frontend/dist/* release/public/
           find release -name "*.map" -delete

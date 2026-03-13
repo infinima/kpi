@@ -5,11 +5,12 @@ import { Server as SocketIOServer } from "socket.io";
 import { createApp } from "./rest/index.js";
 import { initSocket } from "./socket/index.js";
 import { runMigrations } from "./db/migrate.js";
+import { startPaymentChecker } from "./utils/payment-checker.js";
 
 async function bootstrap() {
-    // console.log("[migrations] started")
-    // await runMigrations();
-    // console.log("[migrations] ended successfully")
+    console.log("[migrations] started")
+    await runMigrations();
+    console.log("[migrations] ended successfully")
 
     const app = createApp();
 
@@ -20,6 +21,7 @@ async function bootstrap() {
             : {}
     });
     initSocket(io);
+    startPaymentChecker();
 
     const PORT = process.env.PORT ?? 3000;
     server.listen(PORT, () => {

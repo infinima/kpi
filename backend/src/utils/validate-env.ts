@@ -18,6 +18,8 @@ const EnvSchema = z.object({
     SMTP_PASS: z.string().min(1),
     SMTP_FROM: z.string().min(1),
 
+    PAYMENT_SOLT_KEY: z.string().min(1),
+
     MIGRATIONS_TABLE: z.string().min(1),
     TRIGGERS_IGNORED_TABLES: z.string().default("logs"),
 });

@@ -41,6 +41,7 @@ export const TeamSchema = z.object({
         "заниматься своими делами"
     ]).nullable(),
     status: z.enum(["IN_RESERVE", "ON_CHECKING", "ACCEPTED", "PAID"]),
+    payment_link: z.string().min(1).nullable(),
 
     answers_kvartaly: AnswersKvartalySchema,
     penalty_kvartaly: z.number().int(),
@@ -81,6 +82,7 @@ export const CreateTeamInput = TeamSchema
         owner_user_id: true,
         owner_full_name: true,
         status: true,
+        payment_link: true,
         answers_kvartaly: true,
         penalty_kvartaly: true,
         place_kvartaly: true,

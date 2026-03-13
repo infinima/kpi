@@ -7,6 +7,12 @@ import { authRequired } from "../middlewares/auth-required.js";
 import { generateAppreciation } from "../../utils/generate-appreciation.js";
 import { generateDiploma } from "../../utils/generate-diploma.js";
 import { generateSpecialNominations } from "../../utils/generate-special-nominations.js";
+import { requestPaymentInfo } from "../../utils/payment.js";
+import {
+    loadTeamEmailContext,
+    sendTeamAcceptedEmail,
+    sendTeamPaymentConfirmedEmail,
+} from "../../utils/team-email.js";
 
 import {
     GetTeamsByLeagueInput,
@@ -33,6 +39,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at,
@@ -69,6 +76,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -100,6 +108,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -131,6 +140,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -164,6 +174,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -197,6 +208,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -232,6 +244,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -267,6 +280,7 @@ teamsRouter.get(
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
+                    t.payment_link,
                     t.answers_kvartaly, t.answers_fudzi,
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at
@@ -808,14 +822,18 @@ teamsRouter.patch(
         }
 
         try {
+            const requestedStatus = fields.status;
+            let existingTeam: any | null = null;
             if (!canUpdateAny) {
                 const [team] = await query(
-                    `SELECT t.owner_user_id, l.status AS league_status
+                    `SELECT t.owner_user_id, t.status, t.name, t.school,
+                            l.status AS league_status
                      FROM teams t
                               JOIN leagues l ON l.id = t.league_id
                      WHERE t.id = ?`,
                     [id], userId
                 );
+                existingTeam = team ?? null;
 
                 if (!team) {
                     return res.status(404).json({
@@ -866,6 +884,53 @@ teamsRouter.patch(
                 }
             }
 
+            let currentTeam = existingTeam;
+            if (!currentTeam) {
+                const [row] = await query(
+                    "SELECT status, name, school FROM teams WHERE id = ?",
+                    [id],
+                    (req as any).user_id
+                );
+                currentTeam = row ?? null;
+            }
+
+            const previousStatus = currentTeam?.status;
+
+            if (fields.status === "ACCEPTED") {
+                if (!currentTeam) {
+                    return res.status(404).json({
+                        error: {
+                            code: "TEAM_NOT_FOUND",
+                            message: "The team does not exist",
+                        },
+                    });
+                }
+
+                if (currentTeam.status !== "ACCEPTED") {
+                    try {
+                        const info = await requestPaymentInfo({
+                            teamId: Number(id),
+                            teamName: String(currentTeam.name),
+                            teamSchool: String(currentTeam.school),
+                        });
+
+                        if (info.payUrl) {
+                            fields.payment_link = info.payUrl;
+                        }
+                        if (info.paid) {
+                            fields.status = "PAID";
+                        }
+                    } catch (e: any) {
+                        return res.status(502).json({
+                            error: {
+                                code: "PAYMENT_REQUEST_FAILED",
+                                message: e?.message ?? String(e),
+                            },
+                        });
+                    }
+                }
+            }
+
             if (fields.members) {
                 fields.members = JSON.stringify(fields.members);
             }
@@ -899,6 +964,33 @@ teamsRouter.patch(
                 "UPDATE teams SET ? WHERE id = ?",
                 [fields, id], (req as any).user_id
             );
+
+            const finalStatus = fields.status ?? previousStatus;
+
+            if (requestedStatus === "ACCEPTED" && previousStatus !== "ACCEPTED") {
+                try {
+                    const ctx = await loadTeamEmailContext(Number(id));
+                    if (ctx) {
+                        await sendTeamAcceptedEmail({
+                            context: ctx,
+                            movedFromReserve: previousStatus === "IN_RESERVE",
+                        });
+                    }
+                } catch (e) {
+                    console.error("[email] failed to send acceptance email:", e);
+                }
+            }
+
+            if (finalStatus === "PAID" && previousStatus !== "PAID") {
+                try {
+                    const ctx = await loadTeamEmailContext(Number(id));
+                    if (ctx) {
+                        await sendTeamPaymentConfirmedEmail(ctx);
+                    }
+                } catch (e) {
+                    console.error("[email] failed to send payment confirmation:", e);
+                }
+            }
 
             res.json({ success: true });
         } catch (e: any) {
@@ -970,4 +1062,3 @@ teamsRouter.post(
         res.json({ success: true });
     }
 );
-
