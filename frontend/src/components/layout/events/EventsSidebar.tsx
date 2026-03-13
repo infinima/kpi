@@ -310,7 +310,7 @@ export default function EventsSidebar() {
     const locationNumber = locationInfo?.id ?? (locationId ? Number(locationId) : undefined);
     const leagueNumber = leagueInfo?.id ?? (leagueId ? Number(leagueId) : undefined);
     const rights = user?.rights;
-    const canSeeTeams = !guest;
+    const canSeeTeams = !guest && can("teams", "get");
     const canSeeKvartalyResults = isLeagueStatusAtLeast(leagueInfo?.status, "KVARTALY_GAME");
     const canSeeFudziResults = isLeagueStatusAtLeast(leagueInfo?.status, "FUDZI_GAME");
     const canSeeOverallResults = leagueInfo?.status === "ENDED";
