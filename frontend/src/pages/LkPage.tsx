@@ -63,7 +63,7 @@ type OwnedTeam = {
     id: number;
     league_id: number;
     owner_user_id: number | null;
-    can_edit?: boolean;
+    owner_can_edit?: boolean;
     name: string;
     members: string[];
     appreciations: string[];
@@ -1010,7 +1010,7 @@ export default function LkPage() {
                                                         </div>
 
                                                         <div className="flex flex-col gap-3 sm:flex-row">
-                                                            {team.can_edit ? (
+                                                            {team.owner_can_edit ? (
                                                                 <OutlineButton
                                                                     active
                                                                     leftIcon={<Pencil size={16} />}

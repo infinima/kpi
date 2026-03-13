@@ -9,6 +9,7 @@ import { useModalStore } from "@/store";
 // import { LogTableModal } from "@/components/TableLogsModal";
 // import { LeagueAccountsModal } from "@/components/LeagueAccountsModal";
 import { TeamMembersModal } from "@/components/modals/TeamMembersModal";
+import { TeamInfoModal } from "@/components/modals/TeamInfoModal";
 import { CropModal } from "@/components/services/CropModal";
 
 export function ModalContainer() {
@@ -34,6 +35,8 @@ export function ModalContainer() {
             //     return <LeagueAccountsModal />;
             case "team-members":
                 return <TeamMembersModal />;
+            case "team-info":
+                return <TeamInfoModal />;
             case "crop":
                 return <CropModal />;
             default:

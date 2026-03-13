@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { TeamMembersValue } from "@/components/ui/table/TeamTableRow";
+import type { TeamMembersValue, TeamTableRowData } from "@/components/ui/table/TeamTableRow";
 
 export type ModalType =
     | "login"
@@ -11,6 +11,7 @@ export type ModalType =
     | "table-log"
     | "league-accounts"
     | "team-members"
+    | "team-info"
     | "crop";
 
 type ModalPayloadMap = {
@@ -27,6 +28,11 @@ type ModalPayloadMap = {
         members: TeamMembersValue;
         editable: boolean;
         onSave?: (members: TeamMembersValue) => void;
+    };
+    "team-info": {
+        row: TeamTableRowData;
+        canEditRestrictedFields: boolean;
+        onSave: (row: TeamTableRowData) => Promise<void> | void;
     };
     crop: {
         file: File;
@@ -48,6 +54,7 @@ type ActiveModal =
     | { type: "table-log"; payload: ModalPayloadMap["table-log"] }
     | { type: "league-accounts"; payload: ModalPayloadMap["league-accounts"] }
     | { type: "team-members"; payload: ModalPayloadMap["team-members"] }
+    | { type: "team-info"; payload: ModalPayloadMap["team-info"] }
     | { type: "crop"; payload: ModalPayloadMap["crop"] };
 
 type ModalState = {

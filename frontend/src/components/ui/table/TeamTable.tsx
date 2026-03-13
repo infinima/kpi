@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, RotateCcw, Search } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
@@ -60,6 +60,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>(null);
     const [showCreateRow, setShowCreateRow] = useState(false);
+    const scrollRef = useRef<HTMLDivElement | null>(null);
 
     const filteredData = useMemo(() => {
         const filtered = data.filter((row) =>
@@ -85,8 +86,12 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
         });
     }, [data, filters, sortDirection, sortKey]);
 
-    const actionsWidth = 184;
+    const actionsWidth = 168;
     const createRow = useMemo(() => createEmptyTeam(defaultLeagueId, defaultLeagueName), [defaultLeagueId, defaultLeagueName]);
+    const tableMinWidth = useMemo(
+        () => TEAM_TABLE_COLUMNS.reduce((total, column) => total + column.width, actionsWidth),
+        [actionsWidth]
+    );
 
     return (
         <section className="space-y-4">
@@ -94,11 +99,11 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                 <div className="text-sm text-[var(--color-text-secondary)]">
                     Найдено команд по текущим фильтрам: {filteredData.length}
                 </div>
-                {onCreate ? (
+                {onCreate && defaultLeagueId ? (
                     <PrimaryButton
                         active
                         onClick={() => setShowCreateRow((prev) => !prev)}
-                        className="px-3 py-2 text-sm shadow-none"
+                        className="h-9 w-9 px-0 py-0 text-sm shadow-none"
                     >
                         <span className="sr-only">Создать команду</span>
                         <Plus size={16} />
@@ -106,12 +111,26 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                 ) : null}
             </div>
 
-            <div className="overflow-x-auto">
-                <div className="min-w-[2520px] overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.86)] backdrop-blur-sm">
+            <div
+                ref={scrollRef}
+                className="overflow-x-auto"
+                onWheel={(event) => {
+                    if (!event.ctrlKey || !scrollRef.current) {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    scrollRef.current.scrollLeft += event.deltaY;
+                }}
+            >
+                <div
+                    className="mx-auto w-max min-w-full overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.86)] backdrop-blur-sm"
+                    style={{ minWidth: `${tableMinWidth}px` }}
+                >
                     <div
-                        className="grid items-center gap-2 border-b border-[var(--color-border)] px-6 py-1 font-semibold text-[var(--color-text-main)]"
+                        className="grid items-center gap-0 border-b border-[var(--color-border)] px-6 py-1 font-semibold text-[var(--color-text-main)]"
                         style={{
-                            gridTemplateColumns: `${TEAM_TABLE_COLUMNS.map((column) => `${column.width}fr`).join(" ")} ${actionsWidth}px`,
+                            gridTemplateColumns: `${TEAM_TABLE_COLUMNS.map((column) => `${column.width}px`).join(" ")} ${actionsWidth}px`,
                         }}
                     >
                         {TEAM_TABLE_COLUMNS.map((column) => (
@@ -138,24 +157,24 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
 
                                     setSortDirection("asc");
                                 }}
-                                className="flex min-w-0 items-center gap-2 text-left"
+                                className="flex min-w-0 items-center gap-2 px-1 text-left"
                             >
                                 <span className="truncate">{column.label}</span>
                                 {sortKey === column.key && sortDirection === "asc" ? <ArrowUp size={14} /> : null}
                                 {sortKey === column.key && sortDirection === "desc" ? <ArrowDown size={14} /> : null}
                             </button>
                         ))}
-                        <div className="text-right">Действия</div>
+                        <div className="sticky right-0 z-10 bg-[rgba(255,255,255,0.96)] pr-3 text-right">Действия</div>
                     </div>
 
                     <div
-                        className="grid items-center gap-2 border-b border-[var(--color-border)] bg-[rgba(248,250,252,0.88)] px-3 py-2"
+                        className="grid items-center gap-0 border-b border-[var(--color-border)] bg-[rgba(248,250,252,0.88)] px-3 py-2"
                         style={{
-                            gridTemplateColumns: `${TEAM_TABLE_COLUMNS.map((column) => `${column.width}fr`).join(" ")} ${actionsWidth}px`,
+                            gridTemplateColumns: `${TEAM_TABLE_COLUMNS.map((column) => `${column.width}px`).join(" ")} ${actionsWidth}px`,
                         }}
                     >
                         {TEAM_TABLE_COLUMNS.map((column) => (
-                            <div key={column.key} className="min-w-0">
+                            <div key={column.key} className="min-w-0 px-1">
                                 <div className="relative">
                                     <Search
                                         size={14}
@@ -171,7 +190,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                             </div>
                         ))}
 
-                        <div className="flex justify-end">
+                        <div className="sticky right-0 z-10 flex justify-end bg-[rgba(248,250,252,0.96)] pr-3">
                             <OutlineButton
                                 active
                                 onClick={() => {
@@ -179,7 +198,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                                     setSortKey(null);
                                     setSortDirection(null);
                                 }}
-                                className="px-3 py-2 text-sm"
+                                className="h-9 w-9 px-0 py-0 text-sm"
                             >
                                 <span className="sr-only">Сбросить фильтры</span>
                                 <RotateCcw size={16} />
@@ -188,7 +207,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                     </div>
 
                     <div className="divide-y divide-[var(--color-border)]">
-                        {showCreateRow && onCreate ? (
+                        {showCreateRow && onCreate && defaultLeagueId ? (
                             <TeamTableRow
                                 row={createRow}
                                 columns={TEAM_TABLE_COLUMNS}

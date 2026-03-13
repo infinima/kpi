@@ -200,6 +200,7 @@ export function EventTeamsPage() {
         };
 
         if (canEditRestrictedFields(row.id)) {
+            payload.league_id = row.league_id;
             payload.status = row.status || undefined;
             payload.diploma = row.diploma || null;
             payload.special_nominations = row.special_nominations;
@@ -210,20 +211,8 @@ export function EventTeamsPage() {
             error: true,
         });
 
-        setRows((prev) => prev.map((item) => item.id === row.id ? {
-            ...item,
-            name: row.name,
-            members: buildMembersRequestValue(row),
-            appreciations: row.appreciations,
-            school: row.school,
-            region: row.region,
-            meals_count: row.meals_count,
-            maintainer_full_name: row.maintainer_full_name,
-            maintainer_activity: row.maintainer_activity,
-            status: canEditRestrictedFields(row.id) ? row.status : item.status,
-            diploma: canEditRestrictedFields(row.id) ? row.diploma || null : item.diploma,
-            special_nominations: canEditRestrictedFields(row.id) ? row.special_nominations : item.special_nominations,
-        } : item));
+        const updated = await apiGet<TeamResponseRow>(`teams/${row.id}`, { error: true });
+        setRows((prev) => prev.map((item) => item.id === row.id ? updated : item));
     }
 
     async function handleDelete(row: TeamTableRowData) {
