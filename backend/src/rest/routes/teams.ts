@@ -35,6 +35,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -72,6 +74,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -104,6 +108,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -136,6 +142,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -170,6 +178,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -204,6 +214,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -240,6 +252,8 @@ teamsRouter.get(
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
@@ -276,6 +290,8 @@ teamsRouter.get(
         const [row] = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
                     t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
                     t.name, t.members, t.appreciations,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,

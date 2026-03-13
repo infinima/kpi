@@ -49,11 +49,6 @@ async function checkAcceptedTeams(): Promise<void> {
 }
 
 export function startPaymentChecker(): void {
-    if (!process.env.PAYMENT_SOLT_KEY) {
-        console.warn("[payment-checker] PAYMENT_SOLT_KEY is not set; checker disabled");
-        return;
-    }
-
     checkAcceptedTeams().catch((e) => console.error("[payment-checker] initial run failed", e));
     setInterval(() => {
         checkAcceptedTeams().catch((e) => console.error("[payment-checker] run failed", e));
