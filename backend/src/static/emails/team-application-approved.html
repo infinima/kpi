@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="ru" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="supported-color-schemes" content="light dark" />
+    <title>Заявка одобрена</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+            supported-color-schemes: light dark;
+        }
+
+        body, table, td, div, p, a {
+            font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body, .page {
+                background-color: #0b1220 !important;
+            }
+
+            .card {
+                background-color: #111827 !important;
+                border-color: #334155 !important;
+            }
+
+            .title,
+            .subtitle,
+            .detail-label,
+            .detail-value,
+            .button,
+            .footer-link,
+            .year {
+                color: #f8fafc !important;
+            }
+
+            .text,
+            .footer,
+            .year-note {
+                color: #cbd5e1 !important;
+            }
+
+            .pill {
+                background-color: #1e293b !important;
+                border-color: #334155 !important;
+                color: #cbd5e1 !important;
+            }
+
+            .details-box,
+            .note {
+                background-color: #0f172a !important;
+                border-color: #334155 !important;
+            }
+
+            .button-wrap {
+                background-color: #2563eb !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin:0;padding:0;background-color:#f3f6fb;">
+<table class="page" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;background-color:#f3f6fb;">
+    <tr>
+        <td align="center" style="padding:32px 16px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:620px;border-collapse:collapse;">
+                <tr>
+                    <td align="center" style="padding-bottom:16px;">
+                        <div class="pill" style="display:inline-block;padding:10px 16px;border:1px solid #dbe3ef;border-radius:999px;background-color:#ffffff;font-size:12px;line-height:16px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#475569;">
+                            Турнир математических игр
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="card" style="border:1px solid #dbe3ef;border-radius:28px;background-color:#ffffff;padding:36px 28px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+                            <tr>
+                                <td class="title" align="center" style="padding-bottom:12px;font-size:30px;line-height:36px;font-weight:800;color:#0f172a;">
+                                    Ваша заявка одобрена
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text" align="center" style="padding-bottom:8px;font-size:16px;line-height:24px;color:#475569;">
+                                    Команда <strong class="subtitle" style="color:#0f172a;">{{TEAM_NAME}}</strong> допущена к участию.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="text" align="center" style="padding-bottom:24px;font-size:16px;line-height:24px;color:#475569;">
+                                    Ниже указаны данные заявки и ссылка для оплаты участия.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:24px;">
+                                    <div class="details-box" style="border:1px solid #e2e8f0;border-radius:20px;background-color:#f8fafc;padding:18px 20px;">
+                                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+                                            <tr>
+                                                <td class="detail-label" style="padding:0 0 10px;font-size:13px;line-height:18px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;">
+                                                    Команда
+                                                </td>
+                                                <td class="detail-value" align="right" style="padding:0 0 10px;font-size:15px;line-height:22px;font-weight:700;color:#0f172a;">
+                                                    {{TEAM_NAME}}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-label" style="padding:10px 0;font-size:13px;line-height:18px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;border-top:1px solid #dbe3ef;">
+                                                    Мероприятие
+                                                </td>
+                                                <td class="detail-value" align="right" style="padding:10px 0;font-size:15px;line-height:22px;font-weight:700;color:#0f172a;border-top:1px solid #dbe3ef;">
+                                                    {{EVENT_NAME}}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-label" style="padding:10px 0;font-size:13px;line-height:18px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;border-top:1px solid #dbe3ef;">
+                                                    Площадка
+                                                </td>
+                                                <td class="detail-value" align="right" style="padding:10px 0;font-size:15px;line-height:22px;font-weight:700;color:#0f172a;border-top:1px solid #dbe3ef;">
+                                                    {{LOCATION_NAME}}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="detail-label" style="padding:10px 0 0;font-size:13px;line-height:18px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;color:#64748b;border-top:1px solid #dbe3ef;">
+                                                    Лига
+                                                </td>
+                                                <td class="detail-value" align="right" style="padding:10px 0 0;font-size:15px;line-height:22px;font-weight:700;color:#0f172a;border-top:1px solid #dbe3ef;">
+                                                    {{LEAGUE_NAME}}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:20px;text-align:center;">
+                                    <div class="button-wrap" style="display:inline-block;border-radius:18px;background-color:#2563eb;">
+                                        <a class="button" href="{{PAYMENT_URL}}" style="display:inline-block;padding:16px 28px;border-radius:18px;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">
+                                            Оплатить участие
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:20px;">
+                                    <div class="note" style="border:1px solid #e2e8f0;border-radius:18px;background-color:#f8fafc;padding:14px 16px;font-size:14px;line-height:22px;color:#475569;">
+                                        Если кнопка не открывается, используйте эту ссылку:
+                                        <a href="{{PAYMENT_URL}}" style="color:#2563eb;text-decoration:none;font-weight:700;word-break:break-all;">{{PAYMENT_URL}}</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="footer" align="center" style="padding-top:4px;font-size:13px;line-height:21px;color:#64748b;">
+                                    Нужна помощь? Напишите на
+                                    <a class="footer-link" href="mailto:{{SUPPORT_EMAIL}}" style="color:#334155;font-weight:700;text-decoration:none;">{{SUPPORT_EMAIL}}</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td align="center" style="padding-top:16px;">
+                        <div class="year-note" style="font-size:12px;line-height:20px;color:#64748b;">
+                            <span class="year" style="font-weight:700;color:#334155;">© {{YEAR}}</span>
+                            Турнир математических игр
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
