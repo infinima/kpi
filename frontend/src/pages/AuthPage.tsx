@@ -8,6 +8,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import {apiPost} from "@/api";
 import {useNotifications, useUser} from "@/store";
+import { downloadPersonalDataFile } from "@/utils/legalDownloads";
 
 type AuthMode = "login" | "register";
 type RegisterStep = "form" | "confirm";
@@ -94,6 +95,7 @@ export default function AuthPage() {
         password_confirmation: "",
         phone_number: "",
     });
+    const [acceptedPersonalData, setAcceptedPersonalData] = useState(false);
 
     function navigateAfterAuth() {
         if (window.history.length > 1) {
@@ -139,6 +141,11 @@ export default function AuthPage() {
             !registerForm.phone_number.trim()
         ) {
             notify({type: "warning", text: "Заполните обязательные поля"});
+            return;
+        }
+
+        if (!acceptedPersonalData) {
+            notify({type: "warning", text: "Подтвердите согласие на обработку персональных данных"});
             return;
         }
 
@@ -368,6 +375,26 @@ export default function AuthPage() {
                                                 />
                                             </label>
                                         </div>
+
+                                        <label className="flex items-start gap-3 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] px-4 py-4">
+                                            <input
+                                                type="checkbox"
+                                                checked={acceptedPersonalData}
+                                                onChange={(event) => setAcceptedPersonalData(event.target.checked)}
+                                                className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
+                                            />
+                                            <span className="text-sm text-[var(--color-text-secondary)]">
+                                                Нажимая на регистрацию, вы даёте согласие на обработку{" "}
+                                                <button
+                                                    type="button"
+                                                    onClick={downloadPersonalDataFile}
+                                                    className="text-[var(--color-primary)] underline underline-offset-2"
+                                                >
+                                                    персональных данных
+                                                </button>
+                                                .
+                                            </span>
+                                        </label>
 
                                         <PrimaryButton
                                             active

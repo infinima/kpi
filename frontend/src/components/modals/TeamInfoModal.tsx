@@ -24,6 +24,31 @@ function formatDateTime(value: string | null | undefined) {
     });
 }
 
+function formatRussianPhone(value: string | null | undefined) {
+    if (!value) {
+        return "Не указан";
+    }
+
+    const digits = String(value).replace(/\D/g, "");
+    const normalized = digits.startsWith("8")
+        ? `7${digits.slice(1, 11)}`
+        : digits.startsWith("7")
+            ? digits.slice(0, 11)
+            : digits.slice(0, 11);
+
+    if (normalized.length !== 11) {
+        return value;
+    }
+
+    const part1 = normalized.slice(0, 1);
+    const part2 = normalized.slice(1, 4);
+    const part3 = normalized.slice(4, 7);
+    const part4 = normalized.slice(7, 9);
+    const part5 = normalized.slice(9, 11);
+
+    return `+${part1} (${part2}) ${part3}-${part4}-${part5}`;
+}
+
 const statusOptions = [
     { label: "В резерве", value: "IN_RESERVE" },
     { label: "На проверке", value: "ON_CHECKING" },
@@ -162,6 +187,8 @@ export function TeamInfoModal() {
                 <div className="mt-6 grid flex-1 gap-4 overflow-y-auto pr-1 lg:grid-cols-2">
                     <ReadField label="ID" value={String(draft.id)} />
                     <ReadField label="Руководитель" value={draft.owner_full_name || "Не указан"} />
+                    <ReadField label="Email руководителя" value={draft.owner_email || "Не указан"} />
+                    <ReadField label="Телефон руководителя" value={formatRussianPhone(draft.owner_phone_number)} />
                     <ReadField label="Создано" value={formatDateTime(draft.created_at)} />
                     <ReadField label="Обновлено" value={formatDateTime(draft.updated_at)} />
 

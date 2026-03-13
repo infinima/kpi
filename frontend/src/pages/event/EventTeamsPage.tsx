@@ -11,6 +11,8 @@ type TeamResponseRow = {
     league_name?: string | null;
     owner_user_id: number | null;
     owner_full_name?: string | null;
+    owner_email?: string | null;
+    owner_phone_number?: string | null;
     name: string;
     members: unknown;
     appreciations: string[] | string;
@@ -111,6 +113,8 @@ export function EventTeamsPage() {
             league_name: row.league_name ?? `Лига #${row.league_id}`,
             owner_user_id: row.owner_user_id,
             owner_full_name: row.owner_full_name || "",
+            owner_email: row.owner_email ?? "",
+            owner_phone_number: row.owner_phone_number ?? "",
             name: row.name ?? "",
             members: parseMembers(row.members),
             appreciations: parseStringArray(row.appreciations),

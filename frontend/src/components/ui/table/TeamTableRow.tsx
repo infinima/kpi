@@ -13,6 +13,8 @@ export type TeamTableRowData = {
     league_name: string;
     owner_user_id: number | null;
     owner_full_name: string;
+    owner_email?: string | null;
+    owner_phone_number?: string | null;
     name: string;
     members: TeamMembersValue;
     appreciations: string[];

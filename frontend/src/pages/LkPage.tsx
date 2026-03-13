@@ -20,6 +20,11 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { apiGet, apiPatch, apiPost } from "@/api";
 import { useNotifications, useUser } from "@/store";
+import {
+    downloadContractFile,
+    downloadMedicalInterventionFile,
+    downloadPhotoVideoConsentFile
+} from "@/utils/legalDownloads";
 
 type CabinetSection = "me" | "my_team" | "reg_team";
 
@@ -683,7 +688,7 @@ export default function LkPage() {
         }
 
         if (!editingTeamId && !teamForm.acceptedOffer) {
-            notify({ type: "warning", text: "Подтвердите согласие с офертой" });
+            notify({ type: "warning", text: "Подтвердите согласие с договором" });
             return;
         }
 
@@ -1079,6 +1084,48 @@ export default function LkPage() {
                                                         </div>
                                                     </div>
 
+                                                    <div className="rounded-[24px] border border-[rgba(245,158,11,0.32)] bg-[rgba(255,247,237,0.96)] p-5">
+                                                        <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[rgba(154,52,18,0.95)]">
+                                                            Важно в день турнира
+                                                        </p>
+                                                        <p className="mt-3 text-sm leading-7 text-[var(--color-text-main)]">
+                                                            При регистрации команды руководитель предоставляет на каждого участника:
+                                                        </p>
+                                                        <div className="mt-3 space-y-2 text-sm leading-7 text-[var(--color-text-main)]">
+                                                            <p>
+                                                                <span className="font-semibold uppercase">Справка об отсутствии контактов с инфекционными больными</span>
+                                                                {" "}(выдаётся за 3 дня).
+                                                            </p>
+                                                            <p>
+                                                                <span className="font-semibold uppercase">Справка из школы</span>.
+                                                            </p>
+                                                            <p>
+                                                                <span className="font-semibold uppercase">Согласие на фото-видеосъёмку</span>
+                                                                {" "}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={downloadPhotoVideoConsentFile}
+                                                                    className="text-[var(--color-primary)] underline underline-offset-2"
+                                                                >
+                                                                    скачать
+                                                                </button>
+                                                                .
+                                                            </p>
+                                                            <p>
+                                                                <span className="font-semibold uppercase">Согласие на добровольное медицинское вмешательство</span>
+                                                                {" "}
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={downloadMedicalInterventionFile}
+                                                                    className="text-[var(--color-primary)] underline underline-offset-2"
+                                                                >
+                                                                    скачать
+                                                                </button>
+                                                                .
+                                                            </p>
+                                                        </div>
+                                                    </div>
+
                                                     <div className="grid gap-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                                                         <div className="rounded-[24px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] p-5">
                                                             <p className="text-sm font-medium text-[var(--color-text-main)]">
@@ -1313,6 +1360,17 @@ export default function LkPage() {
                                             </div>
                                         ) : null}
 
+                                        {!editingTeam ? (
+                                            <div className="mt-6 rounded-[24px] border border-[rgba(14,116,144,0.18)] bg-[rgba(14,116,144,0.08)] px-5 py-4">
+                                                <p className="text-sm font-medium text-[var(--color-text-main)]">
+                                                    Стоимость участия команды: 7000 рублей.
+                                                </p>
+                                                <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+                                                    Питание оплачивается отдельно. Стоимость обеда: 400 рублей за человека.
+                                                </p>
+                                            </div>
+                                        ) : null}
+
                                         <div className="mt-8 grid gap-5 sm:grid-cols-2">
                                             <label className="block space-y-2 sm:col-span-2">
                                                 <RequiredLabel invalid={teamSubmitAttempted && !teamForm.name.trim()}>Название команды</RequiredLabel>
@@ -1462,9 +1520,13 @@ export default function LkPage() {
                                                 <span className="text-sm text-[var(--color-text-secondary)]">
                                                     <span className="text-[rgba(220,38,38,0.9)]">*</span>{" "}
                                                     Подавая заявку на регистрацию вы автоматически соглашаетесь с {" "}
-                                                    <a href="/offer" target="_blank" rel="noreferrer" className="text-[var(--color-primary)] underline underline-offset-2">
-                                                        офертой
-                                                    </a>
+                                                    <button
+                                                        type="button"
+                                                        onClick={downloadContractFile}
+                                                        className="text-[var(--color-primary)] underline underline-offset-2"
+                                                    >
+                                                        договором
+                                                    </button>
                                                     .
                                                 </span>
                                             </label>

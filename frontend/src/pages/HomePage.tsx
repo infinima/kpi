@@ -1,5 +1,5 @@
 import {motion} from "framer-motion"
-import {FileText, LogIn, LogOut, UserPlus} from "lucide-react"
+import {FileText, LogIn, UserPlus} from "lucide-react"
 import Background from "@/components/layout/Background"
 import PrimaryButton from "@/components/ui/PrimaryButton"
 import AnimatedText from "@/components/ui/AnimatedText";
@@ -40,7 +40,6 @@ const leagues = [
 
 export default function HomePage() {
     const guest = useUser((state) => state.guest);
-    const logout = useUser((state) => state.logout);
 
     return (
         <div className="relative min-h-screen overflow-hidden">
@@ -57,15 +56,13 @@ export default function HomePage() {
                         </PrimaryButton>
                     </Link>
                 ) : (
-                    <OutlineButton
-                        active={true}
-                        leftIcon={<LogOut size={18}/>}
-                        onClick={() => {
-                            void logout();
-                        }}
-                    >
-                        Выйти
-                    </OutlineButton>
+                    <Link to="/lk">
+                        <OutlineButton
+                            active={true}
+                        >
+                            Личный кабинет
+                        </OutlineButton>
+                    </Link>
                 )}
             </div>
 

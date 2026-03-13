@@ -7,7 +7,6 @@ import NotFoundPage from "@/pages/NotFoundPage";
 import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/AuthPage";
 import LkPage from "@/pages/LkPage";
-import OfferPage from "@/pages/OfferPage";
 import {useUser} from "@/store";
 import NotReadyPage from "@/pages/NotReadyPage";
 import { EventsPage } from "@/pages/event/EventPage";
@@ -50,7 +49,6 @@ export default function App() {
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/lk" element={<Navigate to="/lk/me" replace />} />
                 <Route path="/lk/*" element={<LkPage />} />
-                <Route path="/offer" element={<OfferPage />} />
                 <Route path="*" element={<NotFoundPage />} />
 
                 <Route path="/events" element={<EventsRootPage />}>
