@@ -2,7 +2,7 @@ import { query } from "../db/pool.js";
 import { requestPaymentInfo } from "./payment.js";
 import { loadTeamEmailContext, sendTeamPaymentConfirmedEmail } from "./team-email.js";
 
-const CHECK_INTERVAL_MS = 10 * 60 * 1000;
+const CHECK_INTERVAL_MS = 30 * 60 * 1000;
 
 async function checkAcceptedTeams(): Promise<void> {
     const teams = await query(
