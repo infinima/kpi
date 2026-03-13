@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { fileURLToPath } from "url";
 import { pool } from "./pool.js";
 import { rebuildAuditTriggers } from "./triggers.js";
 
@@ -26,7 +27,32 @@ export async function runMigrations(): Promise<void> {
     await ensureMigrationsTable();
 
     const applied = await getAppliedMigrations();
-    const migrationsDir = path.resolve(process.cwd(), "src/db/migrations");
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    const candidates = [
+        path.resolve(__dirname, "migrations"),
+        path.resolve(__dirname, "../db/migrations"),
+        path.resolve(process.cwd(), "src/db/migrations"),
+        path.resolve(process.cwd(), "dist/db/migrations"),
+    ];
+
+    let migrationsDir = "";
+    for (const candidate of candidates) {
+        try {
+            const stat = await fs.stat(candidate);
+            if (stat.isDirectory()) {
+                migrationsDir = candidate;
+                break;
+            }
+        } catch {
+            // ignore
+        }
+    }
+
+    if (!migrationsDir) {
+        throw new Error(`Migrations directory not found. Tried: ${candidates.join(", ")}`);
+    }
 
     const files = (await fs.readdir(migrationsDir))
         .filter(file => file.endsWith(".sql"))

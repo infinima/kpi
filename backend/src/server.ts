@@ -7,9 +7,9 @@ import { initSocket } from "./socket/index.js";
 import { runMigrations } from "./db/migrate.js";
 
 async function bootstrap() {
-    console.log("[migrations] started")
-    await runMigrations();
-    console.log("[migrations] ended successfully")
+    // console.log("[migrations] started")
+    // await runMigrations();
+    // console.log("[migrations] ended successfully")
 
     const app = createApp();
 

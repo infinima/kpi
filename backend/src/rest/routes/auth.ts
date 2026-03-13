@@ -8,11 +8,35 @@ import { authRequired } from "../middlewares/auth-required.js";
 import { sendEmail } from "../../utils/send-email.js";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
 export const authRouter = express.Router();
 
 function renderOneTimeCodeEmail(code: string, minutes: number) {
-    const templatePath = path.resolve(process.cwd(), "src/static/emails/one-time-code.html");
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    const candidates = [
+        path.resolve(__dirname, "../../static/emails/one-time-code.html"),
+        path.resolve(__dirname, "../../static/one-time-code.html"),
+        path.resolve(process.cwd(), "src/static/emails/one-time-code.html"),
+        path.resolve(process.cwd(), "src/static/one-time-code.html"),
+        path.resolve(process.cwd(), "dist/static/emails/one-time-code.html"),
+        path.resolve(process.cwd(), "dist/static/one-time-code.html"),
+    ];
+
+    let templatePath = "";
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            templatePath = candidate;
+            break;
+        }
+    }
+
+    if (!templatePath) {
+        throw new Error(`Email template not found. Tried: ${candidates.join(", ")}`);
+    }
+
     const template = fs.readFileSync(templatePath, "utf-8");
     const supportEmail = process.env.SUPPORT_EMAIL || "kpi@phtl.ru";
     const year = new Date().getFullYear().toString();
