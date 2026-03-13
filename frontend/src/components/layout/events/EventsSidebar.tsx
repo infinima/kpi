@@ -2,7 +2,6 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useParams, useSearchParams } from "react-router-dom";
 import {
     CalendarDays,
-    Camera,
     ChevronLeft,
     ChevronRight,
     Clock3,
@@ -458,13 +457,6 @@ export default function EventsSidebar() {
                                                 collapsed={effectiveCollapsed}
                                             />
                                         ) : null}
-
-                                        <SidebarItem
-                                            to={`/events/${eventInfo.id}/location/${locationInfo.id}/photos`}
-                                            label="Фотографии"
-                                            icon={<Camera size={16} />}
-                                            collapsed={effectiveCollapsed}
-                                        />
 
                                         <SidebarItem
                                             to={`/events/${eventInfo.id}/location/${locationInfo.id}/league`}

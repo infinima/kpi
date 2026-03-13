@@ -59,7 +59,6 @@ export default function App() {
                     <Route path=":eventId/location" element={<LocationsPage />} />
                     <Route path=":eventId/location/:locationId" element={<LocationsPage />} />
                     <Route path=":eventId/location/:locationId/history" element={<EventPlaceholderPage title="История изменений площадки" />} />
-                    <Route path=":eventId/location/:locationId/photos" element={<LocationsPage />} />
                     <Route path=":eventId/location/:locationId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location/:locationId/league" element={<LeaguesPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId" element={<LeaguesPage />} />
