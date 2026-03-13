@@ -606,6 +606,7 @@ teamsRouter.post(
             if (!canCreateAny) {
                 const allowedCreate = new Set([
                     "league_id",
+                    "owner_user_id",
                     "name",
                     "members",
                     "appreciations",
