@@ -73,6 +73,7 @@ type OwnedTeam = {
     maintainer_full_name: string | null;
     maintainer_activity: string | null;
     status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID";
+    payment_link?: string | number | null;
     created_at: string;
     updated_at: string;
     event_id?: number;
@@ -203,6 +204,22 @@ function getTeamStatusLabel(status: OwnedTeam["status"] | undefined) {
     }
 
     return teamStatusLabels[status] ?? status;
+}
+
+function getTeamPaymentLink(team: OwnedTeam) {
+    const rawValue = team.payment_link;
+
+    if (rawValue === null || rawValue === undefined) {
+        return null;
+    }
+
+    const normalizedValue = String(rawValue).trim();
+
+    if (!normalizedValue || normalizedValue === "0") {
+        return null;
+    }
+
+    return normalizedValue;
 }
 
 const emptyTeamForm = (): TeamFormState => ({
@@ -972,6 +989,12 @@ export default function LkPage() {
                                                         : "border-[var(--color-border)] bg-[rgba(255,255,255,0.74)]"
                                                 }`}
                                             >
+                                                {(() => {
+                                                    const paymentLink = getTeamPaymentLink(team);
+                                                    const shouldShowPaymentLink = team.status === "ACCEPTED" && Boolean(paymentLink);
+                                                    const shouldShowPaidState = team.status === "PAID";
+
+                                                    return (
                                                 <div className="flex flex-col gap-6">
                                                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                                         <div className="space-y-4">
@@ -992,19 +1015,19 @@ export default function LkPage() {
                                                             <div className="flex flex-wrap gap-3">
                                                                 <InfoBadge
                                                                     icon={<Trophy size={14} />}
-                                                                    text={team.event_name}
+                                                                    text={team.event_name ?? "Мероприятие не указано"}
                                                                 />
                                                                 <InfoBadge
                                                                     icon={<MapPin size={14} />}
-                                                                    text={team.location_name}
+                                                                    text={team.location_name ?? "Площадка не указана"}
                                                                 />
                                                                 <InfoBadge
                                                                     icon={<Users size={14} />}
-                                                                    text={team.league_name}
+                                                                    text={team.league_name ?? "Лига не указана"}
                                                                 />
                                                                 <InfoBadge
                                                                     icon={<CalendarDays size={14} />}
-                                                                    text={formatEventDate(team.event_date)}
+                                                                    text={formatEventDate(team.event_date ?? "")}
                                                                 />
                                                             </div>
                                                         </div>
@@ -1077,10 +1100,37 @@ export default function LkPage() {
                                                                     <span className="text-[var(--color-text-secondary)]">Обновлено</span>
                                                                     <p className="mt-1 text-[var(--color-text-main)]">{formatDateTime(team.updated_at)}</p>
                                                                 </div>
+                                                                {shouldShowPaymentLink ? (
+                                                                    <div className="rounded-2xl border border-[rgba(14,116,144,0.18)] bg-[rgba(14,116,144,0.08)] p-4">
+                                                                        <span className="text-[var(--color-text-secondary)]">Оплата участия</span>
+                                                                        <p className="mt-1 text-[var(--color-text-main)]">
+                                                                            Ваша заявка одобрена. Пожалуйста, оплатите участие по ссылке ниже.
+                                                                        </p>
+                                                                        <a
+                                                                            href={paymentLink!}
+                                                                            target="_blank"
+                                                                            rel="noreferrer"
+                                                                            className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                                                                        >
+                                                                            Перейти к оплате
+                                                                            <ChevronRight size={16} />
+                                                                        </a>
+                                                                    </div>
+                                                                ) : null}
+                                                                {shouldShowPaidState ? (
+                                                                    <div className="rounded-2xl border border-[rgba(34,197,94,0.18)] bg-[rgba(34,197,94,0.08)] p-4">
+                                                                        <span className="text-[var(--color-text-secondary)]">Оплата участия</span>
+                                                                        <p className="mt-1 text-[var(--color-text-main)]">
+                                                                            Участие полностью оплачено.
+                                                                        </p>
+                                                                    </div>
+                                                                ) : null}
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                                    );
+                                                })()}
                                             </div>
                                         ))}
                                     </div>
@@ -1131,19 +1181,19 @@ export default function LkPage() {
                                                 />
                                                 <InfoBadge
                                                     icon={<CalendarDays size={14} />}
-                                                    text={`Дата: ${formatEventDate(editingTeam.event_date)}`}
+                                                    text={`Дата: ${formatEventDate(editingTeam.event_date ?? "")}`}
                                                 />
                                                 <InfoBadge
                                                     icon={<Trophy size={14} />}
-                                                    text={`Мероприятие: ${editingTeam.event_name}`}
+                                                    text={`Мероприятие: ${editingTeam.event_name ?? "не указано"}`}
                                                 />
                                                 <InfoBadge
                                                     icon={<MapPin size={14} />}
-                                                    text={`Площадка: ${editingTeam.location_name}`}
+                                                    text={`Площадка: ${editingTeam.location_name ?? "не указана"}`}
                                                 />
                                                 <InfoBadge
                                                     icon={<Users size={14} />}
-                                                    text={`Лига: ${editingTeam.league_name}`}
+                                                    text={`Лига: ${editingTeam.league_name ?? "не указана"}`}
                                                 />
                                             </div>
                                         ) : (
