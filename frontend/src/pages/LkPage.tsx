@@ -1086,18 +1086,18 @@ export default function LkPage() {
 
                                                     <div className="rounded-[24px] border border-[rgba(245,158,11,0.32)] bg-[rgba(255,247,237,0.96)] p-5">
                                                         <p className="text-sm font-semibold uppercase tracking-[0.08em] text-[rgba(154,52,18,0.95)]">
-                                                            Важно в день турнира
+                                                            Важно
                                                         </p>
                                                         <p className="mt-3 text-sm leading-7 text-[var(--color-text-main)]">
-                                                            При регистрации команды руководитель предоставляет на каждого участника:
+                                                            В день турнира при регистрации команды руководитель предоставляет на каждого участника:
                                                         </p>
                                                         <div className="mt-3 space-y-2 text-sm leading-7 text-[var(--color-text-main)]">
                                                             <p>
-                                                                <span className="font-semibold uppercase">Справка об отсутствии контактов с инфекционными больными</span>
+                                                                <span className="font-semibold uppercase">Справку об отсутствии контактов с инфекционными больными</span>
                                                                 {" "}(выдаётся за 3 дня).
                                                             </p>
                                                             <p>
-                                                                <span className="font-semibold uppercase">Справка из школы</span>.
+                                                                <span className="font-semibold uppercase">Справку из школы</span>.
                                                             </p>
                                                             <p>
                                                                 <span className="font-semibold uppercase">Согласие на фото-видеосъёмку</span>
