@@ -1,4 +1,5 @@
 import { useUser, useNotifications } from "@/store";
+import { ensureUserSessionInitialized } from "@/store/useUserStore";
 import { showApiError } from "./errorHelper";
 import { apiPost } from "@/api";
 
@@ -24,6 +25,7 @@ const RELATED_ERRORS = new Set([
 ]);
 
 export async function apiDelete(path: string, restoreId?: number): Promise<void> {
+    await ensureUserSessionInitialized();
     const token = useUser.getState().token;
     const notify = useNotifications.getState().addMessage;
 

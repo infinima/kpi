@@ -8,6 +8,7 @@ import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/AuthPage";
 import LkPage from "@/pages/LkPage";
 import {useUser} from "@/store";
+import {ensureUserSessionInitialized} from "@/store/useUserStore";
 import NotReadyPage from "@/pages/NotReadyPage";
 import { EventsPage } from "@/pages/event/EventPage";
 import { EventsRootPage } from "@/pages/event/EventsRootPage";
@@ -21,19 +22,19 @@ export default function App() {
     const clearSession = useUser((state) => state.clearSession);
 
     useEffect(() => {
-        const storedToken = localStorage.getItem("auth_token");
+        void ensureUserSessionInitialized().then(() => {
+            const {token, user} = useUser.getState();
 
-        if (!storedToken || useUser.getState().token) {
-            return;
-        }
-
-        useUser.setState({token: storedToken, guest: false});
-
-        void fetchUser().catch((error) => {
-            const code = error?.error?.code;
-            if (code === "INVALID_TOKEN" || code === "INVALID_SESSION" || code === "SESSION_NOT_FOUND") {
-                clearSession();
+            if (!token || user) {
+                return;
             }
+
+            return fetchUser().catch((error) => {
+                const code = error?.error?.code;
+                if (code === "INVALID_TOKEN" || code === "INVALID_SESSION" || code === "SESSION_NOT_FOUND") {
+                    clearSession();
+                }
+            });
         });
     }, [clearSession, fetchUser]);
 

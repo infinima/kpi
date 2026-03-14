@@ -1,4 +1,5 @@
 import { useNotifications, useUser } from "@/store";
+import { ensureUserSessionInitialized } from "@/store/useUserStore";
 import { showApiError } from "./errorHelper";
 
 const BASE_URL = `${window.location.origin}/api/`;
@@ -64,6 +65,7 @@ export async function request<T = unknown>({
     notify,
 }: RequestOptions): Promise<T> {
     try {
+        await ensureUserSessionInitialized();
         const token = useUser.getState().token;
 
         const res = await fetch(BASE_URL + path, {

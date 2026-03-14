@@ -1,6 +1,7 @@
 import type { ApiNotifyOptions } from "./request";
 import { BASE_URL, parseJsonResponse } from "./request";
 import { useUser } from "@/store";
+import { ensureUserSessionInitialized } from "@/store/useUserStore";
 import { showApiError } from "./errorHelper";
 
 const SESSION_ERROR_CODES = new Set([
@@ -11,6 +12,7 @@ const SESSION_ERROR_CODES = new Set([
 
 export async function getImage(path: string, notify?: ApiNotifyOptions): Promise<string | null> {
     try {
+        await ensureUserSessionInitialized();
         const token = useUser.getState().token;
         const res = await fetch(BASE_URL + path, {
             method: "GET",

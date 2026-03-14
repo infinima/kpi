@@ -31,7 +31,7 @@ export type TeamTableRowData = {
     deleted_at: string | null;
 };
 
-type TeamColumnKey = "id" | "league_name" | "name" | "status";
+type TeamColumnKey = "id" | "league_name" | "name" | "maintainer_activity" | "status";
 
 type TeamColumn = {
     key: TeamColumnKey;
@@ -53,12 +53,22 @@ type Props = {
     isColumnEditable?: (columnKey: keyof TeamTableRowData, row: TeamTableRowData) => boolean;
 };
 
-const statusLabels: Record<string, string> = {
+export const teamStatusLabels: Record<string, string> = {
     IN_RESERVE: "В резерве",
     ON_CHECKING: "На проверке",
     ACCEPTED: "Принята",
     PAID: "Оплачена",
 };
+
+export function getTeamColumnDisplayValue(row: TeamTableRowData, column: TeamColumn): string {
+    const value = row[column.key];
+
+    if (column.key === "status") {
+        return teamStatusLabels[String(value)] ?? String(value ?? "");
+    }
+
+    return String(value ?? "");
+}
 
 function isTeamCellChanged(left: unknown, right: unknown) {
     return JSON.stringify(left ?? null) !== JSON.stringify(right ?? null);
@@ -164,7 +174,7 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                             )
                         ) : (
                             <div className="min-w-0 truncate text-sm font-medium sm:text-[15px]">
-                                {column.key === "status" ? (statusLabels[String(value)] ?? String(value ?? "")) : String(value ?? "")}
+                                {getTeamColumnDisplayValue(draft, column)}
                             </div>
                         )}
                     </div>
@@ -247,6 +257,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "id", label: "ID", width: 80, editable: false, type: "text" },
     { key: "league_name", label: "Лига", width: 200, editable: false, type: "text" },
     { key: "name", label: "Команда", width: 220, editable: true, type: "text" },
+    { key: "maintainer_activity", label: "Активность сопровождающего", width: 240, editable: true, type: "text" },
     {
         key: "status",
         label: "Статус",

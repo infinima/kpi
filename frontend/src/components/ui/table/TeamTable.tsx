@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Plus, RotateCcw, Search } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
-import { TEAM_TABLE_COLUMNS, TeamTableRow, type TeamTableRowData } from "./TeamTableRow";
+import { getTeamColumnDisplayValue, TEAM_TABLE_COLUMNS, TeamTableRow, type TeamTableRowData } from "./TeamTableRow";
 
 type Props = {
     data: TeamTableRowData[];
@@ -71,7 +71,10 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, defaultLeagueId,
                 }
 
                 const raw = row[column.key];
-                const value = Array.isArray(raw) ? raw.join(", ") : String(raw ?? "");
+                const value = Array.isArray(raw)
+                    ? raw.join(", ")
+                    : getTeamColumnDisplayValue(row, column);
+
                 return value.toLowerCase().includes(term);
             })
         );

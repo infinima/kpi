@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useShowStore } from "@/store/useShowSocket";
 import {useEventsNav, useSocketStore, useUser} from "@/store";
+import {ensureUserSessionInitialized} from "@/store/useUserStore";
 
 import { Document, Page, pdfjs } from "react-pdf";
 import {KvartalRow} from "@/components/KvartalRow";
@@ -30,6 +31,7 @@ export function ShowPage() {
   useEffect(() => {
     async function loadPdf() {
       try {
+        await ensureUserSessionInitialized();
         const token = useUser.getState().token;
 
         const res = await fetch(`/api/leagues/${leagueId}/fudzi_presentation`, {

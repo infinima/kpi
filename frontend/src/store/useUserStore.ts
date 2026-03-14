@@ -2,6 +2,23 @@ import {create} from "zustand";
 import {apiGet, apiPost} from "@/api";
 import {useNotifications} from "@/store/useNotificationStore";
 
+const AUTH_TOKEN_KEY = "auth_token";
+
+function readStoredToken(): string | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+const initialToken = readStoredToken();
+let authInitializationPromise: Promise<void> | null = null;
+
 export type PermissionEntity =
   "events" |
   "locations" |
@@ -59,14 +76,34 @@ interface UserState {
   can: (entity: PermissionEntity, action: PermissionAction, objectId?: number) => boolean;
 }
 
+export function ensureUserSessionInitialized(): Promise<void> {
+  if (!authInitializationPromise) {
+    authInitializationPromise = Promise.resolve().then(() => {
+      const {token} = useUser.getState();
+
+      if (token) {
+        return;
+      }
+
+      const storedToken = readStoredToken();
+
+      if (storedToken) {
+        useUser.setState({token: storedToken, guest: false});
+      }
+    });
+  }
+
+  return authInitializationPromise;
+}
+
 export const useUser = create<UserState>((set, get) => ({
 
   user: null,
-  token: null,
-  guest: true,
+  token: initialToken,
+  guest: !initialToken,
 
   login: async (token: string) => {
-    localStorage.setItem("auth_token", token);
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
     set({token, guest: false});
 
     const data = await apiGet("auth/me?include=user");
@@ -92,7 +129,7 @@ export const useUser = create<UserState>((set, get) => ({
 
     if (!token) {
       set({user: null, token: null, guest: true});
-      localStorage.removeItem("auth_token");
+      localStorage.removeItem(AUTH_TOKEN_KEY);
       return;
     }
 
@@ -109,12 +146,12 @@ export const useUser = create<UserState>((set, get) => ({
       });
     }
 
-    localStorage.removeItem("auth_token");
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     set({user: null, token: null, guest: true});
   },
 
   clearSession: () => {
-    localStorage.removeItem("auth_token");
+    localStorage.removeItem(AUTH_TOKEN_KEY);
     set({user: null, token: null, guest: true});
   },
 

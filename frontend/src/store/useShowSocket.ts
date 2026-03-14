@@ -2,6 +2,7 @@ import {create} from "zustand";
 import {io, Socket} from "socket.io-client";
 
 import {useEventsNav, useNotifications, useUser} from "@/store";
+import {ensureUserSessionInitialized} from "@/store/useUserStore";
 
 const SOCKET_URL = "wss://localhost:3000";
 
@@ -49,6 +50,7 @@ export const useShowStore = create<SocketState>((set, get) => ({
   isConnected: false,
 
   connect: () => {
+    void ensureUserSessionInitialized().then(() => {
     const notify = useNotifications.getState().addMessage;
 
     let { leagueId } = useEventsNav.getState();
@@ -96,6 +98,7 @@ export const useShowStore = create<SocketState>((set, get) => ({
 
     socket.on("error_response", (err: any) => {
       notify({ type: "error", text: err });
+    });
     });
 
   },
