@@ -12,7 +12,7 @@ export const eventsRouter = express.Router();
 // GET /api/events
 eventsRouter.get("/", async (req, res) => {
     const events = await query(
-        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL",
+        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL ORDER BY id DESC",
         [], (req as any).user_id
     );
     res.json(events);
