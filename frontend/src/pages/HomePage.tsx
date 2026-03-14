@@ -103,6 +103,13 @@ export default function HomePage() {
                     >
                         Открыть правила
                     </PrimaryButton>
+                    <PrimaryButton
+                        active={true}
+                        leftIcon={<FileText size={18}/>}
+                        onClick={() => downloadFile("/Инфо.docx", "Инфо")}
+                    >
+                        Информационное сообщение
+                    </PrimaryButton>
                     <Link to="/events">
                         <OutlineButton
                             active={true}>
