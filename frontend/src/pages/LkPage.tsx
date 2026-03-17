@@ -308,6 +308,14 @@ function formatDateTime(value: string) {
     }
 }
 
+function getSingleOptionId<T extends { id: number }>(items: T[] | null | undefined) {
+    if (!items || items.length !== 1) {
+        return "";
+    }
+
+    return String(items[0].id);
+}
+
 export default function LkPage() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -519,14 +527,17 @@ export default function LkPage() {
                 return prev;
             }
 
-            const firstEvent = registrationData[0];
-            const firstLocation = firstEvent?.locations[0];
+            const eventId = getSingleOptionId(registrationData);
+            const selectedSingleEvent = registrationData.find((event) => String(event.id) === eventId) ?? null;
+            const locationId = getSingleOptionId(selectedSingleEvent?.locations);
+            const selectedSingleLocation = selectedSingleEvent?.locations.find((location) => String(location.id) === locationId) ?? null;
+            const leagueId = getSingleOptionId(selectedSingleLocation?.leagues);
 
             return {
                 ...prev,
-                eventId: firstEvent ? String(firstEvent.id) : "",
-                locationId: firstLocation ? String(firstLocation.id) : "",
-                leagueId: "",
+                eventId,
+                locationId,
+                leagueId,
             };
         });
     }, [registrationData]);
@@ -542,15 +553,35 @@ export default function LkPage() {
                 return prev;
             }
 
-            const firstLocation = selectedEvent.locations[0];
+            const locationId = getSingleOptionId(selectedEvent.locations);
+            const selectedSingleLocation = selectedEvent.locations.find((location) => String(location.id) === locationId) ?? null;
+            const leagueId = getSingleOptionId(selectedSingleLocation?.leagues);
 
             return {
                 ...prev,
-                locationId: firstLocation ? String(firstLocation.id) : "",
-                leagueId: "",
+                locationId,
+                leagueId,
             };
         });
     }, [selectedEvent]);
+
+    useEffect(() => {
+        if (!selectedLocation) {
+            return;
+        }
+
+        setTeamForm((prev) => {
+            const hasCurrentLeague = selectedLocation.leagues.some((league) => String(league.id) === prev.leagueId);
+            if (hasCurrentLeague) {
+                return prev;
+            }
+
+            return {
+                ...prev,
+                leagueId: getSingleOptionId(selectedLocation.leagues),
+            };
+        });
+    }, [selectedLocation]);
 
     useEffect(() => {
         if (editingTeamId) {

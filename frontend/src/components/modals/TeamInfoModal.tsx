@@ -107,6 +107,15 @@ function parseTextAreaValue(value: string) {
         .filter(Boolean);
 }
 
+function normalizePaymentLink(value: string | number | null | undefined) {
+    if (value === null || value === undefined) {
+        return null;
+    }
+
+    const normalized = String(value).trim();
+    return normalized ? normalized : null;
+}
+
 export function TeamInfoModal() {
     const activeModal = useModalStore((state) => state.activeModal);
     const closeModal = useModalStore((state) => state.closeModal);
@@ -115,6 +124,7 @@ export function TeamInfoModal() {
     const [draft, setDraft] = useState<TeamTableRowData | null>(payload?.row ?? null);
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    const paymentLink = normalizePaymentLink(draft?.payment_link);
 
     useEffect(() => {
         setDraft(payload?.row ?? null);
@@ -191,6 +201,25 @@ export function TeamInfoModal() {
                     <ReadField label="Телефон руководителя" value={formatRussianPhone(draft.owner_phone_number)} />
                     <ReadField label="Создано" value={formatDateTime(draft.created_at)} />
                     <ReadField label="Обновлено" value={formatDateTime(draft.updated_at)} />
+                    <div className="rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">
+                        <div className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">
+                            Ссылка на оплату
+                        </div>
+                        {paymentLink ? (
+                            <a
+                                href={paymentLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="mt-2 inline-block break-all text-sm font-medium text-[var(--color-primary)] underline underline-offset-2"
+                            >
+                                {paymentLink}
+                            </a>
+                        ) : (
+                            <div className="mt-2 text-sm font-medium text-[var(--color-text-main)]">
+                                Не указано
+                            </div>
+                        )}
+                    </div>
 
                     <label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4">
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">ID лиги</span>

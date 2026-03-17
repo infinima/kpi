@@ -292,6 +292,15 @@ export default function AuthPage() {
                                 >
                                     Войти
                                 </PrimaryButton>
+
+                                <div className="text-center">
+                                    <Link
+                                        to="/forgot_pass"
+                                        className="text-sm text-[var(--color-primary)] underline underline-offset-2"
+                                    >
+                                        Забыли пароль?
+                                    </Link>
+                                </div>
                             </div>
                         ) : (
                             <div className="mt-8 space-y-5">

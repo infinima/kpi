@@ -24,6 +24,7 @@ export type TeamTableRowData = {
     maintainer_full_name: string;
     maintainer_activity: string;
     status: string;
+    payment_link?: string | number | null;
     diploma: string;
     special_nominations: string[];
     created_at: string;

@@ -22,6 +22,7 @@ type TeamResponseRow = {
     maintainer_full_name: string | null;
     maintainer_activity: string | null;
     status: string;
+    payment_link?: string | number | null;
     answers_kvartaly: unknown;
     answers_fudzi: unknown;
     diploma: string | null;
@@ -124,6 +125,7 @@ export function EventTeamsPage() {
             maintainer_full_name: row.maintainer_full_name ?? "",
             maintainer_activity: row.maintainer_activity ?? "",
             status: row.status ?? "",
+            payment_link: row.payment_link ?? null,
             diploma: row.diploma ?? "",
             special_nominations: parseStringArray(row.special_nominations),
             created_at: row.created_at ?? "",

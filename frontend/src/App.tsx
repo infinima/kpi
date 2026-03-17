@@ -6,9 +6,11 @@ import ExamplePage from "@/pages/ExamplePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import HomePage from "@/pages/HomePage";
 import AuthPage from "@/pages/AuthPage";
+import ForgotPassPage from "@/pages/ForgotPassPage";
 import LkPage from "@/pages/LkPage";
 import {useUser} from "@/store";
 import {ensureUserSessionInitialized} from "@/store/useUserStore";
+import NewPassPage from "@/pages/NewPassPage";
 import NotReadyPage from "@/pages/NotReadyPage";
 import { EventsPage } from "@/pages/event/EventPage";
 import { EventsRootPage } from "@/pages/event/EventsRootPage";
@@ -48,6 +50,8 @@ export default function App() {
                 <Route path="/indev" element={<NotReadyPage pageName={"В разработке"} />} />
                 <Route path="/example" element={<ExamplePage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/forgot_pass" element={<ForgotPassPage />} />
+                <Route path="/new_pass" element={<NewPassPage />} />
                 <Route path="/lk" element={<Navigate to="/lk/me" replace />} />
                 <Route path="/lk/*" element={<LkPage />} />
                 <Route path="*" element={<NotFoundPage />} />

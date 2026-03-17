@@ -47,6 +47,7 @@ function createEmptyTeam(defaultLeagueId?: number | null, defaultLeagueName?: st
         maintainer_full_name: "",
         maintainer_activity: "",
         status: "ON_CHECKING",
+        payment_link: null,
         diploma: "",
         special_nominations: [],
         created_at: "",
