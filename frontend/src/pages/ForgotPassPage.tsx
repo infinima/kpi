@@ -70,7 +70,7 @@ export default function ForgotPassPage() {
                         className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)] sm:text-4xl"
                     />
                     <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
-                        Введите почту при регистрации и ждите письмо на нее.
+                        Введите почту при регистрации и ожидайте письмо на нее.
                     </p>
 
                     <div className="mt-8 space-y-5">
