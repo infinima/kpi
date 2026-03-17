@@ -8,7 +8,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import { apiPost } from "@/api";
 import { useNotifications } from "@/store";
 
-const FORGOT_PASSWORD_PATH = "auth/forgot-password";
+const FORGOT_PASSWORD_PATH = "auth/password-reset/start";
 
 const inputClassName = `
     w-full rounded-2xl border border-[var(--color-border)]

@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { KeyRound } from "lucide-react";
 import Background from "@/components/layout/Background";
 import AnimatedText from "@/components/ui/AnimatedText";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import { apiPost } from "@/api";
 import { useNotifications } from "@/store";
 
-const RESET_PASSWORD_PATH = "auth/reset-password";
+const RESET_PASSWORD_PATH = "auth/password-reset/confirm";
 
 const inputClassName = `
     w-full rounded-2xl border border-[var(--color-border)]
@@ -18,10 +18,12 @@ const inputClassName = `
 `;
 
 export default function NewPassPage() {
+    const navigate = useNavigate();
     const notify = useNotifications((state) => state.addMessage);
     const [searchParams] = useSearchParams();
     const [password, setPassword] = useState("");
     const [passwordConfirmation, setPasswordConfirmation] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const key = searchParams.get("key") ?? "";
@@ -42,12 +44,12 @@ export default function NewPassPage() {
             await apiPost(RESET_PASSWORD_PATH, {
                 key,
                 password,
-                password_confirmation: passwordConfirmation,
             }, { error: true });
             notify({
                 type: "success",
                 text: "Пароль обновлен",
             });
+            navigate("/");
         } finally {
             setLoading(false);
         }
@@ -76,24 +78,42 @@ export default function NewPassPage() {
                     <div className="mt-8 space-y-5">
                         <label className="block space-y-2">
                             <span className="text-sm text-[var(--color-text-secondary)]">Новый пароль</span>
-                            <input
-                                type="password"
-                                value={password}
-                                onChange={(event) => setPassword(event.target.value)}
-                                placeholder="Введите новый пароль"
-                                className={inputClassName}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(event) => setPassword(event.target.value)}
+                                    placeholder="Введите новый пароль"
+                                    className={`${inputClassName} pr-12`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </label>
 
                         <label className="block space-y-2">
                             <span className="text-sm text-[var(--color-text-secondary)]">Подтверждение</span>
-                            <input
-                                type="password"
-                                value={passwordConfirmation}
-                                onChange={(event) => setPasswordConfirmation(event.target.value)}
-                                placeholder="Повторите новый пароль"
-                                className={inputClassName}
-                            />
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    value={passwordConfirmation}
+                                    onChange={(event) => setPasswordConfirmation(event.target.value)}
+                                    placeholder="Повторите новый пароль"
+                                    className={`${inputClassName} pr-12`}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                         </label>
 
                         <PrimaryButton
