@@ -226,7 +226,7 @@ leaguesRouter.get(
             .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
 
         const rows = await query(
-            `SELECT name 
+            `SELECT name
              FROM teams
              WHERE league_id = ? AND deleted_at IS NULL
              ORDER BY id`,
@@ -480,11 +480,11 @@ leaguesRouter.post(
                     break;
                 case "FUDZI_GAME_BREAK":
                     await query(
-                        `UPDATE teams 
-                              SET place_fudzi = NULL, 
-                                  place_final = NULL, 
-                                  diploma = NULL
-                              WHERE league_id = ?`,
+                        `UPDATE teams
+                         SET place_fudzi = NULL,
+                             place_final = NULL,
+                             diploma = NULL
+                         WHERE league_id = ?`,
                         [id], (req as any).user_id
                     );
                     break;
@@ -529,13 +529,13 @@ leaguesRouter.post(
 
                     // ---------- 2. Берем кварталы и фудзи ----------
                     const teams = await query(`
-                                                    SELECT id,
-                                                           place_kvartaly as kvartaly,
-                                                           place_fudzi as fudzi,
-                                                           place_final as final
-                                                    FROM teams
-                                                    WHERE league_id = ?
-                                                `, [id], (req as any).user_id);
+                        SELECT id,
+                               place_kvartaly as kvartaly,
+                               place_fudzi as fudzi,
+                               place_final as final
+                        FROM teams
+                        WHERE league_id = ?
+                    `, [id], (req as any).user_id);
 
                     // ---------- 3. Новый финальный рейтинг ----------
                     const finalRank = rankFinal(teams);

@@ -3,6 +3,11 @@ import { requestPaymentInfo } from "./payment.js";
 import { loadTeamEmailContext, sendTeamPaymentConfirmedEmail } from "./team-email.js";
 
 const CHECK_INTERVAL_MS = 30 * 60 * 1000;
+const REQUEST_DELAY_MS = 300;
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function checkAcceptedTeams(): Promise<void> {
     const teams = await query(
@@ -45,6 +50,8 @@ async function checkAcceptedTeams(): Promise<void> {
         } catch (e) {
             console.error(`[payment-checker] team ${team.id}:`, e);
         }
+
+        await sleep(REQUEST_DELAY_MS);
     }
 }
 
