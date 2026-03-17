@@ -108,3 +108,10 @@ export async function sendTeamPaymentConfirmedEmail(context: TeamEmailContext): 
     const html = renderTeamTemplate("team-payment-confirmed.html", context);
     await sendEmail(context.ownerEmail, "Оплата подтверждена", html);
 }
+
+export async function sendTeamMovedToReserveEmail(context: TeamEmailContext): Promise<void> {
+    if (!context.ownerEmail) return;
+
+    const html = renderTeamTemplate("team-moved-to-reserve.html", context);
+    await sendEmail(context.ownerEmail, "Команда переведена в резерв", html);
+}

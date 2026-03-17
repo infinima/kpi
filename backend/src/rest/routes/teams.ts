@@ -11,6 +11,7 @@ import { requestPaymentInfo } from "../../utils/payment.js";
 import {
     loadTeamEmailContext,
     sendTeamAcceptedEmail,
+    sendTeamMovedToReserveEmail,
     sendTeamPaymentConfirmedEmail,
 } from "../../utils/team-email.js";
 
@@ -1006,6 +1007,17 @@ teamsRouter.patch(
                     }
                 } catch (e) {
                     console.error("[email] failed to send payment confirmation:", e);
+                }
+            }
+
+            if (finalStatus === "IN_RESERVE" && previousStatus !== "IN_RESERVE") {
+                try {
+                    const ctx = await loadTeamEmailContext(Number(id));
+                    if (ctx) {
+                        await sendTeamMovedToReserveEmail(ctx);
+                    }
+                } catch (e) {
+                    console.error("[email] failed to send reserve email:", e);
                 }
             }
 
