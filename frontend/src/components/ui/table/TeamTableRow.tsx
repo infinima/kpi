@@ -31,7 +31,7 @@ export type TeamTableRowData = {
     deleted_at: string | null;
 };
 
-type TeamColumnKey = "id" | "league_name" | "name" | "maintainer_activity" | "status";
+type TeamColumnKey = "id" | "league_name" | "name" | "school" | "maintainer_activity" | "status";
 
 type TeamColumn = {
     key: TeamColumnKey;
@@ -257,6 +257,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "id", label: "ID", width: 80, editable: false, type: "text" },
     { key: "league_name", label: "Лига", width: 200, editable: false, type: "text" },
     { key: "name", label: "Команда", width: 220, editable: true, type: "text" },
+    { key: "school", label: "Образовательная организация", width: 260, editable: true, type: "text" },
     { key: "maintainer_activity", label: "Активность сопровождающего", width: 240, editable: true, type: "text" },
     {
         key: "status",
