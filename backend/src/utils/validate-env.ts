@@ -22,6 +22,9 @@ const EnvSchema = z.object({
 
     MIGRATIONS_TABLE: z.string().min(1),
     TRIGGERS_IGNORED_TABLES: z.string().default("logs"),
+
+    PASSWORD_RESET_TOKEN_SALT: z.string().min(32),
+    PASSWORD_RESET_URL_BASE: z.string().min(1).default("https://kpiturnir.ru/new_pass"),
 });
 
 const parsed = EnvSchema.safeParse(process.env);

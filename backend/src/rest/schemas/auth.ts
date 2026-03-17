@@ -29,6 +29,20 @@ export const RegisterConfirmInput = z.object({
 export const RegisterConfirmResponse = z.object({
     token: z.string().min(10)
 });
+export const PasswordResetStartInput = z.object({
+    email: z.email()
+});
+export const PasswordResetStartResponse = z.object({
+    success: z.boolean(),
+    expires_at: z.string().nullable()
+});
+export const PasswordResetConfirmInput = z.object({
+    key: z.string().min(32),
+    password: z.string().min(6, "Password must be at least 6 chars")
+});
+export const PasswordResetConfirmResponse = z.object({
+    success: z.boolean()
+});
 export const LogoutResponse = z.object({
     success: z.boolean()
 });
@@ -140,6 +154,61 @@ registry.registerPath({
             }
         },
         400: { description: "Validation failed" },
+        429: { description: "Too many attempts. Try later." }
+    }
+});
+
+// POST /api/auth/password-reset/start
+registry.registerPath({
+    method: "post",
+    path: "/api/auth/password-reset/start",
+    summary: "Начать восстановление пароля (отправка кода)",
+    tags: ["Auth"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: PasswordResetStartInput
+                }
+            }
+        }
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: PasswordResetStartResponse }
+            }
+        },
+        400: { description: "Validation failed" },
+        429: { description: "Too many attempts. Try later." }
+    }
+});
+
+// POST /api/auth/password-reset/confirm
+registry.registerPath({
+    method: "post",
+    path: "/api/auth/password-reset/confirm",
+    summary: "Подтвердить восстановление пароля по коду",
+    tags: ["Auth"],
+    request: {
+        body: {
+            content: {
+                "application/json": {
+                    schema: PasswordResetConfirmInput
+                }
+            }
+        }
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: PasswordResetConfirmResponse }
+            }
+        },
+        400: { description: "Validation failed or invalid code" },
+        404: { description: "Reset request not found" },
         429: { description: "Too many attempts. Try later." }
     }
 });

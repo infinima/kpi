@@ -3,7 +3,14 @@ import crypto from "crypto";
 import bcrypt from "bcrypt";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../db/pool.js";
-import { LoginInput, MeQuery, RegisterConfirmInput, RegisterStartInput } from "../schemas/auth.js";
+import {
+    LoginInput,
+    MeQuery,
+    PasswordResetConfirmInput,
+    PasswordResetStartInput,
+    RegisterConfirmInput,
+    RegisterStartInput
+} from "../schemas/auth.js";
 import { authRequired } from "../middlewares/auth-required.js";
 import { sendEmail } from "../../utils/send-email.js";
 import fs from "fs";
@@ -44,6 +51,41 @@ function renderOneTimeCodeEmail(code: string, minutes: number) {
     return template
         .split("{{CODE}}").join(code)
         .split("{{MINUTES}}").join(String(minutes))
+        .split("{{SUPPORT_EMAIL}}").join(supportEmail)
+        .split("{{YEAR}}").join(year);
+}
+
+function renderPasswordResetLinkEmail(resetUrl: string) {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
+    const candidates = [
+        path.resolve(__dirname, "../../static/emails/password-reset-link.html"),
+        path.resolve(__dirname, "../../static/password-reset-link.html"),
+        path.resolve(process.cwd(), "src/static/emails/password-reset-link.html"),
+        path.resolve(process.cwd(), "src/static/password-reset-link.html"),
+        path.resolve(process.cwd(), "dist/static/emails/password-reset-link.html"),
+        path.resolve(process.cwd(), "dist/static/password-reset-link.html"),
+    ];
+
+    let templatePath = "";
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            templatePath = candidate;
+            break;
+        }
+    }
+
+    if (!templatePath) {
+        throw new Error(`Email template not found. Tried: ${candidates.join(", ")}`);
+    }
+
+    const template = fs.readFileSync(templatePath, "utf-8");
+    const supportEmail = process.env.SUPPORT_EMAIL || "kpi@phtl.ru";
+    const year = new Date().getFullYear().toString();
+
+    return template
+        .split("{{RESET_URL}}").join(resetUrl)
         .split("{{SUPPORT_EMAIL}}").join(supportEmail)
         .split("{{YEAR}}").join(year);
 }
@@ -266,6 +308,175 @@ authRouter.post(
         );
 
         res.json({ token });
+    }
+);
+
+// POST /api/auth/password-reset/start
+authRouter.post(
+    "/password-reset/start",
+    validate(PasswordResetStartInput, "body"),
+    async (req, res) => {
+        const data = (req as any).validated.body;
+        const email = String(data.email).trim().toLowerCase();
+        const resetSalt = process.env.PASSWORD_RESET_TOKEN_SALT;
+
+        const [user] = await query(
+            "SELECT id FROM users WHERE email = ? AND deleted_at IS NULL LIMIT 1",
+            [email], (req as any).user_id
+        );
+
+        if (!user) {
+            const expiresAt = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+            return res.json({ success: true, expires_at: expiresAt });
+        }
+
+        const [existing] = await query(
+            "SELECT blocked_until FROM password_reset_requests WHERE email = ?",
+            [email], (req as any).user_id
+        );
+
+        if (existing?.blocked_until && new Date(existing.blocked_until).getTime() > Date.now()) {
+            return res.status(429).json({
+                error: {
+                    code: "PASSWORD_RESET_BLOCKED",
+                    message: "Too many attempts. Try later."
+                }
+            });
+        }
+
+        await query(
+            "DELETE FROM password_reset_requests WHERE email = ?",
+            [email], (req as any).user_id
+        );
+
+        const token = crypto.randomBytes(32).toString("hex");
+        const tokenHash = crypto.createHash("sha256").update(token + resetSalt).digest("hex");
+
+        await query(
+            `INSERT INTO password_reset_requests (user_id, email, token_hash, attempts_count, blocked_until, expires_at)
+             VALUES (?, ?, ?, 0, NULL, DATE_ADD(CONVERT_TZ(NOW(), '+00:00', '+03:00'), INTERVAL 5 MINUTE))`,
+            [user.id, email, tokenHash], (req as any).user_id
+        );
+
+        const baseUrl = process.env.PASSWORD_RESET_URL_BASE;
+        const resetUrl = `${baseUrl}?key=${encodeURIComponent(token)}`;
+
+        await sendEmail(
+            email,
+            "Восстановление пароля",
+            renderPasswordResetLinkEmail(resetUrl)
+        );
+
+        const [row] = await query(
+            "SELECT expires_at FROM password_reset_requests WHERE email = ?",
+            [email], (req as any).user_id
+        );
+
+        res.json({ success: true, expires_at: row.expires_at });
+    }
+);
+
+// POST /api/auth/password-reset/confirm
+authRouter.post(
+    "/password-reset/confirm",
+    validate(PasswordResetConfirmInput, "body"),
+    async (req, res) => {
+        const { key, password } = (req as any).validated.body;
+        const resetSalt = process.env.PASSWORD_RESET_TOKEN_SALT;
+
+        const [reqRow] = await query(
+            `SELECT id, user_id, token_hash, attempts_count, blocked_until, expires_at
+             FROM password_reset_requests
+             WHERE token_hash = ?`,
+            [crypto.createHash("sha256").update(String(key) + resetSalt).digest("hex")], (req as any).user_id
+        );
+
+        if (!reqRow) {
+            return res.status(404).json({
+                error: {
+                    code: "INVALID_KEY",
+                    message: "Invalid or expired reset key"
+                }
+            });
+        }
+
+        if (reqRow.blocked_until && new Date(reqRow.blocked_until).getTime() > Date.now()) {
+            return res.status(429).json({
+                error: {
+                    code: "PASSWORD_RESET_BLOCKED",
+                    message: "Too many attempts. Try later."
+                }
+            });
+        }
+
+        if (new Date(reqRow.expires_at).getTime() < Date.now()) {
+            await query(
+                "DELETE FROM password_reset_requests WHERE id = ?",
+                [reqRow.id], (req as any).user_id
+            );
+
+            return res.status(400).json({
+                error: {
+                    code: "CODE_EXPIRED",
+                    message: "Confirmation code expired"
+                }
+            });
+        }
+
+        const expectedHash = crypto
+            .createHash("sha256")
+            .update(String(key) + resetSalt)
+            .digest("hex");
+
+        if (expectedHash !== String(reqRow.token_hash)) {
+            const nextAttempts = Number(reqRow.attempts_count) + 1;
+            if (nextAttempts >= 5) {
+                await query(
+                    `UPDATE password_reset_requests
+                     SET attempts_count = ?, blocked_until = DATE_ADD(NOW(), INTERVAL 15 MINUTE)
+                     WHERE id = ?`,
+                    [nextAttempts, reqRow.id], (req as any).user_id
+                );
+
+                return res.status(429).json({
+                    error: {
+                        code: "PASSWORD_RESET_BLOCKED",
+                        message: "Too many attempts. Try later."
+                    }
+                });
+            }
+
+            await query(
+                "UPDATE password_reset_requests SET attempts_count = ? WHERE id = ?",
+                [nextAttempts, reqRow.id], (req as any).user_id
+            );
+
+            return res.status(400).json({
+                error: {
+                    code: "INVALID_KEY",
+                    message: "Invalid or expired reset key"
+                }
+            });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
+
+        await query(
+            "UPDATE users SET password_hash = ? WHERE id = ?",
+            [passwordHash, reqRow.user_id], (req as any).user_id
+        );
+
+        await query(
+            "UPDATE sessions SET is_deactivated = 1 WHERE user_id = ? AND is_deactivated = 0",
+            [reqRow.user_id], (req as any).user_id
+        );
+
+        await query(
+            "DELETE FROM password_reset_requests WHERE id = ?",
+            [reqRow.id], (req as any).user_id
+        );
+
+        res.json({ success: true });
     }
 );
 
