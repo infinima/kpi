@@ -732,22 +732,20 @@ export default function LkPage() {
 
         try {
             setTeamSaving(true);
-            const payload = {
+            const basePayload = {
                 name: teamForm.name.trim(),
                 members: teamForm.members.map((member) => member.trim()),
                 appreciations: teamForm.appreciationsText
                     .split("\n")
                     .map((value) => value.trim())
                     .filter(Boolean),
-                school: teamForm.school.trim(),
-                region: teamForm.region.trim(),
                 meals_count: mealsCount,
                 maintainer_full_name: teamForm.maintainer_full_name.trim() || null,
                 maintainer_activity: teamForm.maintainer_activity || null,
             };
 
             if (editingTeamId) {
-                await apiPatch(`teams/${editingTeamId}`, payload, {
+                await apiPatch(`teams/${editingTeamId}`, basePayload, {
                     success: "Команда обновлена",
                     error: true,
                 });
@@ -756,7 +754,9 @@ export default function LkPage() {
                     league_id: Number(teamForm.leagueId),
                     owner_user_id: user?.id,
                     is_reserve: teamForm.isReserve,
-                    ...payload,
+                    ...basePayload,
+                    school: teamForm.school.trim(),
+                    region: teamForm.region.trim(),
                 }, {
                     success: "Команда зарегистрирована",
                     error: true,
@@ -1436,61 +1436,85 @@ export default function LkPage() {
                                                 />
                                             </label>
 
-                                            <label className="block space-y-2">
-                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.schoolMode}>Учебное заведение команды</RequiredLabel>
-                                                <select
-                                                    value={teamForm.schoolMode}
-                                                    onChange={(event) => handleSchoolModeChange(event.target.value)}
-                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.schoolMode)}
-                                                >
-                                                    <option value="">Выберите учебное заведение</option>
-                                                    {schoolOptions.map((option) => (
-                                                        <option key={option} value={option}>
-                                                            {option}
-                                                        </option>
-                                                    ))}
-                                                    <option value={customSchoolValue}>{customSchoolValue}</option>
-                                                </select>
-                                            </label>
+                                            {editingTeam ? (
+                                                <>
+                                                    <label className="block space-y-2">
+                                                        <span className="text-sm text-[var(--color-text-secondary)]">Учебное заведение команды</span>
+                                                        <input
+                                                            value={teamForm.school}
+                                                            readOnly
+                                                            className={readOnlyClassName}
+                                                        />
+                                                    </label>
 
-                                            <label className="block space-y-2">
-                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.regionMode}>Регион</RequiredLabel>
-                                                <select
-                                                    value={teamForm.regionMode}
-                                                    onChange={(event) => handleRegionModeChange(event.target.value)}
-                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.regionMode)}
-                                                >
-                                                    <option value="">Выберите регион</option>
-                                                    {regionOptions.map((option) => (
-                                                        <option key={option} value={option}>
-                                                            {option}
-                                                        </option>
-                                                    ))}
-                                                    <option value={customRegionValue}>{customRegionValue}</option>
-                                                </select>
-                                            </label>
+                                                    <label className="block space-y-2">
+                                                        <span className="text-sm text-[var(--color-text-secondary)]">Регион</span>
+                                                        <input
+                                                            value={teamForm.region}
+                                                            readOnly
+                                                            className={readOnlyClassName}
+                                                        />
+                                                    </label>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <label className="block space-y-2">
+                                                        <RequiredLabel invalid={teamSubmitAttempted && !teamForm.schoolMode}>Учебное заведение команды</RequiredLabel>
+                                                        <select
+                                                            value={teamForm.schoolMode}
+                                                            onChange={(event) => handleSchoolModeChange(event.target.value)}
+                                                            className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.schoolMode)}
+                                                        >
+                                                            <option value="">Выберите учебное заведение</option>
+                                                            {schoolOptions.map((option) => (
+                                                                <option key={option} value={option}>
+                                                                    {option}
+                                                                </option>
+                                                            ))}
+                                                            <option value={customSchoolValue}>{customSchoolValue}</option>
+                                                        </select>
+                                                    </label>
 
-                                            {teamForm.schoolMode === customSchoolValue ? (
-                                                <label className="block space-y-2">
-                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.school.trim()}>Свое учебное заведение</RequiredLabel>
-                                                    <input
-                                                        value={teamForm.school}
-                                                        onChange={(event) => setTeamForm((prev) => ({ ...prev, school: event.target.value }))}
-                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.school.trim())}
-                                                    />
-                                                </label>
-                                            ) : null}
+                                                    <label className="block space-y-2">
+                                                        <RequiredLabel invalid={teamSubmitAttempted && !teamForm.regionMode}>Регион</RequiredLabel>
+                                                        <select
+                                                            value={teamForm.regionMode}
+                                                            onChange={(event) => handleRegionModeChange(event.target.value)}
+                                                            className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.regionMode)}
+                                                        >
+                                                            <option value="">Выберите регион</option>
+                                                            {regionOptions.map((option) => (
+                                                                <option key={option} value={option}>
+                                                                    {option}
+                                                                </option>
+                                                            ))}
+                                                            <option value={customRegionValue}>{customRegionValue}</option>
+                                                        </select>
+                                                    </label>
 
-                                            {teamForm.regionMode === customRegionValue ? (
-                                                <label className="block space-y-2">
-                                                    <RequiredLabel invalid={teamSubmitAttempted && !teamForm.region.trim()}>Свой регион</RequiredLabel>
-                                                    <input
-                                                        value={teamForm.region}
-                                                        onChange={(event) => setTeamForm((prev) => ({ ...prev, region: event.target.value }))}
-                                                        className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.region.trim())}
-                                                    />
-                                                </label>
-                                            ) : null}
+                                                    {teamForm.schoolMode === customSchoolValue ? (
+                                                        <label className="block space-y-2">
+                                                            <RequiredLabel invalid={teamSubmitAttempted && !teamForm.school.trim()}>Свое учебное заведение</RequiredLabel>
+                                                            <input
+                                                                value={teamForm.school}
+                                                                onChange={(event) => setTeamForm((prev) => ({ ...prev, school: event.target.value }))}
+                                                                className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.school.trim())}
+                                                            />
+                                                        </label>
+                                                    ) : null}
+
+                                                    {teamForm.regionMode === customRegionValue ? (
+                                                        <label className="block space-y-2">
+                                                            <RequiredLabel invalid={teamSubmitAttempted && !teamForm.region.trim()}>Свой регион</RequiredLabel>
+                                                            <input
+                                                                value={teamForm.region}
+                                                                onChange={(event) => setTeamForm((prev) => ({ ...prev, region: event.target.value }))}
+                                                                className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.region.trim())}
+                                                            />
+                                                        </label>
+                                                    ) : null}
+                                                </>
+                                            )}
 
                                             {teamForm.members.map((member, index) => (
                                                 <label key={index} className="block space-y-2">
