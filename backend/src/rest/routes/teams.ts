@@ -880,7 +880,6 @@ teamsRouter.patch(
                 }
 
                 const allowed = new Set([
-                    "name",
                     "members",
                     "appreciations",
                     "meals_count",
