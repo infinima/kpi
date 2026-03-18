@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { ArrowDown, ArrowUp, Plus, RefreshCw, RotateCcw, Search, X } from "lucide-react";
+import { ArrowDown, ArrowUp, RefreshCw, RotateCcw, Search, Settings2, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import {
@@ -212,7 +212,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, onRefresh, loadi
                         className="h-9 w-9 px-0 py-0 text-sm shadow-none"
                     >
                         <span className="sr-only">Настроить столбцы</span>
-                        <Plus size={16} />
+                        <Settings2 size={16} />
                     </OutlineButton>
                     {showColumnSettings ? (
                         <div className="absolute right-0 top-12 z-20 w-80 rounded-[20px] border border-[var(--color-border)] bg-white p-4 shadow-[0_20px_40px_rgba(15,23,42,0.16)]">
