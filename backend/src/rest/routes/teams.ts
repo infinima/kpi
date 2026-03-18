@@ -1045,6 +1045,15 @@ teamsRouter.post(
             [id], (req as any).user_id
         );
 
+        if (team.status !== "ACCEPTED") {
+            return res.status(400).json({
+                error: {
+                    code: "TEAM_STATUS_NOT_ACCEPTED",
+                    message: "Team status must be ACCEPTED",
+                },
+            });
+        }
+
         try {
             const info = await requestPaymentInfo({
                 teamId: Number(team.id),
