@@ -1034,6 +1034,69 @@ teamsRouter.patch(
     }
 );
 
+// POST /api/teams/:id/check-payment
+teamsRouter.post(
+    "/:id/check-payment",
+    validate(GetOneTeamInput, "params"),
+    checkNotDeleted("team"),
+    checkPermission("teams", "get"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [team] = await query(
+            "SELECT id, name, school, payment_link, status FROM teams WHERE id = ?",
+            [id], (req as any).user_id
+        );
+
+        try {
+            const info = await requestPaymentInfo({
+                teamId: Number(team.id),
+                teamName: String(team.name),
+                teamSchool: String(team.school),
+            });
+
+            if (info.paid) {
+                await query(
+                    "UPDATE teams SET status = 'PAID', payment_link = ? WHERE id = ?",
+                    [info.payUrl ?? team.payment_link ?? null, team.id],
+                    (req as any).user_id
+                );
+
+                if (team.status !== "PAID") {
+                    try {
+                        const ctx = await loadTeamEmailContext(Number(team.id));
+                        if (ctx) {
+                            await sendTeamPaymentConfirmedEmail(ctx);
+                        }
+                    } catch (e) {
+                        console.error("[email] failed to send payment confirmation:", e);
+                    }
+                }
+
+                return res.json({ paid: true });
+            }
+
+            if (info.payUrl && info.payUrl !== team.payment_link) {
+                await query(
+                    "UPDATE teams SET payment_link = ? WHERE id = ?",
+                    [info.payUrl, team.id],
+                    (req as any).user_id
+                );
+            }
+
+            return res.json({ paid: false });
+        } catch (e: any) {
+            console.error(e);
+            return res.status(502).json({
+                error: {
+                    code: "PAYMENT_REQUEST_FAILED",
+                    message: e?.message ?? String(e),
+                },
+            });
+        }
+    }
+);
+
 // ---- DELETE /api/teams/:id ----
 teamsRouter.delete(
     "/:id",

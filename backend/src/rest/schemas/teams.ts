@@ -113,6 +113,9 @@ export const UpdateTeamInput = CreateTeamInput
         owner_user_id: z.coerce.number().int().positive().nullable().optional(),
         appreciations: TeamSchema.shape.appreciations.optional(),
     });
+export const CheckTeamPaymentResponse = z.object({
+    paid: z.boolean(),
+});
 
 
 
@@ -335,6 +338,28 @@ registry.registerPath({
         200: { description: "OK" },
         400: { description: "The team is deleted or validation failed" },
         404: { description: "The team does not exist" },
+    },
+});
+
+// POST /api/teams/:id/check-payment
+registry.registerPath({
+    method: "post",
+    path: "/api/teams/{id}/check-payment",
+    summary: "Проверить оплату команды",
+    tags: ["Teams"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneTeamInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/json": { schema: CheckTeamPaymentResponse },
+            },
+        },
+        404: { description: "The team does not exist" },
+        502: { description: "Payment provider error" },
     },
 });
 
