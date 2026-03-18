@@ -9,17 +9,17 @@ function downloadPublicFile(fileName: string) {
 }
 
 export function downloadContractFile() {
-    downloadPublicFile("Д.docx");
+    downloadPublicFile("Договор-оферта.pdf");
 }
 
 export function downloadPersonalDataFile() {
-    downloadPublicFile("ПД.doc");
+    downloadPublicFile("ОПД_регистрация.pdf");
 }
 
 export function downloadMedicalInterventionFile() {
-    downloadPublicFile("Мед.rtf");
+    downloadPublicFile("Мед.pdf");
 }
 
 export function downloadPhotoVideoConsentFile() {
-    downloadPublicFile("ФотоИВидео.docx");
+    downloadPublicFile("ОПД.pdf");
 }

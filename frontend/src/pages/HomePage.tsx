@@ -106,7 +106,7 @@ export default function HomePage() {
                     <PrimaryButton
                         active={true}
                         leftIcon={<FileText size={18}/>}
-                        onClick={() => downloadFile("/Инфо.docx", "Инфо")}
+                        onClick={() => downloadFile("/Информационное_сообщение.pdf", "Информационное_сообщение.pdf")}
                     >
                         Информационное сообщение
                     </PrimaryButton>
