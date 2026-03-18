@@ -32,9 +32,9 @@ export type TeamTableRowData = {
     deleted_at: string | null;
 };
 
-type TeamColumnKey = "id" | "league_name" | "name" | "school" | "maintainer_activity" | "status";
+export type TeamColumnKey = keyof TeamTableRowData;
 
-type TeamColumn = {
+export type TeamColumn = {
     key: TeamColumnKey;
     label: string;
     width: number;
@@ -64,6 +64,10 @@ export const teamStatusLabels: Record<string, string> = {
 export function getTeamColumnDisplayValue(row: TeamTableRowData, column: TeamColumn): string {
     const value = row[column.key];
 
+    if (Array.isArray(value)) {
+        return value.join(", ");
+    }
+
     if (column.key === "status") {
         return teamStatusLabels[String(value)] ?? String(value ?? "");
     }
@@ -82,6 +86,7 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
     const openModal = useModalStore((state) => state.openModal);
 
     const canSave = useMemo(() => Boolean(draft.name.trim()), [draft.name]);
+    const canEditRow = isCreating || (isColumnEditable ? isColumnEditable("name", row) : true);
     const rowBaseBackgroundClass = row.status === "ON_CHECKING" && !isEditing
         ? "bg-[rgba(250,204,21,0.10)]"
         : "bg-[rgba(255,255,255,0.96)]";
@@ -218,7 +223,7 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                             onClick={() => {
                                 openModal("team-info", {
                                     row: draft,
-                                    canEditRestrictedFields: isColumnEditable ? isColumnEditable("status", row) : true,
+                                    canEdit: canEditRow,
                                     onSave,
                                 });
                             }}
@@ -227,15 +232,17 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                             <span className="sr-only">Инфо</span>
                             <CircleEllipsis size={16} />
                         </OutlineButton>
-                        <OutlineButton
-                            active
-                            onClick={() => setIsEditing(true)}
-                            disabled={loading}
-                            className="h-9 w-9 px-0 py-0 text-sm shadow-none"
-                        >
-                            <span className="sr-only">{isCreating ? "Создать" : "Изменить"}</span>
-                            {isCreating ? <Plus size={16} /> : <Pencil size={16} />}
-                        </OutlineButton>
+                        {canEditRow ? (
+                            <OutlineButton
+                                active
+                                onClick={() => setIsEditing(true)}
+                                disabled={loading}
+                                className="h-9 w-9 px-0 py-0 text-sm shadow-none"
+                            >
+                                <span className="sr-only">{isCreating ? "Создать" : "Изменить"}</span>
+                                {isCreating ? <Plus size={16} /> : <Pencil size={16} />}
+                            </OutlineButton>
+                        ) : null}
                         {!isCreating ? (
                             <PrimaryButton
                                 active
@@ -257,9 +264,18 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
 export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "id", label: "ID", width: 80, editable: false, type: "text" },
     { key: "league_name", label: "Лига", width: 200, editable: false, type: "text" },
+    { key: "league_id", label: "ID лиги", width: 110, editable: true, type: "text" },
     { key: "name", label: "Команда", width: 220, editable: true, type: "text" },
+    { key: "owner_full_name", label: "Руководитель", width: 220, editable: false, type: "text" },
+    { key: "owner_email", label: "Email руководителя", width: 240, editable: false, type: "text" },
+    { key: "owner_phone_number", label: "Телефон руководителя", width: 190, editable: false, type: "text" },
+    { key: "members", label: "Участники", width: 320, editable: false, type: "text" },
+    { key: "appreciations", label: "Благодарности", width: 260, editable: false, type: "text" },
     { key: "school", label: "Образовательная организация", width: 260, editable: true, type: "text" },
+    { key: "region", label: "Регион", width: 180, editable: true, type: "text" },
+    { key: "maintainer_full_name", label: "Сопровождающий", width: 220, editable: true, type: "text" },
     { key: "maintainer_activity", label: "Активность сопровождающего", width: 240, editable: true, type: "text" },
+    { key: "meals_count", label: "Обеды", width: 100, editable: true, type: "text" },
     {
         key: "status",
         label: "Статус",
@@ -273,4 +289,16 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "Оплачена", value: "PAID" },
         ],
     },
+    {
+        key: "diploma",
+        label: "Диплом",
+        width: 150,
+        editable: true,
+        type: "text",
+    },
+    { key: "special_nominations", label: "Номинации", width: 240, editable: false, type: "text" },
+    { key: "payment_link", label: "Ссылка на оплату", width: 260, editable: false, type: "text" },
+    { key: "created_at", label: "Создано", width: 180, editable: false, type: "text" },
+    { key: "updated_at", label: "Обновлено", width: 180, editable: false, type: "text" },
+    { key: "deleted_at", label: "Удалено", width: 180, editable: false, type: "text" },
 ];

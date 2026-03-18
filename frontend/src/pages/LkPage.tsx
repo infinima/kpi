@@ -339,6 +339,7 @@ export default function LkPage() {
     const [registrationLoading, setRegistrationLoading] = useState(false);
     const [ownedTeams, setOwnedTeams] = useState<OwnedTeam[]>([]);
     const [ownedTeamsLoading, setOwnedTeamsLoading] = useState(false);
+    const [checkingPaymentTeamId, setCheckingPaymentTeamId] = useState<number | null>(null);
     const [teamSaving, setTeamSaving] = useState(false);
     const [teamForm, setTeamForm] = useState<TeamFormState>(emptyTeamForm);
     const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
@@ -800,6 +801,19 @@ export default function LkPage() {
         }
     }
 
+    async function handleCheckPayment(teamId: number) {
+        try {
+            setCheckingPaymentTeamId(teamId);
+            await apiPost(`teams/${teamId}/check-payment`, undefined, {
+                success: "Проверка оплаты запущена",
+                error: true,
+            });
+            window.location.reload();
+        } finally {
+            setCheckingPaymentTeamId(null);
+        }
+    }
+
     if (!token) {
         return (
             <div className="relative min-h-screen overflow-hidden">
@@ -1103,6 +1117,15 @@ export default function LkPage() {
                                                         </div>
 
                                                         <div className="flex flex-col gap-3 sm:flex-row">
+                                                            {team.status === "ACCEPTED" ? (
+                                                                <OutlineButton
+                                                                    active
+                                                                    onClick={() => void handleCheckPayment(team.id)}
+                                                                    disabled={checkingPaymentTeamId === team.id}
+                                                                >
+                                                                    {checkingPaymentTeamId === team.id ? "Проверяем..." : "Проверить оплату"}
+                                                                </OutlineButton>
+                                                            ) : null}
                                                             {team.owner_can_edit ? (
                                                                 <OutlineButton
                                                                     active

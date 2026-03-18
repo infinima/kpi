@@ -103,7 +103,7 @@ export function EventTeamsPage() {
     const [rows, setRows] = useState<TeamResponseRow[]>([]);
     const [loading, setLoading] = useState(false);
 
-    function canEditRestrictedFields(teamId: number) {
+    function canEditTeam(teamId: number) {
         return can("teams", "update", teamId);
     }
 
@@ -158,58 +158,24 @@ export function EventTeamsPage() {
     }, [eventId, locationId, leagueId]);
 
     useEffect(() => {
-        let ignore = false;
-
-        async function load() {
-            const path = leagueId
-                ? `teams/league/${leagueId}`
-                : locationId
-                    ? `teams/location/${locationId}`
-                    : eventId
-                        ? `teams/event/${eventId}`
-                        : null;
-
-            if (!path) {
-                setRows([]);
-                return;
-            }
-
-            try {
-                setLoading(true);
-                const data = await apiGet<TeamResponseRow[]>(path, { error: true });
-                if (!ignore) {
-                    setRows(data);
-                }
-            } finally {
-                if (!ignore) {
-                    setLoading(false);
-                }
-            }
-        }
-
-        void load();
-        return () => {
-            ignore = true;
-        };
-    }, [eventId, locationId, leagueId]);
+        void loadTeams();
+    }, [loadTeams]);
 
     async function handleUpdate(row: TeamTableRowData) {
         const payload: Record<string, unknown> = {
             name: row.name,
             members: buildMembersRequestValue(row),
             appreciations: row.appreciations,
-            school: row.school,
-            region: row.region,
             meals_count: row.meals_count,
             maintainer_full_name: row.maintainer_full_name || null,
             maintainer_activity: row.maintainer_activity || null,
+            status: row.status || undefined,
+            diploma: row.diploma || null,
+            special_nominations: row.special_nominations,
         };
 
-        if (canEditRestrictedFields(row.id)) {
+        if (canEditTeam(row.id)) {
             payload.league_id = row.league_id;
-            payload.status = row.status || undefined;
-            payload.diploma = row.diploma || null;
-            payload.special_nominations = row.special_nominations;
         }
 
         await apiPatch(`teams/${row.id}`, payload, {
@@ -257,15 +223,11 @@ export function EventTeamsPage() {
                 onUpdate={handleUpdate}
                 onDelete={handleDelete}
                 onCreate={handleCreate}
+                onRefresh={loadTeams}
+                loading={loading}
                 defaultLeagueId={leagueId ? Number(leagueId) : null}
                 defaultLeagueName={leagueId ? tableRows[0]?.league_name ?? "" : ""}
-                isColumnEditable={(columnKey, row) => {
-                    if (columnKey === "status" || columnKey === "diploma" || columnKey === "special_nominations") {
-                        return canEditRestrictedFields(row.id);
-                    }
-
-                    return true;
-                }}
+                isColumnEditable={(columnKey, row) => canEditTeam(row.id) && columnKey !== "school" && columnKey !== "region"}
             />
         </section>
     );

@@ -227,7 +227,7 @@ export function TeamInfoModal() {
                             type="number"
                             min={1}
                             value={draft.league_id}
-                            readOnly={!isEditing || !payload.canEditRestrictedFields}
+                            readOnly={!isEditing}
                             onChange={(event) => setDraft((prev) => prev ? { ...prev, league_id: Number(event.target.value || 0) } : prev)}
                             className={inputClassName(isChanged(draft.league_id, payload.row.league_id))}
                         />
@@ -249,7 +249,7 @@ export function TeamInfoModal() {
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Статус</span>
                         <select
                             value={draft.status}
-                            disabled={!isEditing || !payload.canEditRestrictedFields}
+                            disabled={!isEditing}
                             onChange={(event) => setDraft((prev) => prev ? { ...prev, status: event.target.value } : prev)}
                             className={inputClassName(isChanged(draft.status, payload.row.status))}
                         >
@@ -284,8 +284,7 @@ export function TeamInfoModal() {
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Учебное заведение</span>
                         <input
                             value={draft.school}
-                            readOnly={!isEditing}
-                            onChange={(event) => setDraft((prev) => prev ? { ...prev, school: event.target.value } : prev)}
+                            readOnly
                             className={inputClassName(isChanged(draft.school, payload.row.school))}
                         />
                     </label>
@@ -294,8 +293,7 @@ export function TeamInfoModal() {
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Регион</span>
                         <input
                             value={draft.region}
-                            readOnly={!isEditing}
-                            onChange={(event) => setDraft((prev) => prev ? { ...prev, region: event.target.value } : prev)}
+                            readOnly
                             className={inputClassName(isChanged(draft.region, payload.row.region))}
                         />
                     </label>
@@ -343,7 +341,7 @@ export function TeamInfoModal() {
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Диплом</span>
                         <select
                             value={draft.diploma}
-                            disabled={!isEditing || !payload.canEditRestrictedFields}
+                            disabled={!isEditing}
                             onChange={(event) => setDraft((prev) => prev ? { ...prev, diploma: event.target.value } : prev)}
                             className={inputClassName(isChanged(draft.diploma, payload.row.diploma))}
                         >
@@ -371,7 +369,7 @@ export function TeamInfoModal() {
                         <textarea
                             rows={3}
                             value={buildTextAreaValue(draft.special_nominations)}
-                            readOnly={!isEditing || !payload.canEditRestrictedFields}
+                            readOnly={!isEditing}
                             onChange={(event) => setDraft((prev) => prev ? { ...prev, special_nominations: parseTextAreaValue(event.target.value) } : prev)}
                             className={`${inputClassName(isChanged(draft.special_nominations, payload.row.special_nominations))} resize-none`}
                         />
@@ -382,7 +380,7 @@ export function TeamInfoModal() {
                     <OutlineButton active onClick={closeModal}>
                         Закрыть
                     </OutlineButton>
-                    {!isEditing ? (
+                    {!isEditing && payload.canEdit ? (
                         <OutlineButton active onClick={() => setIsEditing(true)}>
                             Изменить
                         </OutlineButton>

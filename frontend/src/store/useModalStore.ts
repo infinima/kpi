@@ -31,7 +31,7 @@ type ModalPayloadMap = {
     };
     "team-info": {
         row: TeamTableRowData;
-        canEditRestrictedFields: boolean;
+        canEdit: boolean;
         onSave: (row: TeamTableRowData) => Promise<void> | void;
     };
     crop: {
