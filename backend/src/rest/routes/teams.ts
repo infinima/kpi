@@ -47,7 +47,7 @@ teamsRouter.get(
                     t.diploma, t.special_nominations,
                     t.created_at, t.updated_at, t.deleted_at,
                     CASE
-                        WHEN l.status IN ('REGISTRATION_IN_PROGRESS', 'REGISTRATION_ENDED') THEN 0
+                        WHEN l.status IN ('REGISTRATION_IN_PROGRESS', 'REGISTRATION_ENDED') THEN 1
                         ELSE 0
                     END AS owner_can_edit
              FROM teams t
