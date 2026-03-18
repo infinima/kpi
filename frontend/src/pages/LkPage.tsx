@@ -733,7 +733,6 @@ export default function LkPage() {
         try {
             setTeamSaving(true);
             const basePayload = {
-                name: teamForm.name.trim(),
                 members: teamForm.members.map((member) => member.trim()),
                 appreciations: teamForm.appreciationsText
                     .split("\n")
@@ -754,6 +753,7 @@ export default function LkPage() {
                     league_id: Number(teamForm.leagueId),
                     owner_user_id: user?.id,
                     is_reserve: teamForm.isReserve,
+                    name: teamForm.name.trim(),
                     ...basePayload,
                     school: teamForm.school.trim(),
                     region: teamForm.region.trim(),
@@ -1427,13 +1427,26 @@ export default function LkPage() {
 
                                         <div className="mt-8 grid gap-5 sm:grid-cols-2">
                                             <label className="block space-y-2 sm:col-span-2">
-                                                <RequiredLabel invalid={teamSubmitAttempted && !teamForm.name.trim()}>Название команды</RequiredLabel>
-                                                <input
-                                                    value={teamForm.name}
-                                                    onChange={(event) => setTeamForm((prev) => ({ ...prev, name: event.target.value }))}
-                                                    placeholder="Пифагоры"
-                                                    className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.name.trim())}
-                                                />
+                                                {editingTeam ? (
+                                                    <>
+                                                        <span className="text-sm text-[var(--color-text-secondary)]">Название команды</span>
+                                                        <input
+                                                            value={teamForm.name}
+                                                            readOnly
+                                                            className={readOnlyClassName}
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <RequiredLabel invalid={teamSubmitAttempted && !teamForm.name.trim()}>Название команды</RequiredLabel>
+                                                        <input
+                                                            value={teamForm.name}
+                                                            onChange={(event) => setTeamForm((prev) => ({ ...prev, name: event.target.value }))}
+                                                            placeholder="Пифагоры"
+                                                            className={withValidationClass(inputClassName, teamSubmitAttempted && !teamForm.name.trim())}
+                                                        />
+                                                    </>
+                                                )}
                                             </label>
 
                                             {editingTeam ? (
