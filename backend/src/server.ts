@@ -21,7 +21,7 @@ async function bootstrap() {
             : {}
     });
     initSocket(io);
-    startPaymentChecker();
+    // startPaymentChecker();
 
     const PORT = process.env.PORT ?? 3000;
     server.listen(PORT, () => {
