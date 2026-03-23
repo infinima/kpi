@@ -124,6 +124,7 @@ export function TeamInfoModal() {
     const [draft, setDraft] = useState<TeamTableRowData | null>(payload?.row ?? null);
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [checkingPayment, setCheckingPayment] = useState(false);
     const paymentLink = normalizePaymentLink(draft?.payment_link);
 
     useEffect(() => {
@@ -149,6 +150,7 @@ export function TeamInfoModal() {
     if (!payload || !draft) {
         return null;
     }
+    const modalPayload = payload;
 
     async function handleSave() {
         if (!canSave) {
@@ -157,10 +159,26 @@ export function TeamInfoModal() {
 
         try {
             setSaving(true);
-            await payload.onSave(draft);
+            await modalPayload.onSave(draft);
             closeModal();
         } finally {
             setSaving(false);
+        }
+    }
+
+    async function handleCheckPayment() {
+        if (!modalPayload.onCheckPayment || !draft) {
+            return;
+        }
+
+        try {
+            setCheckingPayment(true);
+            const updated = await modalPayload.onCheckPayment(draft);
+            if (updated) {
+                setDraft(updated);
+            }
+        } finally {
+            setCheckingPayment(false);
         }
     }
 
@@ -206,14 +224,25 @@ export function TeamInfoModal() {
                             Ссылка на оплату
                         </div>
                         {paymentLink ? (
-                            <a
-                                href={paymentLink}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="mt-2 inline-block break-all text-sm font-medium text-[var(--color-primary)] underline underline-offset-2"
-                            >
-                                {paymentLink}
-                            </a>
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
+                                <a
+                                    href={paymentLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-block break-all text-sm font-medium text-[var(--color-primary)] underline underline-offset-2"
+                                >
+                                    {paymentLink}
+                                </a>
+                                {payload.onCheckPayment && draft.status === "ACCEPTED" ? (
+                                    <OutlineButton
+                                        active
+                                        onClick={() => void handleCheckPayment()}
+                                        disabled={checkingPayment}
+                                    >
+                                        Проверить оплату
+                                    </OutlineButton>
+                                ) : null}
+                            </div>
                         ) : (
                             <div className="mt-2 text-sm font-medium text-[var(--color-text-main)]">
                                 Не указано

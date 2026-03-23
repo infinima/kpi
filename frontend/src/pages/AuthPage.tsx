@@ -90,6 +90,7 @@ export default function AuthPage() {
     const [registerForm, setRegisterForm] = useState({
         first_name: "",
         last_name: "",
+        patronymic: "",
         email: "",
         password: "",
         password_confirmation: "",
@@ -132,6 +133,7 @@ export default function AuthPage() {
 
     async function handleRegister() {
         const normalizedPhone = getRussianPhoneDigits(registerForm.phone_number);
+        const normalizedPatronymic = registerForm.patronymic.trim();
 
         if (
             !registerForm.first_name.trim() ||
@@ -171,7 +173,7 @@ export default function AuthPage() {
                 password: registerForm.password,
                 last_name: registerForm.last_name,
                 first_name: registerForm.first_name,
-                patronymic: null,
+                patronymic: normalizedPatronymic || null,
                 phone_number: normalizedPhone,
             }, { error: true });
             notify({
@@ -327,6 +329,16 @@ export default function AuthPage() {
                                                 />
                                             </label>
                                         </div>
+
+                                        <label className="block space-y-2">
+                                            <span className="text-sm text-[var(--color-text-secondary)]">Отчество</span>
+                                            <input
+                                                value={registerForm.patronymic}
+                                                onChange={(event) => setRegisterForm((prev) => ({...prev, patronymic: event.target.value}))}
+                                                placeholder="Сергеевна"
+                                                className={inputClassName}
+                                            />
+                                        </label>
 
                                         <label className="block space-y-2">
                                             <span className="text-sm text-[var(--color-text-secondary)]">Телефон</span>

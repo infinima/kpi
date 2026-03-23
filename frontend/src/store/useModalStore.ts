@@ -33,6 +33,7 @@ type ModalPayloadMap = {
         row: TeamTableRowData;
         canEdit: boolean;
         onSave: (row: TeamTableRowData) => Promise<void> | void;
+        onCheckPayment?: (row: TeamTableRowData) => Promise<TeamTableRowData | void> | TeamTableRowData | void;
     };
     crop: {
         file: File;

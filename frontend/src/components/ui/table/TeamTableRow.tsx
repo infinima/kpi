@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { CircleEllipsis, Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { CircleEllipsis, Pencil, Plus, RefreshCw, Save, Trash2, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { useModalStore } from "@/store";
@@ -48,6 +48,7 @@ type Props = {
     columns: TeamColumn[];
     onSave: (row: TeamTableRowData) => Promise<void> | void;
     onDelete: (row: TeamTableRowData) => Promise<void> | void;
+    onCheckPayment?: (row: TeamTableRowData) => Promise<TeamTableRowData | void> | TeamTableRowData | void;
     actionsWidth: number;
     isCreating?: boolean;
     onCreated?: () => void;
@@ -79,10 +80,21 @@ function isTeamCellChanged(left: unknown, right: unknown) {
     return JSON.stringify(left ?? null) !== JSON.stringify(right ?? null);
 }
 
-export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isCreating = false, onCreated, isColumnEditable }: Props) {
+export function TeamTableRow({
+    row,
+    columns,
+    onSave,
+    onDelete,
+    onCheckPayment,
+    actionsWidth,
+    isCreating = false,
+    onCreated,
+    isColumnEditable,
+}: Props) {
     const [draft, setDraft] = useState<TeamTableRowData>(row);
     const [isEditing, setIsEditing] = useState(isCreating);
     const [loading, setLoading] = useState(false);
+    const [checkingPayment, setCheckingPayment] = useState(false);
     const openModal = useModalStore((state) => state.openModal);
 
     const canSave = useMemo(() => Boolean(draft.name.trim()), [draft.name]);
@@ -131,6 +143,22 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
             await onDelete(row);
         } finally {
             setLoading(false);
+        }
+    }
+
+    async function handleCheckPayment() {
+        if (!onCheckPayment) {
+            return;
+        }
+
+        try {
+            setCheckingPayment(true);
+            const updated = await onCheckPayment(draft);
+            if (updated) {
+                setDraft(updated);
+            }
+        } finally {
+            setCheckingPayment(false);
         }
     }
 
@@ -225,6 +253,7 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                                     row: draft,
                                     canEdit: canEditRow,
                                     onSave,
+                                    onCheckPayment,
                                 });
                             }}
                             className="h-9 w-9 px-0 py-0 text-sm shadow-none"
@@ -241,6 +270,17 @@ export function TeamTableRow({ row, columns, onSave, onDelete, actionsWidth, isC
                             >
                                 <span className="sr-only">{isCreating ? "Создать" : "Изменить"}</span>
                                 {isCreating ? <Plus size={16} /> : <Pencil size={16} />}
+                            </OutlineButton>
+                        ) : null}
+                        {!isCreating && row.status === "ACCEPTED" && onCheckPayment ? (
+                            <OutlineButton
+                                active
+                                onClick={() => void handleCheckPayment()}
+                                disabled={loading || checkingPayment}
+                                className="h-9 w-9 px-0 py-0 text-sm shadow-none"
+                            >
+                                <span className="sr-only">Проверить оплату</span>
+                                <RefreshCw size={16} className={checkingPayment ? "animate-spin" : ""} />
                             </OutlineButton>
                         ) : null}
                         {!isCreating ? (

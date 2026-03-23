@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import { ArrowDown, ArrowUp, RefreshCw, RotateCcw, Search, Settings2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Plus, RefreshCw, RotateCcw, Search, Settings2, X } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import {
@@ -15,6 +15,7 @@ type Props = {
     data: TeamTableRowData[];
     onUpdate: (row: TeamTableRowData) => Promise<void> | void;
     onDelete: (row: TeamTableRowData) => Promise<void> | void;
+    onCheckPayment?: (row: TeamTableRowData) => Promise<TeamTableRowData | void> | TeamTableRowData | void;
     onCreate?: (row: TeamTableRowData) => Promise<void> | void;
     onRefresh?: () => Promise<void> | void;
     loading?: boolean;
@@ -76,7 +77,18 @@ function createEmptyTeam(defaultLeagueId?: number | null, defaultLeagueName?: st
     };
 }
 
-export function TeamTable({ data, onUpdate, onDelete, onCreate, onRefresh, loading = false, defaultLeagueId, defaultLeagueName, isColumnEditable }: Props) {
+export function TeamTable({
+    data,
+    onUpdate,
+    onDelete,
+    onCheckPayment,
+    onCreate,
+    onRefresh,
+    loading = false,
+    defaultLeagueId,
+    defaultLeagueName,
+    isColumnEditable,
+}: Props) {
     const [filters, setFilters] = useState<Record<string, string>>({});
     const [sortKey, setSortKey] = useState<string | null>(null);
     const [sortDirection, setSortDirection] = useState<SortDirection>(null);
@@ -381,6 +393,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, onRefresh, loadi
                                 columns={visibleColumns}
                                 onSave={onCreate}
                                 onDelete={onDelete}
+                                onCheckPayment={onCheckPayment}
                                 actionsWidth={actionsWidth}
                                 isCreating
                                 onCreated={() => setShowCreateRow(false)}
@@ -394,6 +407,7 @@ export function TeamTable({ data, onUpdate, onDelete, onCreate, onRefresh, loadi
                                 columns={visibleColumns}
                                 onSave={onUpdate}
                                 onDelete={onDelete}
+                                onCheckPayment={onCheckPayment}
                                 actionsWidth={actionsWidth}
                                 isColumnEditable={isColumnEditable}
                             />
