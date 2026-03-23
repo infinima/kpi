@@ -161,6 +161,11 @@ export default function AuthPage() {
             return;
         }
 
+        if (registerForm.password.length < 6) {
+            notify({type: "warning", text: "Пароль должен содержать минимум 6 символов"});
+            return;
+        }
+
         if (registerForm.password !== registerForm.password_confirmation) {
             notify({type: "warning", text: "Пароли не совпадают"});
             return;

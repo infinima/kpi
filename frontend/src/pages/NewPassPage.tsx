@@ -34,6 +34,11 @@ export default function NewPassPage() {
             return;
         }
 
+        if (password.length < 6) {
+            notify({ type: "warning", text: "Пароль должен содержать минимум 6 символов" });
+            return;
+        }
+
         if (password !== passwordConfirmation) {
             notify({ type: "warning", text: "Пароли не совпадают" });
             return;
