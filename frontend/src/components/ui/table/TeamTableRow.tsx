@@ -246,6 +246,17 @@ export function TeamTableRow({
                     </>
                 ) : (
                     <>
+                        {!isCreating && row.status === "ACCEPTED" && onCheckPayment ? (
+                            <OutlineButton
+                                active
+                                onClick={() => void handleCheckPayment()}
+                                disabled={loading || checkingPayment}
+                                className="h-9 w-9 px-0 py-0 text-sm shadow-none"
+                            >
+                                <span className="sr-only">Проверить оплату</span>
+                                <RefreshCw size={16} className={checkingPayment ? "animate-spin" : ""} />
+                            </OutlineButton>
+                        ) : null}
                         <OutlineButton
                             active
                             onClick={() => {
@@ -270,17 +281,6 @@ export function TeamTableRow({
                             >
                                 <span className="sr-only">{isCreating ? "Создать" : "Изменить"}</span>
                                 {isCreating ? <Plus size={16} /> : <Pencil size={16} />}
-                            </OutlineButton>
-                        ) : null}
-                        {!isCreating && row.status === "ACCEPTED" && onCheckPayment ? (
-                            <OutlineButton
-                                active
-                                onClick={() => void handleCheckPayment()}
-                                disabled={loading || checkingPayment}
-                                className="h-9 w-9 px-0 py-0 text-sm shadow-none"
-                            >
-                                <span className="sr-only">Проверить оплату</span>
-                                <RefreshCw size={16} className={checkingPayment ? "animate-spin" : ""} />
                             </OutlineButton>
                         ) : null}
                         {!isCreating ? (
