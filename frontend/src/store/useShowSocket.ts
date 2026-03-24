@@ -1,10 +1,15 @@
 import {create} from "zustand";
 import {io, Socket} from "socket.io-client";
 
-import {useEventsNav, useNotifications, useUser} from "@/store";
+import {useNotifications, useUser} from "@/store";
 import {ensureUserSessionInitialized} from "@/store/useUserStore";
 
-const SOCKET_URL = "wss://localhost:3000";
+const SOCKET_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
+
+function getLeagueIdFromPath() {
+  const match = window.location.pathname.match(/\/league\/(\d+)/);
+  return match?.[1] ?? null;
+}
 
 type showStatus = "WALLPAPER" |
   "KVARTALY-RESULTS" |
@@ -53,7 +58,7 @@ export const useShowStore = create<SocketState>((set, get) => ({
     void ensureUserSessionInitialized().then(() => {
     const notify = useNotifications.getState().addMessage;
 
-    let { leagueId } = useEventsNav.getState();
+    const leagueId = getLeagueIdFromPath();
     const token = useUser.getState().token;
 
     if (!leagueId) {

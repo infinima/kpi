@@ -21,6 +21,8 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { apiGet, apiGetFile } from "@/api";
 import { useUser } from "@/store";
+import { useSocketStore } from "@/store/useTableSocket";
+import { useShowStore } from "@/store/useShowSocket";
 import {
     canUseTableMode,
     getCollectionViewMode,
@@ -76,6 +78,8 @@ type SidebarItemProps = {
 };
 
 function SidebarItem({ to, label, icon, onClick, end = false, modeToggle, collapsed }: SidebarItemProps) {
+    const disconnectTableSocket = useSocketStore((state) => state.disconnect);
+    const disconnectShowSocket = useShowStore((state) => state.disconnect);
     const className = ({ isActive }: { isActive: boolean }) => `
         flex min-w-0 items-center rounded-xl transition
         ${collapsed ? "h-10 w-10 justify-center px-0 py-0" : "flex-1 gap-2 px-2.5 py-2 text-sm"}
@@ -83,6 +87,11 @@ function SidebarItem({ to, label, icon, onClick, end = false, modeToggle, collap
             ? "bg-[rgba(14,116,144,0.12)] text-[var(--color-primary)]"
             : "text-[var(--color-text-secondary)] hover:bg-[rgba(255,255,255,0.72)] hover:text-[var(--color-text-main)]"}
     `;
+
+    function handleDisconnect() {
+        disconnectTableSocket();
+        disconnectShowSocket();
+    }
 
     return (
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-1.5"}`}>
@@ -92,6 +101,7 @@ function SidebarItem({ to, label, icon, onClick, end = false, modeToggle, collap
                     end={end}
                     title={label}
                     className={className}
+                    onClick={handleDisconnect}
                 >
                     {icon ? <span className="shrink-0">{icon}</span> : null}
                     {!collapsed ? <span className="min-w-0 truncate">{label}</span> : null}
@@ -99,7 +109,10 @@ function SidebarItem({ to, label, icon, onClick, end = false, modeToggle, collap
             ) : (
                 <button
                     type="button"
-                    onClick={onClick}
+                    onClick={() => {
+                        handleDisconnect();
+                        void onClick?.();
+                    }}
                     title={label}
                     className={className({ isActive: false })}
                 >
@@ -123,6 +136,8 @@ function SidebarModeToggle({
     canTable: boolean;
     collapsed: boolean;
 }) {
+    const disconnectTableSocket = useSocketStore((state) => state.disconnect);
+    const disconnectShowSocket = useShowStore((state) => state.disconnect);
     const [searchParams] = useSearchParams();
     const mode = getCollectionViewMode(searchParams, entity, canTable);
     const nextMode: CollectionViewMode = mode === "cards" && canTable ? "table" : "cards";
@@ -152,6 +167,10 @@ function SidebarModeToggle({
             to={{ pathname: to, search: nextSearch }}
             className={buttonClass}
             title={nextMode === "table" ? "Переключить в таблицу" : "Переключить в карточки"}
+            onClick={() => {
+                disconnectTableSocket();
+                disconnectShowSocket();
+            }}
         >
             <Icon size={collapsed ? 16 : 14} />
         </Link>

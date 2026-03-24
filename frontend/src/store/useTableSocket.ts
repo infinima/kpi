@@ -1,10 +1,26 @@
 import {create} from "zustand";
 import {io, Socket} from "socket.io-client";
 
-import {useEventsNav, useNotifications, useUser} from "@/store";
+import {useNotifications, useUser} from "@/store";
 import {ensureUserSessionInitialized} from "@/store/useUserStore";
 
-const SOCKET_URL = "wss://localhost:3000";
+const SOCKET_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
+let tableSocketConnectVersion = 0;
+
+function getSocketRouteConfig() {
+  const match = window.location.pathname.match(
+    /^\/events\/\d+\/location\/\d+\/league\/(\d+)\/results\/(kvartaly|fudzi)\/?$/
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    leagueId: match[1],
+    tableType: match[2],
+  };
+}
 
 
 interface SocketState {
@@ -12,7 +28,7 @@ interface SocketState {
   tableData: any | null;
   isConnected: boolean;
 
-  connect: (passedTableType: string) => void;
+  connect: (passedTableType?: string, passedLeagueId?: string | number) => void;
   disconnect: () => void;
 
   fudziSetAnswer: (
@@ -53,13 +69,26 @@ export const useSocketStore = create<SocketState>((set, get) => ({
   tableData: null,
   isConnected: false,
 
-  connect: ( passedTableType?: string) => {
+  connect: ( passedTableType?: string, passedLeagueId?: string | number) => {
+    const connectVersion = ++tableSocketConnectVersion;
+    const previousSocket = get().socket;
+
+    if (previousSocket) {
+      previousSocket.close();
+    }
+
+    set({ socket: null, tableData: null, isConnected: false });
+
     void ensureUserSessionInitialized().then(() => {
+    if (connectVersion !== tableSocketConnectVersion) {
+      return;
+    }
+
     const notify = useNotifications.getState().addMessage;
 
-    const store = useEventsNav.getState();
-    const leagueId =  store.leagueId;
-    const tableType = passedTableType ?? store.tableType;
+    const routeConfig = getSocketRouteConfig();
+    const leagueId =  passedLeagueId ?? routeConfig?.leagueId ?? null;
+    const tableType = passedTableType ?? routeConfig?.tableType ?? null;
 
     const token = useUser.getState().token;
 
@@ -68,10 +97,8 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       return;
     }
 
-    const oldSocket = get().socket;
-    if (oldSocket) oldSocket.close();
-
     const socket = io(SOCKET_URL, {
+      autoConnect: false,
       transports: ["websocket"],
       query: {
         league_id: String(leagueId),
@@ -82,37 +109,60 @@ export const useSocketStore = create<SocketState>((set, get) => ({
 
     set({ socket });
 
-    socket.on("connection_error", (err: any) => {
+    const handleTableData = (t: any) => {
+      set({ tableData: t });
+    };
+
+    socket.on("connect_error", (err: any) => {
+      if (connectVersion !== tableSocketConnectVersion) {
+        return;
+      }
       notify({
         type: "error",
         text: err?.message ?? "Ошибка подключения к таблице",
       });
       socket.close();
-      set({ isConnected: false });
+      set({ socket: null, isConnected: false });
     });
 
     socket.on("connect", () => {
+      if (connectVersion !== tableSocketConnectVersion) {
+        socket.close();
+        return;
+      }
       set({ isConnected: true });
       notify({ type: "success", text: "Подключено к таблице" });
 
       socket.emit("get_table");
     });
 
-    socket.on("data", (t: any) => {
-      set({ tableData: t });
+    socket.on("disconnect", () => {
+      if (connectVersion !== tableSocketConnectVersion) {
+        return;
+      }
+      set({ isConnected: false });
     });
 
+    socket.on("data", handleTableData);
+    socket.on("table_data", handleTableData);
+
     socket.on("error_response", (err: any) => {
+      if (connectVersion !== tableSocketConnectVersion) {
+        return;
+      }
       if(err?.error?.code === "WRONG_LEAGUE_STATUS"){
         notify({ type: "error", text: "Неверный статуc лиги" });
       } else{
         console.error(err);
       }
     });
+
+    socket.connect();
     });
   },
 
   disconnect: () => {
+    tableSocketConnectVersion += 1;
     const s = get().socket;
     if (s) s.close();
     set({socket: null, isConnected: false, tableData: null});

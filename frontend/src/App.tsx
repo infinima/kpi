@@ -18,6 +18,8 @@ import { LocationsPage } from "@/pages/event/LocationPage";
 import { LeaguesPage } from "@/pages/event/LeaguesPage";
 import { EventPlaceholderPage } from "@/pages/event/EventPlaceholderPage";
 import { EventTeamsPage } from "@/pages/event/EventTeamsPage";
+import { FudziResultsPage, KvartalyResultsPage } from "@/pages/event/LeagueStageResultsPage";
+import { ResultPage } from "@/pages/ResultPage";
 
 export default function App() {
     const fetchUser = useUser((state) => state.fetchUser);
@@ -68,9 +70,9 @@ export default function App() {
                     <Route path=":eventId/location/:locationId/league" element={<LeaguesPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId" element={<LeaguesPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/history" element={<EventPlaceholderPage title="История изменений лиги" />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/results/kvartaly" element={<EventPlaceholderPage title="Результаты кварталов" />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/results/fudzi" element={<EventPlaceholderPage title="Результаты фудзи" />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/results/overall" element={<EventPlaceholderPage title="Общие результаты" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/results/kvartaly" element={<KvartalyResultsPage />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/results/fudzi" element={<FudziResultsPage />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/results/overall" element={<ResultPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/accounts" element={<EventPlaceholderPage title="Аккаунты показа" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/show" element={<EventPlaceholderPage title="Показ" />} />

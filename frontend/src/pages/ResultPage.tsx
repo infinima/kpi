@@ -1,10 +1,9 @@
-import {useEffect, useMemo, useState} from "react";
-import {apiGet, apiGetFile, apiPatch} from "@/api";
-import {useEventsNav, useNotifications, useUser} from "@/store";
+import { useEffect, useMemo, useState } from "react";
+import { useOutletContext, useParams } from "react-router-dom";
+import { ArrowDown, ArrowUp, Check, Download, Plus, X } from "lucide-react";
+import { apiGet, apiGetFile, apiPatch } from "@/api";
+import { useNotifications, useUser } from "@/store";
 
-import {ArrowUpDown, Check, Plus, Search, X,} from "lucide-react";
-
-// перевод дипломов
 const diplomaMap: Record<string, string> = {
   FIRST_DEGREE: "Диплом I степени",
   SECOND_DEGREE: "Диплом II степени",
@@ -17,484 +16,332 @@ const diplomaOptions = Object.keys(diplomaMap);
 type FinalTeam = {
   id: number;
   name: string;
-  place_kvartaly: number;
-  place_fudzi: number;
-  place_sum: number;
-  place_final: number;
-  diploma: string;
+  place_kvartaly: number | null;
+  place_fudzi: number | null;
+  place_sum: number | null;
+  place_final: number | null;
+  diploma: string | null;
   special_nominations: string[];
 };
 
+type EntitySummary = {
+  id: number;
+  name: string;
+};
+
+type EventsOutletContext = {
+  eventInfo: EntitySummary | null;
+  locationInfo: EntitySummary | null;
+  leagueInfo: EntitySummary | null;
+};
+
+type SortKey = "place_final" | "place_fudzi" | "place_kvartaly" | "place_sum" | "name";
+type SortDirection = "asc" | "desc";
+
+function compareValues(left: unknown, right: unknown) {
+  if (left == null && right == null) return 0;
+  if (left == null) return -1;
+  if (right == null) return 1;
+
+  const leftNumber = Number(left);
+  const rightNumber = Number(right);
+
+  if (!Number.isNaN(leftNumber) && !Number.isNaN(rightNumber) && `${left}` !== "" && `${right}` !== "") {
+    return leftNumber - rightNumber;
+  }
+
+  return String(left).localeCompare(String(right), "ru", { sensitivity: "base" });
+}
+
+function sortIcon(active: boolean, direction: SortDirection) {
+  if (!active) return null;
+  return direction === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
+}
+
+function headerButtonClass(active: boolean) {
+  return `flex w-full items-center gap-1 text-left text-xs font-semibold uppercase tracking-[0.08em] transition ${
+    active ? "text-white" : "text-white/92 hover:text-white"
+  }`;
+}
+
 export function ResultPage() {
-  const {leagueId} = useEventsNav();
-  const notify = useNotifications((s) => s.addMessage);
+  const { leagueId } = useParams();
+  const { eventInfo, locationInfo, leagueInfo } = useOutletContext<EventsOutletContext>();
+  const notify = useNotifications((state) => state.addMessage);
+  const { can } = useUser();
 
   const [data, setData] = useState<FinalTeam[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<
-    "place_final" | "place_fudzi" | "place_kvartaly" | "place_sum" | "name"
-  >("place_final");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-
+  const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
+    key: "place_final",
+    direction: "asc",
+  });
   const [editNominationsFor, setEditNominationsFor] = useState<FinalTeam | null>(null);
   const [newNom, setNewNom] = useState("");
 
-  const {can} = useUser();
-
-  // ========= LOAD =========
   useEffect(() => {
+    let ignore = false;
+
     async function load() {
+      if (!leagueId) {
+        setData([]);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        const json = await apiGet(`leagues/${leagueId}/final-table`);
-        setData(json);
-      } catch {
+        const json = await apiGet<FinalTeam[]>(`leagues/${leagueId}/final-table`);
+        if (!ignore) {
+          setData(json);
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     }
 
-    if (leagueId) load();
+    void load();
+    return () => {
+      ignore = true;
+    };
   }, [leagueId]);
 
-  // ========= SORT =========
-  function toggleSort(key: typeof sortKey) {
-    if (key === sortKey) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
-    }
-  }
-
-  const filtered = useMemo(() => {
-    if (!search.trim()) return data;
-
-    const s = search.toLowerCase();
-    return data.filter((t) => t.name.toLowerCase().includes(s));
-  }, [data, search]);
-
   const sorted = useMemo(() => {
-    const arr = [...filtered];
-    arr.sort((a, b) => {
-      const va = a[sortKey];
-      const vb = b[sortKey];
-
-      if (typeof va === "string") {
-        return sortDir === "asc"
-          ? va.localeCompare(vb)
-          : vb.localeCompare(va);
-      }
-      return sortDir === "asc"
-        ? (va as number) - (vb as number)
-        : (vb as number) - (va as number);
+    return [...data].sort((left, right) => {
+      const compared = compareValues(left[sort.key], right[sort.key]);
+      return sort.direction === "asc" ? compared : -compared;
     });
-    return arr;
-  }, [filtered, sortKey, sortDir]);
+  }, [data, sort]);
 
-  // ========= UPDATE DIPLOMA =========
-  async function updateDiploma(team: FinalTeam, value: string) {
-    try {
-      await apiPatch(`teams/${team.id}`, {diploma: value === "" ? null : value});
-      setData((prev) =>
-        prev.map((t) =>
-          t.id === team.id ? {...t, diploma: value} : t
-        )
-      );
-    } catch {}
+  function toggleSort(key: SortKey) {
+    setSort((current) => current.key === key
+      ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
+      : { key, direction: key === "name" ? "asc" : "desc" });
   }
 
-  // ========= UPDATE NOMINATIONS =========
+  async function updateDiploma(team: FinalTeam, value: string) {
+    await apiPatch(`teams/${team.id}`, { diploma: value === "" ? null : value }, { error: true });
+    setData((prev) => prev.map((item) => item.id === team.id ? { ...item, diploma: value || null } : item));
+  }
+
   async function saveNominations(team: FinalTeam, list: string[]) {
     try {
-      await apiPatch(`teams/${team.id}`, {
-        special_nominations: list,
-      });
-
-      notify({type: "success", text: "Номинации обновлены"});
-
-      setData((prev) =>
-        prev.map((t) =>
-          t.id === team.id ? {...t, special_nominations: list} : t
-        )
-      );
+      await apiPatch(`teams/${team.id}`, { special_nominations: list }, { error: true });
+      notify({ type: "success", text: "Номинации обновлены" });
+      setData((prev) => prev.map((item) => item.id === team.id ? { ...item, special_nominations: list } : item));
       setEditNominationsFor(null);
       setNewNom("");
     } catch {
-      notify({type: "error", text: "Ошибка сохранения"});
+      notify({ type: "error", text: "Ошибка сохранения" });
     }
   }
 
-  // ========= RENDER HELPERS =========
-  const th =
-    "px-4 py-3 border-b border-border dark:border-dark-border font-semibold text-left";
-  const td =
-    "px-4 py-3 border-b border-border dark:border-dark-border";
-  const tdCenter =
-    "px-4 py-3 border-b border-border dark:border-dark-border text-center";
-
-  // ============================================================
-  //                              UI
-  // ============================================================
-
   return (
-    <div className="space-y-6 py-6 px-4 md:px-8">
-
-
-      {/* 🔍 Поиск + сортировка — ВСЕГДА отображаются */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
-
-        {/* SEARCH */}
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 opacity-60" size={18}/>
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Поиск по командам…"
-            className="w-full pl-10 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
-          />
+    <section className="space-y-6">
+      <div className="space-y-2">
+        <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">
+          Общие результаты
         </div>
-
-        {/* SORT */}
-        <div className="relative md:hidden">
-          <ArrowUpDown
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50 pointer-events-none"
-          />
-          <select
-            value={sortKey}
-            onChange={(e) => setSortKey(e.target.value as any)}
-            className="pl-9 pr-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
-          >
-            <option value="place_final">По месту</option>
-            <option value="name">По команде</option>
-            <option value="place_kvartaly">Кварталы</option>
-            <option value="place_fudzi">Фудзи</option>
-            <option value="place_sum">Сумма мест</option>
-          </select>
+        <div className="space-y-1 text-sm text-[var(--color-text-secondary)]">
+          {eventInfo ? <div>Мероприятие: {eventInfo.name}</div> : null}
+          {locationInfo ? <div>Площадка: {locationInfo.name}</div> : null}
+          {leagueInfo ? <div>Лига: {leagueInfo.name}</div> : null}
         </div>
       </div>
 
-      {/* STATUS */}
-      {loading && (
-        <p className="text-center opacity-70 py-10">Загрузка…</p>
-      )}
-
-      {!loading && sorted.length === 0 && (
-        <p className="text-center opacity-70 py-10">Ничего не найдено</p>
-      )}
-
-      {/* ============ DESKTOP TABLE ============ */}
-      {!loading && sorted.length > 0 && (
-        <div className="hidden md:block overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-0 rounded-xl overflow-hidden shadow-card">
-            <thead>
-            <tr className="bg-surface dark:bg-dark-surface">
-
-              <th className={th}>
-                <button
-                  onClick={() => toggleSort("place_final")}
-                  className="flex items-center gap-1"
-                >
-                  Место <ArrowUpDown size={14} className="opacity-50"/>
-                </button>
-              </th>
-
-              <th className={th}>
-                <button
-                  onClick={() => toggleSort("name")}
-                  className="flex items-center gap-1"
-                >
-                  Команда <ArrowUpDown size={14} className="opacity-50"/>
-                </button>
-              </th>
-
-              <th className={th}>
-                <button
-                  onClick={() => toggleSort("place_kvartaly")}
-                  className="flex items-center gap-1"
-                >
-                  Кварталы <ArrowUpDown size={14} className="opacity-50"/>
-                </button>
-              </th>
-
-              <th className={th}>
-                <button
-                  onClick={() => toggleSort("place_fudzi")}
-                  className="flex items-center gap-1"
-                >
-                  Фудзи <ArrowUpDown size={14} className="opacity-50"/>
-                </button>
-              </th>
-
-
-              <th className={th}>
-                <button
-                  onClick={() => toggleSort("place_sum")}
-                  className="flex items-center gap-1"
-                >
-                  Сумма мест <ArrowUpDown size={14} className="opacity-50"/>
-                </button>
-              </th>
-
-              <th className={th}>Диплом</th>
-              <th className={th}>Специальные номинации</th>
-              <th className={th}>Благодарности</th>
-              <th className={th}>Диплом</th>
-              <th className={th}>Спецноминации</th>
-            </tr>
-            </thead>
-
-            <tbody>
-            {sorted.map((t) => (
-              <tr
-                key={t.id}
-                className="bg-surface dark:bg-dark-surface hover:bg-hover dark:hover:bg-dark-hover transition-colors"
-              >
-                <td className={tdCenter}>{t.place_final ?? "—"}</td>
-                <td className={td}>{t.name ?? "—"}</td>
-                <td className={tdCenter}>{t.place_kvartaly ?? "—"}</td>
-                <td className={tdCenter}>{t.place_fudzi ?? "—"}</td>
-                <td className={tdCenter}>{t.place_sum ?? "—"}</td>
-
-                {/* ДИПЛОМ */}
-                <td className={td}>
-                  <select disabled={!can("teams", "update", t.id)}
-                    value={t.diploma}
-                    onChange={(e) => updateDiploma(t, e.target.value)}
-                    className="px-2 py-1 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border text-sm"
+      {loading ? (
+        <div className="rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] px-6 py-8 text-sm text-[var(--color-text-secondary)]">
+          Загрузка...
+        </div>
+      ) : sorted.length === 0 ? (
+        <div className="rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] px-6 py-8 text-sm text-[var(--color-text-secondary)]">
+          Нет данных для отображения.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <div className="min-w-[1240px] overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
+            <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
+              <colgroup>
+                <col className="w-[8%]" />
+                <col className="w-[18%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[12%]" />
+                <col className="w-[18%]" />
+                <col className="w-[8%]" />
+                <col className="w-[6%]" />
+                <col className="w-[6%]" />
+              </colgroup>
+              <thead>
+                <tr className="bg-[var(--color-primary)] text-white">
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_final")} className={headerButtonClass(sort.key === "place_final")}>Место {sortIcon(sort.key === "place_final", sort.direction)}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort.key === "name")}>Команда {sortIcon(sort.key === "name", sort.direction)}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_kvartaly")} className={headerButtonClass(sort.key === "place_kvartaly")}>Кварталы {sortIcon(sort.key === "place_kvartaly", sort.direction)}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_fudzi")} className={headerButtonClass(sort.key === "place_fudzi")}>Фудзи {sortIcon(sort.key === "place_fudzi", sort.direction)}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_sum")} className={headerButtonClass(sort.key === "place_sum")}>Сумма {sortIcon(sort.key === "place_sum", sort.direction)}</button></th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Диплом</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Спецноминации</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Благ.</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Дипл.</th>
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Ном.</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.map((team, index) => (
+                  <tr
+                    key={team.id}
+                    className={`transition ${index % 2 === 0 ? "bg-[rgba(248,250,252,0.88)]" : "bg-[rgba(255,255,255,0.84)]"} hover:bg-[rgba(14,116,144,0.08)]`}
                   >
-                    <option value="">—</option>
-                    {diplomaOptions.map((k) => (
-                      <option key={k} value={k}>
-                        {diplomaMap[k]}
-                      </option>
-                    ))}
-                  </select>
-                </td>
-
-                {/* НОМИНАЦИИ */}
-                <td className={td}>
-                  {t.special_nominations.length === 0 ? (
-                    <ul className="text-sm space-y-1">
-
-                      <li >Номинаций нет</li>
-                    </ul>
-                  ) : (
-                    <ul className="text-sm space-y-1">
-                      {t.special_nominations.map((n, i) => (
-                        <li key={i}>{n}</li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {can("teams", "update", t.id) && (<button
-                    onClick={() => setEditNominationsFor(t)}
-                    className="text-primary text-sm mt-1 hover:underline"
-                  >
-                    Изменить
-                  </button>)}
-                </td>
-                {can("teams", "get", t.id) && (<td className={`${tdCenter} `}>
-                  <button
-                    onClick={async () =>
-                      await apiGetFile(
-                        `teams/${t.id}/appreciation`,
-                        `${t.name.replace(" ", "_")}_благодарность.pdf`
-                      )
-                    }
-                    className="text-primary text-sm mt-1 hover:underline "
-                  >
-                    Скачать
-                  </button>
-                </td>)}
-                {can("teams", "get", t.id) && (<td className={tdCenter}>
-                  {t.diploma && (
-                      <button
-                          onClick={async () =>
-                              await apiGetFile(
-                                  `teams/${t.id}/diploma`,
-                                  `${t.name.replace(" ", "_")}_${t.diploma == "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`
-                              )
-                          }
-                          className="text-primary text-sm mt-1 hover:underline"
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center font-semibold">{team.place_final ?? "—"}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3">{team.name}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_kvartaly ?? "—"}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_fudzi ?? "—"}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_sum ?? "—"}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3">
+                      <select
+                        disabled={!can("teams", "update", team.id)}
+                        value={team.diploma ?? ""}
+                        onChange={(event) => void updateDiploma(team, event.target.value)}
+                        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
                       >
-                        Скачать
-                      </button>
-                  )}
-                </td>)}
-                {can("teams", "get", t.id) && (<td className={tdCenter}>
-                {t.special_nominations?.length > 0 && (
-                    <button
-                        onClick={async () =>
-                            await apiGetFile(
-                                `teams/${t.id}/special-nominations`,
-                                `${t.name.replace(" ", "_")}_спецноминации.pdf`
-                            )
-                        }
-                        className="text-primary text-sm mt-1 hover:underline"
-                    >
-                      Скачать
-                    </button>
-                )}
-                </td>)}
-              </tr>
-            ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* ============ MOBILE VERSION ============ */}
-      {!loading && sorted.length > 0 && (
-        <div className="md:hidden space-y-4">
-          {sorted.map((t) => (
-            <div
-              key={t.id}
-              className="p-4 rounded-xl bg-surface dark:bg-dark-surface border border-border dark:border-dark-border shadow-card"
-            >
-              <div className="flex justify-between items-center mb-2">
-                <div className="font-semibold text-lg">{t.name}</div>
-                <div className="text-xl font-bold text-primary">
-                  #{t.place_final ?? "—"}
-                </div>
-              </div>
-
-              <div className="text-sm space-y-1 opacity-90">
-                <p>Кварталы: <b>{t.place_kvartaly ?? "—"}</b></p>
-                <p>Фудзи: <b>{t.place_fudzi ?? "—"}</b></p>
-                <p>Сумма мест: <b>{t.place_sum ?? "—"}</b></p>
-
-                {/* Диплом */}
-                <div>
-                  <span>Диплом: </span>
-                  <select disabled={!can("teams", "update", t.id)}
-                    value={t.diploma}
-                    onChange={(e) => updateDiploma(t, e.target.value)}
-                    className="px-2 py-1 rounded-lg bg-surface border border-border  dark:bg-dark-surface dark:border-dark-border text-sm"
-                  >
-                    <option value="">—</option>
-                    {diplomaOptions.map((k) => (
-                      <option key={k} value={k}>
-                        {diplomaMap[k]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {t.special_nominations.length > 0 && (
-                  <div className="pt-1">
-                    <div className="font-medium">Номинации:</div>
-                    <div className="text-sm ml-2">
-                      {t.special_nominations.map((n, i) => (
-                        <div key={i}>{n}</div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {can("teams", "update", t.id) && (<button
-                  onClick={() => setEditNominationsFor(t)}
-                  className="text-primary text-sm mt-1 hover:underline"
-                >
-                  Изменить
-                </button>)}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* ============ POPUP НОМИНАЦИЙ ============ */}
-      {editNominationsFor && (
-        <div className="
-          fixed inset-0 bg-black/40 backdrop-blur-sm
-          flex items-center justify-center z-50
-        ">
-          <div className="
-            w-96 bg-surface dark:bg-dark-surface
-            rounded-xl border border-border dark:border-dark-border
-            shadow-xl p-4 space-y-4
-          ">
-            <h2 className="font-semibold text-lg">Номинации</h2>
-
-            <div className="space-y-2">
-              {editNominationsFor.special_nominations.map((n, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-between bg-hover/30 dark:bg-dark-hover/30 px-3 py-2 rounded-lg"
-                >
-                  <span>{n}</span>
-                  <button
-                    onClick={() =>
-                      setEditNominationsFor({
-                        ...editNominationsFor,
-                        special_nominations:
-                          editNominationsFor.special_nominations.filter((_, j) => j !== i),
-                      })
-                    }
-                    className="text-error hover:opacity-80"
-                  >
-                    <X size={16}/>
-                  </button>
-                </div>
-              ))}
-
-              {/* ADD NEW */}
-              <div className="flex gap-2 mt-2">
-                <input
-                  value={newNom}
-                  onChange={(e) => setNewNom(e.target.value)}
-                  placeholder="Новая номинация…"
-                  className="flex-1 px-3 py-2 rounded-lg bg-surface dark:bg-dark-surface border border-border dark:border-dark-border"
-                />
-                <button
-                  onClick={() => {
-                    if (!newNom.trim()) return;
-                    setEditNominationsFor({
-                      ...editNominationsFor,
-                      special_nominations: [
-                        ...editNominationsFor.special_nominations,
-                        newNom.trim(),
-                      ],
-                    });
-                    setNewNom("");
-                  }}
-                  className="px-3 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark"
-                >
-                  <Plus size={18}/>
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-2">
-
-              <button
-                onClick={() => setEditNominationsFor(null)}
-                className="px-4 py-2 rounded-lg border border-border dark:border-dark-border hover:bg-hover dark:hover:bg-dark-hover"
-              >
-                Отмена
-              </button>
-
-              <button
-                onClick={() =>
-                  saveNominations(
-                    editNominationsFor,
-                    editNominationsFor.special_nominations
-                  )
-                }
-                className="px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary-dark flex items-center gap-2"
-              >
-                <Check size={18}/>
-                Сохранить
-              </button>
-
-            </div>
+                        <option value="">—</option>
+                        {diplomaOptions.map((key) => (
+                          <option key={key} value={key}>
+                            {diplomaMap[key]}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3">
+                      <div className="space-y-2">
+                        <div className="space-y-1 text-sm">
+                          {team.special_nominations.length === 0 ? "Номинаций нет" : team.special_nominations.map((item, nominationIndex) => (
+                            <div key={`${team.id}-${nominationIndex}`}>{item}</div>
+                          ))}
+                        </div>
+                        {can("teams", "update", team.id) ? (
+                          <button
+                            type="button"
+                            onClick={() => setEditNominationsFor(team)}
+                            className="text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                          >
+                            Изменить
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
+                      {can("teams", "get", team.id) ? (
+                        <button
+                          type="button"
+                          onClick={() => void apiGetFile(`teams/${team.id}/appreciation`, `${team.name.replace(" ", "_")}_благодарность.pdf`)}
+                          className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                        >
+                          <Download size={14} />
+                          Скачать
+                        </button>
+                      ) : null}
+                    </td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
+                      {can("teams", "get", team.id) && team.diploma ? (
+                        <button
+                          type="button"
+                          onClick={() => void apiGetFile(`teams/${team.id}/diploma`, `${team.name.replace(" ", "_")}_${team.diploma === "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`)}
+                          className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                        >
+                          <Download size={14} />
+                          Скачать
+                        </button>
+                      ) : null}
+                    </td>
+                    <td className="border-b border-[var(--color-border)] px-3 py-3 text-center">
+                      {can("teams", "get", team.id) && team.special_nominations.length > 0 ? (
+                        <button
+                          type="button"
+                          onClick={() => void apiGetFile(`teams/${team.id}/special-nominations`, `${team.name.replace(" ", "_")}_спецноминации.pdf`)}
+                          className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                        >
+                          <Download size={14} />
+                          Скачать
+                        </button>
+                      ) : null}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-    </div>
+      {editNominationsFor ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="w-full max-w-xl rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.96)] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.2)]">
+            <div className="mb-4 text-xl font-semibold text-[var(--color-text-main)]">Специальные номинации</div>
+            <div className="space-y-2">
+              {editNominationsFor.special_nominations.map((nomination, index) => (
+                <div key={index} className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.85)] px-3 py-2">
+                  <span className="text-sm text-[var(--color-text-main)]">{nomination}</span>
+                  <button
+                    type="button"
+                    onClick={() => setEditNominationsFor({
+                      ...editNominationsFor,
+                      special_nominations: editNominationsFor.special_nominations.filter((_, nominationIndex) => nominationIndex !== index),
+                    })}
+                    className="text-[var(--color-text-secondary)] transition hover:text-[var(--color-primary)]"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <input
+                value={newNom}
+                onChange={(event) => setNewNom(event.target.value)}
+                placeholder="Новая номинация"
+                className="flex-1 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newNom.trim()) return;
+                  setEditNominationsFor({
+                    ...editNominationsFor,
+                    special_nominations: [...editNominationsFor.special_nominations, newNom.trim()],
+                  });
+                  setNewNom("");
+                }}
+                className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2 text-white transition hover:bg-[var(--color-primary-dark)]"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setEditNominationsFor(null)}
+                className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-2 text-sm text-[var(--color-text-main)] transition hover:bg-[rgba(248,250,252,0.9)]"
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                onClick={() => void saveNominations(editNominationsFor, editNominationsFor.special_nominations)}
+                className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm text-white transition hover:bg-[var(--color-primary-dark)]"
+              >
+                <Check size={16} />
+                Сохранить
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </section>
   );
 }
