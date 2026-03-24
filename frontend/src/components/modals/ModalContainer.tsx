@@ -12,6 +12,7 @@ import { TeamMembersModal } from "@/components/modals/TeamMembersModal";
 import { TeamInfoModal } from "@/components/modals/TeamInfoModal";
 import { CropModal } from "@/components/services/CropModal";
 import { UserRightsModal } from "@/components/lk/UserRightsModal";
+import { FinalNominationsModal } from "@/components/modals/FinalNominationsModal";
 
 export function ModalContainer() {
     const activeModal = useModalStore((state) => state.activeModal);
@@ -24,6 +25,8 @@ export function ModalContainer() {
             //     return <ProfileModal />;
             case "rights":
                 return <UserRightsModal />;
+            case "final-nominations":
+                return <FinalNominationsModal />;
             // case "log":
             //     return <LogModal />;
             // case "user-log":

@@ -5,6 +5,7 @@ export type ModalType =
     | "login"
     | "profile"
     | "rights"
+    | "final-nominations"
     | "log"
     | "user-log"
     | "photos"
@@ -18,6 +19,12 @@ type ModalPayloadMap = {
     login: undefined;
     profile: undefined;
     rights: { userId: number; userName: string };
+    "final-nominations": {
+        teamId: number;
+        teamName: string;
+        nominations: string[];
+        onSave: (list: string[]) => Promise<void> | void;
+    };
     log: { id: number; name: string };
     "user-log": { id: number };
     photos: undefined;
@@ -49,6 +56,7 @@ type ActiveModal =
     | { type: "login"; payload?: undefined }
     | { type: "profile"; payload?: undefined }
     | { type: "rights"; payload: ModalPayloadMap["rights"] }
+    | { type: "final-nominations"; payload: ModalPayloadMap["final-nominations"] }
     | { type: "log"; payload: ModalPayloadMap["log"] }
     | { type: "user-log"; payload: ModalPayloadMap["user-log"] }
     | { type: "photos"; payload?: undefined }

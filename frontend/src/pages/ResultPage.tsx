@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext, useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp, Check, Download, Plus, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Download } from "lucide-react";
 import { apiGet, apiGetFile, apiPatch } from "@/api";
-import { useNotifications, useUser } from "@/store";
+import { useModalStore, useNotifications, useUser } from "@/store";
 
 const diplomaMap: Record<string, string> = {
   FIRST_DEGREE: "Диплом I степени",
@@ -68,6 +68,7 @@ export function ResultPage() {
   const { leagueId } = useParams();
   const { eventInfo, locationInfo, leagueInfo } = useOutletContext<EventsOutletContext>();
   const notify = useNotifications((state) => state.addMessage);
+  const openModal = useModalStore((state) => state.openModal);
   const { can } = useUser();
 
   const [data, setData] = useState<FinalTeam[]>([]);
@@ -76,8 +77,6 @@ export function ResultPage() {
     key: "place_final",
     direction: "asc",
   });
-  const [editNominationsFor, setEditNominationsFor] = useState<FinalTeam | null>(null);
-  const [newNom, setNewNom] = useState("");
 
   useEffect(() => {
     let ignore = false;
@@ -131,8 +130,6 @@ export function ResultPage() {
       await apiPatch(`teams/${team.id}`, { special_nominations: list }, { error: true });
       notify({ type: "success", text: "Номинации обновлены" });
       setData((prev) => prev.map((item) => item.id === team.id ? { ...item, special_nominations: list } : item));
-      setEditNominationsFor(null);
-      setNewNom("");
     } catch {
       notify({ type: "error", text: "Ошибка сохранения" });
     }
@@ -225,7 +222,12 @@ export function ResultPage() {
                         {can("teams", "update", team.id) ? (
                           <button
                             type="button"
-                            onClick={() => setEditNominationsFor(team)}
+                            onClick={() => openModal("final-nominations", {
+                              teamId: team.id,
+                              teamName: team.name,
+                              nominations: team.special_nominations,
+                              onSave: (list) => saveNominations(team, list),
+                            })}
                             className="text-sm text-[var(--color-primary)] transition hover:opacity-80"
                           >
                             Изменить
@@ -241,7 +243,6 @@ export function ResultPage() {
                           className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
                         >
                           <Download size={14} />
-                          Скачать
                         </button>
                       ) : null}
                     </td>
@@ -253,7 +254,6 @@ export function ResultPage() {
                           className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
                         >
                           <Download size={14} />
-                          Скачать
                         </button>
                       ) : null}
                     </td>
@@ -265,7 +265,6 @@ export function ResultPage() {
                           className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
                         >
                           <Download size={14} />
-                          Скачать
                         </button>
                       ) : null}
                     </td>
@@ -276,72 +275,6 @@ export function ResultPage() {
           </div>
         </div>
       )}
-
-      {editNominationsFor ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="w-full max-w-xl rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.96)] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.2)]">
-            <div className="mb-4 text-xl font-semibold text-[var(--color-text-main)]">Специальные номинации</div>
-            <div className="space-y-2">
-              {editNominationsFor.special_nominations.map((nomination, index) => (
-                <div key={index} className="flex items-center justify-between rounded-xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.85)] px-3 py-2">
-                  <span className="text-sm text-[var(--color-text-main)]">{nomination}</span>
-                  <button
-                    type="button"
-                    onClick={() => setEditNominationsFor({
-                      ...editNominationsFor,
-                      special_nominations: editNominationsFor.special_nominations.filter((_, nominationIndex) => nominationIndex !== index),
-                    })}
-                    className="text-[var(--color-text-secondary)] transition hover:text-[var(--color-primary)]"
-                  >
-                    <X size={16} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-4 flex gap-2">
-              <input
-                value={newNom}
-                onChange={(event) => setNewNom(event.target.value)}
-                placeholder="Новая номинация"
-                className="flex-1 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (!newNom.trim()) return;
-                  setEditNominationsFor({
-                    ...editNominationsFor,
-                    special_nominations: [...editNominationsFor.special_nominations, newNom.trim()],
-                  });
-                  setNewNom("");
-                }}
-                className="inline-flex items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2 text-white transition hover:bg-[var(--color-primary-dark)]"
-              >
-                <Plus size={18} />
-              </button>
-            </div>
-
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setEditNominationsFor(null)}
-                className="rounded-xl border border-[var(--color-border)] bg-white px-4 py-2 text-sm text-[var(--color-text-main)] transition hover:bg-[rgba(248,250,252,0.9)]"
-              >
-                Отмена
-              </button>
-              <button
-                type="button"
-                onClick={() => void saveNominations(editNominationsFor, editNominationsFor.special_nominations)}
-                className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm text-white transition hover:bg-[var(--color-primary-dark)]"
-              >
-                <Check size={16} />
-                Сохранить
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
     </section>
   );
 }
