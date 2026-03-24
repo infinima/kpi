@@ -36,7 +36,8 @@ export type PermissionObject =
   | "leagues"
   | "teams"
   | "users"
-  | "permissions";
+  | "permissions"
+  | "mailings";
 
 export type PermissionScope = "global" | "local" | "nested";
 
@@ -59,6 +60,7 @@ const OBJECT_LABELS: Record<PermissionObject, string> = {
   teams: "Команды",
   users: "Пользователи",
   permissions: "Права доступа",
+  mailings: "Рассылки",
 };
 
 const ACTION_LABELS: Record<PermissionAction, string> = {
