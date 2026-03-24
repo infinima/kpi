@@ -15,11 +15,11 @@ import {
     Rows3,
     Table2,
     Trophy,
-    Users
+    Users, Download
 } from "lucide-react";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
-import { apiGet } from "@/api";
+import { apiGet, apiGetFile } from "@/api";
 import { useUser } from "@/store";
 import {
     canUseTableMode,
@@ -66,32 +66,47 @@ function isLeagueStatusAtLeast(currentStatus: string | undefined, requiredStatus
 }
 
 type SidebarItemProps = {
-    to: string;
     label: string;
     icon?: ReactNode;
+    to?: string;
+    onClick?: () => void | Promise<void>;
     end?: boolean;
     modeToggle?: ReactNode;
     collapsed: boolean;
 };
 
-function SidebarItem({ to, label, icon, end = false, modeToggle, collapsed }: SidebarItemProps) {
+function SidebarItem({ to, label, icon, onClick, end = false, modeToggle, collapsed }: SidebarItemProps) {
+    const className = ({ isActive }: { isActive: boolean }) => `
+        flex min-w-0 items-center rounded-xl transition
+        ${collapsed ? "h-10 w-10 justify-center px-0 py-0" : "flex-1 gap-2 px-2.5 py-2 text-sm"}
+        ${isActive
+            ? "bg-[rgba(14,116,144,0.12)] text-[var(--color-primary)]"
+            : "text-[var(--color-text-secondary)] hover:bg-[rgba(255,255,255,0.72)] hover:text-[var(--color-text-main)]"}
+    `;
+
     return (
         <div className={`flex items-center ${collapsed ? "justify-center" : "gap-1.5"}`}>
-            <NavLink
-                to={to}
-                end={end}
-                title={label}
-                className={({ isActive }: { isActive: boolean }) => `
-                    flex min-w-0 items-center rounded-xl transition
-                    ${collapsed ? "h-10 w-10 justify-center px-0 py-0" : "flex-1 gap-2 px-2.5 py-2 text-sm"}
-                    ${isActive
-                        ? "bg-[rgba(14,116,144,0.12)] text-[var(--color-primary)]"
-                        : "text-[var(--color-text-secondary)] hover:bg-[rgba(255,255,255,0.72)] hover:text-[var(--color-text-main)]"}
-                `}
-            >
-                {icon ? <span className="shrink-0">{icon}</span> : null}
-                {!collapsed ? <span className="min-w-0 truncate">{label}</span> : null}
-            </NavLink>
+            {to ? (
+                <NavLink
+                    to={to}
+                    end={end}
+                    title={label}
+                    className={className}
+                >
+                    {icon ? <span className="shrink-0">{icon}</span> : null}
+                    {!collapsed ? <span className="min-w-0 truncate">{label}</span> : null}
+                </NavLink>
+            ) : (
+                <button
+                    type="button"
+                    onClick={onClick}
+                    title={label}
+                    className={className({ isActive: false })}
+                >
+                    {icon ? <span className="shrink-0">{icon}</span> : null}
+                    {!collapsed ? <span className="min-w-0 truncate text-left">{label}</span> : null}
+                </button>
+            )}
             {!collapsed ? modeToggle : null}
         </div>
     );
@@ -311,8 +326,9 @@ export default function EventsSidebar() {
     const rights = user?.rights;
     const canSeeTeams = !guest && can("teams", "get");
     const canSeeKvartalyResults = isLeagueStatusAtLeast(leagueInfo?.status, "KVARTALY_GAME");
-    const canSeeFudziResults = isLeagueStatusAtLeast(leagueInfo?.status, "FUDZI_GAME");
-    const canSeeOverallResults = leagueInfo?.status === "ENDED";
+    const canSeeFudziResults = isLeagueStatusAtLeast(leagueInfo?.status, "LUNCH");
+    const canSeeOverallResults = leagueInfo?.status === "ENDED"
+        || (leagueNumber ? can("leagues", "print_documents", leagueNumber) : false);
 
     return (
         <aside
@@ -516,15 +532,6 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "update", leagueNumber) ? (
-                                                    <SidebarItem
-                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/accounts`}
-                                                        label="Аккаунты показа"
-                                                        icon={<Users size={16} />}
-                                                        collapsed={effectiveCollapsed}
-                                                    />
-                                                ) : null}
-
                                                 {canSeeTeams ? (
                                                     <SidebarItem
                                                         to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/teams`}
@@ -554,18 +561,26 @@ export default function EventsSidebar() {
 
                                                 {leagueNumber && can("leagues", "print_documents", leagueNumber) ? (
                                                     <SidebarItem
-                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/tables`}
-                                                        label="Таблички"
-                                                        icon={<Table2 size={16} />}
+                                                        label="Карточки команд"
+                                                        icon={<Download size={16} />}
+                                                        onClick={() => apiGetFile(
+                                                            `leagues/${leagueInfo.id}/print_teams_names`,
+                                                            `league_${leagueInfo.id}_team_cards.pdf`,
+                                                            { error: true }
+                                                        )}
                                                         collapsed={effectiveCollapsed}
                                                     />
                                                 ) : null}
 
                                                 {leagueNumber && can("leagues", "get_show", leagueNumber) ? (
                                                     <SidebarItem
-                                                        to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/fudzi-presentation`}
-                                                        label="Презентация фудзи"
-                                                        icon={<Presentation size={16} />}
+                                                        label="Презентация Фудзи"
+                                                        icon={<Download size={16} />}
+                                                        onClick={() => apiGetFile(
+                                                            `leagues/${leagueInfo.id}/fudzi_presentation`,
+                                                            `league_${leagueInfo.id}_fudzi_presentation.pdf`,
+                                                            { error: true }
+                                                        )}
                                                         collapsed={effectiveCollapsed}
                                                     />
                                                 ) : null}
