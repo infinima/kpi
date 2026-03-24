@@ -8,6 +8,7 @@ import {
     CircleUserRound,
     LogIn,
     LogOut,
+    Mail,
     MapPin,
     Pencil,
     PlusSquare,
@@ -19,6 +20,7 @@ import AnimatedText from "@/components/ui/AnimatedText";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { UsersSection } from "@/components/lk/UsersSection";
+import { MailingsSection } from "@/components/lk/MailingsSection";
 import { apiGet, apiPatch, apiPost } from "@/api";
 import { useNotifications, useUser } from "@/store";
 import {
@@ -27,7 +29,7 @@ import {
     downloadPhotoVideoConsentFile
 } from "@/utils/legalDownloads";
 
-type CabinetSection = "me" | "my_team" | "reg_team" | "users";
+type CabinetSection = "me" | "my_team" | "reg_team" | "users" | "mailings";
 
 type ProfileResponse = {
     id: number;
@@ -326,6 +328,8 @@ export default function LkPage() {
     const logout = useUser((state) => state.logout);
     const notify = useNotifications((state) => state.addMessage);
     const canManageUsers = Boolean(user?.rights.users?.global?.includes("get"));
+    const canManageMailings = Boolean(user?.rights.mailings?.global?.includes("get"));
+    console.log(user?.rights.mailings)
 
     const [profileForm, setProfileForm] = useState<ProfileFormState>({
         first_name: "",
@@ -509,6 +513,10 @@ export default function LkPage() {
     );
 
     const activeSection = useMemo<CabinetSection>(() => {
+        if (location.pathname === "/lk/mailings") {
+            return "mailings";
+        }
+
         if (location.pathname === "/lk/users") {
             return "users";
         }
@@ -954,6 +962,19 @@ export default function LkPage() {
                                 <ChevronRight size={16} />
                             </Link>
                         ) : null}
+
+                        {canManageMailings ? (
+                            <Link
+                                to="/lk/mailings"
+                                className={`mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeSection === "mailings" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <Mail size={18} />
+                                    <span>Рассылки</span>
+                                </span>
+                                <ChevronRight size={16} />
+                            </Link>
+                        ) : null}
                     </aside>
 
                     <motion.div
@@ -1292,6 +1313,8 @@ export default function LkPage() {
                             </div>
                         ) : activeSection === "users" ? (
                             <UsersSection />
+                        ) : activeSection === "mailings" ? (
+                            <MailingsSection />
                         ) : (
                             <div>
                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">

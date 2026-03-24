@@ -286,10 +286,6 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {actions
               .filter(a => {
-                if (a === "get" && !["teams", "users", "permissions"].includes(data.object)) {
-                  return false;
-                }
-
                 if (data.object === "permissions" && ["restore", "access_history"].includes(a)) {
                   return false;
                 }
