@@ -4,6 +4,7 @@ import { getKvartalyTable } from "./services/kvartaly-table.js";
 import { getFudziTable } from "./services/fudzi-table.js";
 import { getShowState } from "./services/show.js";
 import { checkSocketPermission } from "./services/check-socket-permission.js";
+import crypto from "crypto";
 
 export function registerConnection(
     io: Server,
@@ -54,16 +55,18 @@ export function registerConnection(
         let user_id: number | null = null;
 
         if (token) {
+            const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
             const rows = await query(
                 `
                 SELECT user_id
                 FROM sessions
-                WHERE token = ?
+                WHERE token_hash = ?
                   AND is_deactivated = 0
                   AND expires_at > NOW()
                 LIMIT 1
                 `,
-                [token]
+                [tokenHash]
             );
 
             if (rows.length === 0) {
