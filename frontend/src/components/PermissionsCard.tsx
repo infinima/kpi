@@ -246,7 +246,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
 
 
   return (
-    <div className="border border-border dark:border-dark-border p-4 rounded-xl space-y-4 bg-surface dark:bg-dark-surface">
+    <div className="space-y-4 rounded-[24px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.88)] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
@@ -262,7 +262,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
             onChange={(e) =>
               update({ object: e.target.value as PermissionObject | "" })
             }
-            className="flex-1 px-3 py-2 border rounded-lg bg-surface dark:bg-dark-surface dark:border-dark-border border-border"
+            className="flex-1 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
           >
             {data.id === null && <option value="">Выберите…</option>}
 
@@ -311,7 +311,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
             .map((action) => (
               <label
                 key={action}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border dark:border-dark-border bg-surface dark:bg-dark-surface cursor-pointer"
+                className="flex cursor-pointer items-center gap-2 rounded-xl border border-[var(--color-border)] bg-white px-3 py-2"
               >
                 <input
                   type="checkbox"
@@ -328,7 +328,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
       {/* -------- EXPAND -------- */}
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg bg-hover dark:bg-dark-hover border border-border dark:border-dark-border text-sm"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-border)] bg-white py-2 text-sm text-[var(--color-text-main)]"
       >
         {expanded ? "Скрыть детали" : "Показать детали"}
         {expanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -336,7 +336,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
 
       {/* -------- DETAILS -------- */}
       {expanded && (
-        <div className="space-y-4 border-t border-border dark:border-dark-border pt-4">
+        <div className="space-y-4 border-t border-[var(--color-border)] pt-4">
 
           {/* SCOPE HEADER */}
           <div className="text-center">
@@ -349,7 +349,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
             <select
               value={scope}
               onChange={(e) => updateScope(e.target.value as PermissionScope)}
-              className="w-full sm:w-64 px-3 py-2 border rounded-lg bg-surface dark:bg-dark-surface dark:border-dark-border border-border"
+              className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none sm:w-64"
             >
               <option value="global">Глобальное</option>
               <option value="local">Локальное</option>
@@ -371,7 +371,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
                   })
                 }
                 placeholder="Например, 5"
-                className="w-full sm:w-40 px-3 py-2 border rounded-lg bg-surface dark:bg-dark-surface dark:border-dark-border border-border"
+                className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none sm:w-40"
               />
 
               {/* lookup result */}
@@ -399,7 +399,7 @@ export function PermissionsCard({ row, onChangedOutside }: Props) {
                   onChange={(e) =>
                     update({ scope_object: e.target.value as PermissionObject })
                   }
-                  className="w-full sm:w-64 px-3 py-2 border rounded-lg bg-surface dark:bg-dark-surface dark:border-dark-border"
+                  className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none sm:w-64"
                 >
                   <option value="">— выберите тип —</option>
                   {["events", "locations", "leagues", "teams"].map((o) => (

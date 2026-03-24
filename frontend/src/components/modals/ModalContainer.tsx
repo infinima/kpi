@@ -11,6 +11,7 @@ import { useModalStore } from "@/store";
 import { TeamMembersModal } from "@/components/modals/TeamMembersModal";
 import { TeamInfoModal } from "@/components/modals/TeamInfoModal";
 import { CropModal } from "@/components/services/CropModal";
+import { UserRightsModal } from "@/components/lk/UserRightsModal";
 
 export function ModalContainer() {
     const activeModal = useModalStore((state) => state.activeModal);
@@ -21,8 +22,8 @@ export function ModalContainer() {
             //     return <LoginModal />;
             // case "profile":
             //     return <ProfileModal />;
-            // case "rights":
-            //     return <RightsModal />;
+            case "rights":
+                return <UserRightsModal />;
             // case "log":
             //     return <LogModal />;
             // case "user-log":

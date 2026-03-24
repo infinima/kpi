@@ -18,6 +18,7 @@ import Background from "@/components/layout/Background";
 import AnimatedText from "@/components/ui/AnimatedText";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
+import { UsersSection } from "@/components/lk/UsersSection";
 import { apiGet, apiPatch, apiPost } from "@/api";
 import { useNotifications, useUser } from "@/store";
 import {
@@ -26,7 +27,7 @@ import {
     downloadPhotoVideoConsentFile
 } from "@/utils/legalDownloads";
 
-type CabinetSection = "me" | "my_team" | "reg_team";
+type CabinetSection = "me" | "my_team" | "reg_team" | "users";
 
 type ProfileResponse = {
     id: number;
@@ -324,6 +325,7 @@ export default function LkPage() {
     const fetchUser = useUser((state) => state.fetchUser);
     const logout = useUser((state) => state.logout);
     const notify = useNotifications((state) => state.addMessage);
+    const canManageUsers = Boolean(user?.rights.users?.global?.includes("get"));
 
     const [profileForm, setProfileForm] = useState<ProfileFormState>({
         first_name: "",
@@ -507,6 +509,10 @@ export default function LkPage() {
     );
 
     const activeSection = useMemo<CabinetSection>(() => {
+        if (location.pathname === "/lk/users") {
+            return "users";
+        }
+
         if ( location.pathname === "/lk/reg_team") {
             return "reg_team";
         }
@@ -935,6 +941,19 @@ export default function LkPage() {
                             </span>
                             <ChevronRight size={16} />
                         </Link>
+
+                        {canManageUsers ? (
+                            <Link
+                                to="/lk/users"
+                                className={`mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left transition ${activeSection === "users" ? "bg-[var(--color-primary)] text-white shadow-lg" : "text-[var(--color-text-main)] hover:bg-[rgba(255,255,255,0.7)]"}`}
+                            >
+                                <span className="flex items-center gap-3">
+                                    <Users size={18} />
+                                    <span>Пользователи</span>
+                                </span>
+                                <ChevronRight size={16} />
+                            </Link>
+                        ) : null}
                     </aside>
 
                     <motion.div
@@ -1271,6 +1290,8 @@ export default function LkPage() {
                                     </div>
                                 )}
                             </div>
+                        ) : activeSection === "users" ? (
+                            <UsersSection />
                         ) : (
                             <div>
                                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
