@@ -1,7 +1,7 @@
 import {useEffect} from "react";
 import NotificationCenter from "@/components/services/NotificationCenter";
 import { ModalContainer } from "@/components/modals/ModalContainer";
-import {BrowserRouter, Navigate, Route, Routes} from "react-router-dom";
+import {BrowserRouter, Navigate, Route, Routes, useParams} from "react-router-dom";
 import ExamplePage from "@/pages/ExamplePage";
 import NotFoundPage from "@/pages/NotFoundPage";
 import HomePage from "@/pages/HomePage";
@@ -20,6 +20,23 @@ import { EventPlaceholderPage } from "@/pages/event/EventPlaceholderPage";
 import { EventTeamsPage } from "@/pages/event/EventTeamsPage";
 import { FudziResultsPage, KvartalyResultsPage } from "@/pages/event/LeagueStageResultsPage";
 import { ResultPage } from "@/pages/ResultPage";
+import { ShowPage } from "@/pages/ShowPage";
+import { ShowControlPage } from "@/pages/ShowControlPage";
+
+function LeagueShowRedirect({ mode }: { mode: "show" | "controller" }) {
+    const { leagueId } = useParams();
+
+    if (!leagueId) {
+        return <Navigate to="/events" replace />;
+    }
+
+    return (
+        <Navigate
+            to={mode === "show" ? `/show/${leagueId}` : `/showcontroller/${leagueId}`}
+            replace
+        />
+    );
+}
 
 export default function App() {
     const fetchUser = useUser((state) => state.fetchUser);
@@ -56,6 +73,8 @@ export default function App() {
                 <Route path="/new_pass" element={<NewPassPage />} />
                 <Route path="/lk" element={<Navigate to="/lk/me" replace />} />
                 <Route path="/lk/*" element={<LkPage />} />
+                <Route path="/show/:leagueId" element={<ShowPage />} />
+                <Route path="/showcontroller/:leagueId" element={<ShowControlPage />} />
                 <Route path="*" element={<NotFoundPage />} />
 
                 <Route path="/events" element={<EventsRootPage />}>
@@ -75,8 +94,8 @@ export default function App() {
                     <Route path=":eventId/location/:locationId/league/:leagueId/results/overall" element={<ResultPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/accounts" element={<EventPlaceholderPage title="Аккаунты показа" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/teams" element={<EventTeamsPage />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/show" element={<EventPlaceholderPage title="Показ" />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/show-control" element={<EventPlaceholderPage title="Управление показом" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/show" element={<LeagueShowRedirect mode="show" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/show-control" element={<ShowControlPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/tables" element={<EventPlaceholderPage title="Таблички" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/fudzi-presentation" element={<EventPlaceholderPage title="Презентация фудзи" />} />
                 </Route>

@@ -7,8 +7,10 @@ import {ensureUserSessionInitialized} from "@/store/useUserStore";
 const SOCKET_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
 
 function getLeagueIdFromPath() {
-  const match = window.location.pathname.match(/\/league\/(\d+)/);
-  return match?.[1] ?? null;
+  const match = window.location.pathname.match(
+    /^\/(?:show|showcontroller)\/(\d+)\/?$|\/league\/(\d+)(?:\/|$)/
+  );
+  return match?.[1] ?? match?.[2] ?? null;
 }
 
 type showStatus = "WALLPAPER" |

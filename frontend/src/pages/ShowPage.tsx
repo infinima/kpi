@@ -1,24 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 import { useShowStore } from "@/store/useShowSocket";
-import {useEventsNav, useSocketStore, useUser} from "@/store";
+import { useUser } from "@/store";
+import { useSocketStore } from "@/store/useTableSocket";
 import {ensureUserSessionInitialized} from "@/store/useUserStore";
+import { useParams } from "react-router-dom";
 
 import { Document, Page, pdfjs } from "react-pdf";
-import {KvartalRow} from "@/components/KvartalRow";
-import {KvartalyTable} from "@/components/KvartalyTable";
 import {ShowTable} from "@/components/ShowTable";
 
 pdfjs.GlobalWorkerOptions.workerSrc =
   `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
-export function ShowPage() {
+export function ShowPage({ manageShowConnection = true }: { manageShowConnection?: boolean }) {
   const { show, isConnected, connect, disconnect } = useShowStore();
-  const { leagueId, goToTables } = useEventsNav();
+  const { leagueId } = useParams();
+  const [dualMode, setDualMode] = useState(false);
 
   useEffect(() => {
+    if (!manageShowConnection) {
+      return;
+    }
+
     connect();
-    // return () => disconnect();
-  }, []);
+    return () => disconnect();
+  }, [connect, disconnect, manageShowConnection]);
 
 
   const [pdfData, setPdfData] = useState<string | null>(null);
@@ -31,6 +36,10 @@ export function ShowPage() {
   useEffect(() => {
     async function loadPdf() {
       try {
+        if (!leagueId) {
+          return;
+        }
+
         await ensureUserSessionInitialized();
         const token = useUser.getState().token;
 
@@ -51,7 +60,32 @@ export function ShowPage() {
     if (show?.status === "FUDZI-PRESENTATION") {
       loadPdf();
     }
+    return () => {
+      if (pdfData) {
+        window.URL.revokeObjectURL(pdfData);
+      }
+    };
   }, [show?.status, leagueId]);
+
+  useEffect(() => {
+    useSocketStore.getState().disconnect();
+
+    if (!leagueId || !show) {
+      return;
+    }
+
+    if (show.status === "KVARTALY-RESULTS") {
+      useSocketStore.getState().connect("kvartaly", leagueId);
+    }
+
+    if (show.status === "FUDZI-RESULTS") {
+      useSocketStore.getState().connect("fudzi", leagueId);
+    }
+
+    return () => {
+      useSocketStore.getState().disconnect();
+    };
+  }, [leagueId, show?.status]);
 
   useEffect(() => {
     if (!show?.timer_is_enabled) {
@@ -87,8 +121,6 @@ export function ShowPage() {
 
   function renderContent() {
     if (!show) return null;
-    useSocketStore.getState().disconnect();
-
 
     switch (show.status) {
       case "WALLPAPER":
@@ -100,16 +132,13 @@ export function ShowPage() {
         );
 
       case "KVARTALY-RESULTS":
-        useSocketStore.getState().connect("kvartaly");
-
         return (
-          <ShowTable tableType={"kvartaly"} />
+          <ShowTable tableType={"kvartaly"} dualMode={dualMode} />
         );
 
       case "FUDZI-RESULTS":
-        useSocketStore.getState().connect("fudzi");
         return (
-          <ShowTable tableType={"fudzi"} />
+          <ShowTable tableType={"fudzi"} dualMode={dualMode} />
         );
 
       case "FUDZI-PRESENTATION":
@@ -154,11 +183,40 @@ export function ShowPage() {
     }
   }
 
+  const backgroundClassName = show?.status === "WALLPAPER"
+    ? "bg-white"
+    : show?.status === "FUDZI-PRESENTATION"
+      ? "bg-black"
+      : "bg-[#1364b3]";
+
   // ========= UI ============
   // ========= UI ============
   return (
-    <div className="w-full pointer-events-none">
-      <div className="relative w-full aspect-[16/9] bg-black text-white overflow-hidden">
+    <div className="pointer-events-none h-full w-full">
+      <div ref={containerRef} className={`relative h-full min-h-[calc(100vh-2rem)] w-full overflow-hidden text-white ${backgroundClassName}`}>
+
+        <button
+          type="button"
+          aria-label="Переключить двухколоночный режим"
+          onClick={() => setDualMode((current) => !current)}
+          className="pointer-events-auto absolute left-0 top-0 z-20 h-[25vw] w-[25vw] max-h-64 max-w-64 min-h-24 min-w-24 bg-transparent"
+        />
+
+        <button
+          type="button"
+          aria-label="Полноэкранный режим"
+          onClick={() => {
+            const element = containerRef.current;
+            if (!element) {
+              return;
+            }
+
+            if (!document.fullscreenElement) {
+              void element.requestFullscreen();
+            }
+          }}
+          className="pointer-events-auto absolute right-0 top-0 z-20 h-[25vw] w-[25vw] max-h-64 max-w-64 min-h-24 min-w-24 bg-transparent"
+        />
 
         {/* TIMER — всегда сверху */}
         {show?.timer_is_enabled && (

@@ -14,6 +14,10 @@ export function MenuBar() {
 
     const location = useLocation()
     const navigate = useNavigate()
+    const leagueIdMatch = location.pathname.match(/\/league\/(\d+)/)
+    const leagueId = leagueIdMatch?.[1] ? Number(leagueIdMatch[1]) : null
+    const leagueRouteMatch = location.pathname.match(/(\/events\/\d+\/location\/\d+\/league\/\d+)/)
+    const leagueRouteBase = leagueRouteMatch?.[1] ?? null
 
     const menuItems: MenuItem[] = [
         { id: "home", title: "Главная", path: "/" },
@@ -23,32 +27,17 @@ export function MenuBar() {
         { id: "logs", title: "Логи", path: "/logs" },
         { id: "results", title: "Результаты", path: "/results" },
     ]
-    //
-    // if (can("users", "get") || true) {
-    //     menuItems.push({ id: "users", title: "Пользователи", path: "/users" })
-    // }
-    //
-    // if (leagueId && can("teams", "create")|| true) {
-    //     menuItems.push({ id: "teams", title: "Команды", path: "/teams" })
-    // }
-    //
-    // if (leagueId && can("leagues", "get_show", leagueId)|| true) {
-    //     menuItems.push({ id: "show", title: "Показ", path: "/show" })
-    // }
-    //
-    // if (leagueId && can("leagues", "control_show", leagueId)|| true) {
-    //     menuItems.push({
-    //         id: "showControl",
-    //         title: "Управление показом",
-    //         path: "/show",
-    //     })
-    // }
-    //
-    // if (leagueId && tableType || true) {
-    //     menuItems.push({ id: "tables", title: "Таблицы", path: "/tables" })
-    // }
-    //
-    const changePage = (path: string) => {
+
+    if (leagueId && can("leagues", "get_show", leagueId)) {
+        menuItems.push({ id: "show", title: "Показ", path: `/show/${leagueId}` })
+    }
+
+    if (leagueId && can("leagues", "control_show", leagueId)) {
+        menuItems.push({
+            id: "showControl",
+            title: "Управление показом",
+            path: leagueRouteBase ? `${leagueRouteBase}/show-control` : `/showcontroller/${leagueId}`,
+        })
     }
 
     return (

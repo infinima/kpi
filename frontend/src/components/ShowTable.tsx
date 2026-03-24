@@ -1,12 +1,9 @@
-import React, {useEffect} from "react";
-import {useEventsNav, useSocketStore, useUI} from "@/store";
+import { useSocketStore } from "@/store/useTableSocket";
 import { KvartalyTable } from "./KvartalyTable";
 import { FudziTable } from "./FudziTable";
 
-export function ShowTable({tableType} : { tableType: string }) {
-  const { tableData, isConnected , connect, disconnect } = useSocketStore();
-
-  const dualMode = useUI(s => s.dualMode);
+export function ShowTable({ tableType, dualMode = false } : { tableType: string; dualMode?: boolean }) {
+  const { tableData, isConnected } = useSocketStore();
 
   if (!isConnected) {
     return (
@@ -25,8 +22,10 @@ export function ShowTable({tableType} : { tableType: string }) {
   }
 
   if (tableType === "kvartaly") {
-    if (!dualMode) return (      <div className="flex  border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
-      <KvartalyTable data={tableData} />       </div>
+    if (!dualMode) return (
+      <div className="flex border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
+        <KvartalyTable data={tableData} />
+      </div>
     );
 
     // dual mode ON — split data
@@ -49,8 +48,10 @@ export function ShowTable({tableType} : { tableType: string }) {
   }
 
   if (tableType === "fudzi") {
-    if (!dualMode) return (      <div className="flex border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
-      <FudziTable data={tableData} />      </div>
+    if (!dualMode) return (
+      <div className="flex border-none bg-[#1364b3] origin-top-left scale-[0.70] w-[143%] h-[143%]">
+        <FudziTable data={tableData} />
+      </div>
     );
 
     const mid = Math.ceil(tableData.length / 2);
