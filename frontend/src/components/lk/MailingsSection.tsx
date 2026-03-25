@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronUp, Mail, Paperclip, Pencil, Plus, RotateCcw, Send, Trash2, Users, X } from "lucide-react";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import OutlineButton from "@/components/ui/OutlineButton";
@@ -58,6 +58,38 @@ type MailingFormState = {
 type DraftAttachment = {
   name: string;
   file: string;
+};
+
+type LookupStatus = "idle" | "loading" | "found" | "missing";
+
+type SelectionLookup = {
+  status: LookupStatus;
+  label: string;
+  subtitle?: string;
+};
+
+type SelectionLookupMap = {
+  event: SelectionLookup;
+  location: SelectionLookup;
+  league: SelectionLookup;
+};
+
+type EventLookupResponse = {
+  id: number;
+  name: string;
+  date?: string;
+};
+
+type LocationLookupResponse = {
+  id: number;
+  name: string;
+  address: string;
+};
+
+type LeagueLookupResponse = {
+  id: number;
+  name: string;
+  status?: string;
 };
 
 const statusLabels: Record<Mailing["status"], string> = {
@@ -254,6 +286,13 @@ function getDeliveryStatusClass(status: MailingRecipient["delivery_status"]) {
   }
 }
 
+function createEmptyLookup(entityLabel: string): SelectionLookup {
+  return {
+    status: "idle",
+    label: `${entityLabel} не выбран`,
+  };
+}
+
 export function MailingsSection() {
   const notify = useNotifications((state) => state.addMessage);
   const { can } = useUser();
@@ -270,7 +309,108 @@ export function MailingsSection() {
   const [resendingRecipientIds, setResendingRecipientIds] = useState<number[]>([]);
   const [deliveryMessages, setDeliveryMessages] = useState<Record<number, string>>({});
   const [recipientsExpanded, setRecipientsExpanded] = useState<Record<number, boolean>>({});
+  const [mailingCardsExpanded, setMailingCardsExpanded] = useState<Record<number, boolean>>({});
+  const [editorSplit, setEditorSplit] = useState(52);
+  const [selectionLookup, setSelectionLookup] = useState<SelectionLookupMap>({
+    event: createEmptyLookup("Мероприятие"),
+    location: createEmptyLookup("Площадка"),
+    league: createEmptyLookup("Лига"),
+  });
   const previewHtml = useMemo(() => renderMailingPreview(form.body), [form.body]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolveLookup<T>(
+      value: string,
+      path: string,
+      entityLabel: string,
+      toLookup: (data: T) => SelectionLookup,
+      apply: (lookup: SelectionLookup) => void,
+    ) {
+      const trimmed = value.trim();
+      if (!trimmed) {
+        apply(createEmptyLookup(entityLabel));
+        return;
+      }
+
+      if (!/^\d+$/.test(trimmed)) {
+        apply({
+          status: "missing",
+          label: `${entityLabel} не найден`,
+          subtitle: "Введите корректный числовой id",
+        });
+        return;
+      }
+
+      apply({
+        status: "loading",
+        label: `Проверяем ${entityLabel.toLowerCase()} #${trimmed}...`,
+      });
+
+      try {
+        const data = await apiGet<T>(`${path}/${trimmed}`);
+        if (!cancelled) {
+          apply(toLookup(data));
+        }
+      } catch {
+        if (!cancelled) {
+          apply({
+            status: "missing",
+            label: `${entityLabel} #${trimmed} не найден`,
+            subtitle: "Проверьте id или оставьте поле пустым",
+          });
+        }
+      }
+    }
+
+    const timer = window.setTimeout(() => {
+      void resolveLookup<EventLookupResponse>(
+        form.selection_event_id,
+        "events",
+        "Мероприятие",
+        (data) => ({
+          status: "found",
+          label: data.name || `Мероприятие #${data.id}`,
+          subtitle: data.date ? `Дата: ${data.date}` : `ID: ${data.id}`,
+        }),
+        (lookup) => setSelectionLookup((current) => ({ ...current, event: lookup })),
+      );
+
+      void resolveLookup<LocationLookupResponse>(
+        form.selection_location_id,
+        "locations",
+        "Площадка",
+        (data) => ({
+          status: "found",
+          label: data.name || `Площадка #${data.id}`,
+          subtitle: data.address || `ID: ${data.id}`,
+        }),
+        (lookup) => setSelectionLookup((current) => ({ ...current, location: lookup })),
+      );
+
+      void resolveLookup<LeagueLookupResponse>(
+        form.selection_league_id,
+        "leagues",
+        "Лига",
+        (data) => ({
+          status: "found",
+          label: data.name || `Лига #${data.id}`,
+          subtitle: data.status ? `Статус: ${data.status}` : `ID: ${data.id}`,
+        }),
+        (lookup) => setSelectionLookup((current) => ({ ...current, league: lookup })),
+      );
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [form.selection_event_id, form.selection_league_id, form.selection_location_id]);
+
+  const editorColumnsStyle = useMemo<CSSProperties>(() => ({
+    ["--mailing-editor-columns" as string]: `minmax(0, ${editorSplit}fr) minmax(320px, ${100 - editorSplit}fr)`,
+  }), [editorSplit]);
 
   async function loadMailingDetails(mailingId: number) {
     const detail = await apiGet<MailingDetails>(`mailings/${mailingId}`, { error: true });
@@ -525,6 +665,31 @@ export function MailingsSection() {
                   <textarea value={form.selection_manual_emails} onChange={(event) => setForm((prev) => ({ ...prev, selection_manual_emails: event.target.value }))} rows={4} placeholder="mail1@example.com, mail2@example.com" className={`${inputClassName} resize-y`} />
                 </label>
               </div>
+
+              <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                {([
+                  { key: "event", title: "Мероприятие", lookup: selectionLookup.event },
+                  { key: "location", title: "Площадка", lookup: selectionLookup.location },
+                  { key: "league", title: "Лига", lookup: selectionLookup.league },
+                ] as const).map((item) => (
+                  <div
+                    key={item.key}
+                    className={`rounded-[20px] border px-4 py-3 ${
+                      item.lookup.status === "found"
+                        ? "border-[rgba(22,163,74,0.16)] bg-[rgba(240,253,244,0.9)]"
+                        : item.lookup.status === "missing"
+                          ? "border-[rgba(220,38,38,0.16)] bg-[rgba(254,242,242,0.9)]"
+                          : "border-[var(--color-border)] bg-white/80"
+                    }`}
+                  >
+                    <div className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">{item.title}</div>
+                    <div className="mt-2 text-sm font-medium text-[var(--color-text-main)]">{item.lookup.label}</div>
+                    {item.lookup.subtitle ? (
+                      <div className="mt-1 text-xs text-[var(--color-text-secondary)]">{item.lookup.subtitle}</div>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="rounded-[24px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] p-5">
@@ -535,7 +700,33 @@ export function MailingsSection() {
                   <input value={form.subject} onChange={(event) => setForm((prev) => ({ ...prev, subject: event.target.value }))} className={inputClassName} />
                 </label>
 
-                <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+                <div className="rounded-[22px] border border-[var(--color-border)] bg-white p-4">
+                  <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <div className="text-sm font-medium text-[var(--color-text-main)]">Баланс редактора и предпросмотра</div>
+                      <div className="mt-1 text-xs text-[var(--color-text-secondary)]">
+                        Передвигайте ползунок по горизонтали, чтобы менять центральное разделение блоков.
+                      </div>
+                    </div>
+                    <div className="text-sm font-medium text-[var(--color-text-secondary)]">
+                      Редактор {editorSplit}% · Предпросмотр {100 - editorSplit}%
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={35}
+                    max={65}
+                    step={1}
+                    value={editorSplit}
+                    onChange={(event) => setEditorSplit(Number(event.target.value))}
+                    className="mt-4 h-2 w-full cursor-ew-resize accent-[var(--color-primary)]"
+                  />
+                </div>
+
+                <div
+                  className="grid gap-4 xl:items-start xl:[grid-template-columns:var(--mailing-editor-columns)]"
+                  style={editorColumnsStyle}
+                >
                   <div className="space-y-2">
                     <span className="text-sm text-[var(--color-text-secondary)]">Текст письма</span>
                     <textarea
@@ -555,7 +746,7 @@ export function MailingsSection() {
                           title="mailing-html-preview"
                           sandbox=""
                           srcDoc={previewHtml}
-                          className="h-[320px] w-full bg-white"
+                          className="h-[640px] w-full bg-white"
                         />
                       </div>
                     </div>
@@ -659,6 +850,7 @@ export function MailingsSection() {
             const deliveryMessage = deliveryMessages[mailing.id];
             const recipients = details?.recipients ?? [];
             const isRecipientsExpanded = recipientsExpanded[mailing.id] ?? false;
+            const isCardExpanded = mailingCardsExpanded[mailing.id] ?? false;
 
             return (
               <article key={mailing.id} className="rounded-[30px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] p-6 shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
@@ -673,17 +865,21 @@ export function MailingsSection() {
                         {statusLabels[mailing.status]}
                       </span>
                     </div>
-                    <div className="overflow-hidden rounded-[22px] border border-[var(--color-border)] bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
-                      <iframe
-                        title={`mailing-preview-${mailing.id}`}
-                        sandbox=""
-                        srcDoc={renderMailingPreview(mailing.body)}
-                        className="h-[280px] w-full bg-white"
-                      />
-                    </div>
+                    {!isCardExpanded ? (
+                      <div className="text-sm text-[var(--color-text-secondary)]">
+                        Карточка свернута. Оставлена только тема письма.
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="flex flex-wrap gap-2">
+                    <OutlineButton
+                      active
+                      onClick={() => setMailingCardsExpanded((current) => ({ ...current, [mailing.id]: !isCardExpanded }))}
+                      className="px-4 py-2 text-sm"
+                    >
+                      {isCardExpanded ? "Свернуть" : "Развернуть"}
+                    </OutlineButton>
                     {canSend ? (
                       <PrimaryButton
                         active
@@ -708,7 +904,7 @@ export function MailingsSection() {
                   </div>
                 </div>
 
-                {deliveryMessage ? (
+                {deliveryMessage && isCardExpanded ? (
                   <div className={`mt-4 flex items-center gap-3 rounded-[22px] border px-4 py-3 text-sm ${
                     isSending
                       ? "border-[rgba(14,116,144,0.18)] bg-[rgba(14,116,144,0.08)] text-[var(--color-primary)]"
@@ -718,6 +914,17 @@ export function MailingsSection() {
                     <span>{deliveryMessage}</span>
                   </div>
                 ) : null}
+
+                {isCardExpanded ? (
+                  <>
+                <div className="mt-6 overflow-hidden rounded-[22px] border border-[var(--color-border)] bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
+                  <iframe
+                    title={`mailing-preview-${mailing.id}`}
+                    sandbox=""
+                    srcDoc={renderMailingPreview(mailing.body)}
+                    className="h-[520px] w-full bg-white"
+                  />
+                </div>
 
                 <div className="mt-6 grid gap-4 xl:grid-cols-3">
                   <div className="rounded-[22px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] p-4">
@@ -863,6 +1070,8 @@ export function MailingsSection() {
                     </div>
                   )}
                 </div>
+                  </>
+                ) : null}
               </article>
             );
           })}
