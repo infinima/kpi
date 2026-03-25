@@ -188,12 +188,15 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
     : show?.status === "FUDZI-PRESENTATION"
       ? "bg-black"
       : "bg-[#1364b3]";
+  const containerClassName = manageShowConnection
+    ? "relative h-full min-h-[calc(100vh-2rem)] w-full overflow-hidden text-white"
+    : "relative h-full w-full overflow-hidden text-white";
 
   // ========= UI ============
   // ========= UI ============
   return (
     <div className="pointer-events-none h-full w-full">
-      <div ref={containerRef} className={`relative h-full min-h-[calc(100vh-2rem)] w-full overflow-hidden text-white ${backgroundClassName}`}>
+      <div ref={containerRef} className={`${containerClassName} ${backgroundClassName}`}>
 
         <button
           type="button"

@@ -119,56 +119,33 @@ export const useShowStore = create<SocketState>((set, get) => ({
   showSetStatus: (
     status: showStatus
   ) => {
-    const notify = useNotifications.getState().addMessage;
-
     const {socket} = get();
     if (!socket) return;
     socket.emit("show_set_status", {status});
-    notify({type: "success", text: `Переключено на ${translator[status]}`});
-
   },
 
   showSetSlideNum: (
     slide_num: number,
   ) => {
-    const notify = useNotifications.getState().addMessage;
-
     const {socket} = get();
     if (!socket) return;
     socket.emit("show_set_slide_num", {slide_num});
-
-    notify({type: "success", text: `Переключено на слайд ${slide_num}`});
-
   },
 
   showSetTimerIsEnabled: (
     enabled: boolean,
   ) => {
-
-    const notify = useNotifications.getState().addMessage;
-
     const {socket} = get();
     if (!socket) return;
     socket.emit("show_set_timer_is_enabled", {enabled});
-
-    notify({type: "success", text: `Таймер ${enabled ? "включен" : "выключен"}`});
-
-
   },
 
   showSetColorScheme: (
     color_scheme: JSON
   ) => {
-
-
-    const notify = useNotifications.getState().addMessage;
-
     const {socket} = get();
     if (!socket) return;
     socket.emit("show_set_color_scheme", {color_scheme});
-
-    notify({type: "success", text: `Тема изменена`});
-
   },
 
 

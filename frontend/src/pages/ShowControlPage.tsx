@@ -168,8 +168,10 @@ export function ShowControlPage() {
               ) : null}
             </div>
 
-            <div className="rounded-[28px] overflow-hidden border border-[var(--color-border)] bg-[rgba(255,255,255,0.92)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
-              <ShowPage manageShowConnection={false} />
+            <div className="rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.92)] p-4 shadow-[0_18px_50px_rgba(15,23,42,0.08)]">
+              <div className="mx-auto aspect-video w-full overflow-hidden rounded-[22px] border border-[var(--color-border)] bg-black">
+                <ShowPage manageShowConnection={false} />
+              </div>
             </div>
           </div>
         </>
