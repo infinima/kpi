@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { KeyRound, Pencil, RotateCcw, Save, Trash2, Users, X } from "lucide-react";
+import { History, KeyRound, ListTree, Pencil, RotateCcw, Save, Trash2, Users, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
 import OutlineButton from "@/components/ui/OutlineButton";
 import PrimaryButton from "@/components/ui/PrimaryButton";
@@ -64,6 +65,7 @@ function createDraft(user: UserRow): UserDraft {
 }
 
 export function UsersSection() {
+  const navigate = useNavigate();
   const { user, can } = useUser();
   const openModal = useModalStore((state) => state.openModal);
   const [rows, setRows] = useState<UserRow[]>([]);
@@ -247,6 +249,8 @@ export function UsersSection() {
                 const canUpdate = visibility === "active" && can("users", "update", row.id);
                 const canDelete = visibility === "active" && can("users", "delete", row.id);
                 const canRestore = visibility === "deleted" && can("users", "restore", row.id);
+                const canHistory = can("users", "access_history", row.id);
+                const canActionsHistory = can("users", "access_actions_history", row.id);
                 const isEditing = editingId === row.id && draft;
 
                 return (
@@ -299,6 +303,28 @@ export function UsersSection() {
                           leftIcon={<KeyRound size={14} />}
                         >
                           Права
+                        </OutlineButton>
+                      ) : null}
+
+                      {canHistory ? (
+                        <OutlineButton
+                          active
+                          onClick={() => navigate(`/logs/users/${row.id}`)}
+                          className="px-3 py-2 text-sm"
+                          leftIcon={<History size={14} />}
+                        >
+                          История
+                        </OutlineButton>
+                      ) : null}
+
+                      {canActionsHistory ? (
+                        <OutlineButton
+                          active
+                          onClick={() => navigate(`/logs/users/${row.id}/actions`)}
+                          className="px-3 py-2 text-sm"
+                          leftIcon={<ListTree size={14} />}
+                        >
+                          Действия
                         </OutlineButton>
                       ) : null}
 

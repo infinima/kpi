@@ -22,6 +22,7 @@ import { FudziResultsPage, KvartalyResultsPage } from "@/pages/event/LeagueStage
 import { ResultPage } from "@/pages/ResultPage";
 import { ShowPage } from "@/pages/ShowPage";
 import { ShowControlPage } from "@/pages/ShowControlPage";
+import { LogsPage } from "@/pages/LogsPage";
 
 function LeagueShowRedirect({ mode }: { mode: "show" | "controller" }) {
     const { leagueId } = useParams();
@@ -73,6 +74,13 @@ export default function App() {
                 <Route path="/new_pass" element={<NewPassPage />} />
                 <Route path="/lk" element={<Navigate to="/lk/me" replace />} />
                 <Route path="/lk/*" element={<LkPage />} />
+                <Route path="/logs" element={<LogsPage />} />
+                <Route path="/logs/teams/:teamId" element={<LogsPage mode="record" entity="teams" />} />
+                <Route path="/logs/users/:userId" element={<LogsPage mode="record" entity="users" />} />
+                <Route path="/logs/users/:userId/actions" element={<LogsPage mode="user-actions" />} />
+                <Route path="/locations" element={<Navigate to="/events" replace />} />
+                <Route path="/leagues" element={<Navigate to="/events" replace />} />
+                <Route path="/results" element={<Navigate to="/events" replace />} />
                 <Route path="/show/:leagueId" element={<ShowPage />} />
                 <Route path="/showcontroller/:leagueId" element={<ShowControlPage />} />
                 <Route path="*" element={<NotFoundPage />} />
@@ -80,15 +88,15 @@ export default function App() {
                 <Route path="/events" element={<EventsRootPage />}>
                     <Route index element={<EventsPage />} />
                     <Route path=":eventId" element={<EventsPage />} />
-                    <Route path=":eventId/history" element={<EventPlaceholderPage title="История изменений мероприятия" />} />
+                    <Route path=":eventId/history" element={<LogsPage mode="record" entity="events" />} />
                     <Route path=":eventId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location" element={<LocationsPage />} />
                     <Route path=":eventId/location/:locationId" element={<LocationsPage />} />
-                    <Route path=":eventId/location/:locationId/history" element={<EventPlaceholderPage title="История изменений площадки" />} />
+                    <Route path=":eventId/location/:locationId/history" element={<LogsPage mode="record" entity="locations" />} />
                     <Route path=":eventId/location/:locationId/teams" element={<EventTeamsPage />} />
                     <Route path=":eventId/location/:locationId/league" element={<LeaguesPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId" element={<LeaguesPage />} />
-                    <Route path=":eventId/location/:locationId/league/:leagueId/history" element={<EventPlaceholderPage title="История изменений лиги" />} />
+                    <Route path=":eventId/location/:locationId/league/:leagueId/history" element={<LogsPage mode="record" entity="leagues" />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/results/kvartaly" element={<KvartalyResultsPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/results/fudzi" element={<FudziResultsPage />} />
                     <Route path=":eventId/location/:locationId/league/:leagueId/results/overall" element={<ResultPage />} />

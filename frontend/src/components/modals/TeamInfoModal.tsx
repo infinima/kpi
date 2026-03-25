@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import type { TeamTableRowData } from "@/components/ui/table/TeamTableRow";
-import { useModalStore } from "@/store";
+import { useModalStore, useUser } from "@/store";
 
 function formatDateTime(value: string | null | undefined) {
     if (!value) {
@@ -117,6 +118,8 @@ function normalizePaymentLink(value: string | number | null | undefined) {
 }
 
 export function TeamInfoModal() {
+    const navigate = useNavigate();
+    const can = useUser((state) => state.can);
     const activeModal = useModalStore((state) => state.activeModal);
     const closeModal = useModalStore((state) => state.closeModal);
 
@@ -151,6 +154,7 @@ export function TeamInfoModal() {
         return null;
     }
     const modalPayload = payload;
+    const canHistory = can("teams", "access_history", draft.id);
 
     async function handleSave() {
         if (!canSave) {
@@ -406,6 +410,17 @@ export function TeamInfoModal() {
                 </div>
 
                 <div className="mt-5 flex justify-end gap-2 border-t border-[var(--color-border)] pt-4">
+                    {canHistory ? (
+                        <OutlineButton
+                            active
+                            onClick={() => {
+                                closeModal();
+                                navigate(`/logs/teams/${draft.id}`);
+                            }}
+                        >
+                            История
+                        </OutlineButton>
+                    ) : null}
                     <OutlineButton active onClick={closeModal}>
                         Закрыть
                     </OutlineButton>

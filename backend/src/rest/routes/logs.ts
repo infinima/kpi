@@ -3,6 +3,7 @@ import { validate } from "../middlewares/validate.js";
 import { query } from "../../db/pool.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import {
+    GetLogsByObjectInput,
     GetLogsByUserInput,
     GetLogsByRecordInput
 } from "../schemas/logs.js";
@@ -98,16 +99,16 @@ logsRouter.get(
 );
 
 logsRouter.get(
-    "/user/:user_id",
-    validate(GetLogsByUserInput, "params"),
-    checkPermission("users", "access_actions_history"),
+    "/object/:object",
+    validate(GetLogsByObjectInput, "params"),
+    (req, res, next) => checkPermission((req as any).params.object, "access_history")(req, res, next),
     async (req: any, res) => {
-        const { user_id } = req.validated.params;
+        const { object } = req.validated.params;
 
         const result = await paginateLogs(
             req,
-            `WHERE user_id = ?`,
-            [user_id]
+            `WHERE table_name = ?`,
+            [object]
         );
 
         res.json(result);
