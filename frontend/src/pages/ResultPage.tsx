@@ -59,7 +59,7 @@ function sortIcon(active: boolean, direction: SortDirection) {
 }
 
 function headerButtonClass(active: boolean) {
-  return `flex w-full items-center gap-1 text-left text-xs font-semibold uppercase tracking-[0.08em] transition ${
+  return `flex w-full items-center justify-center gap-1 text-center text-xs font-semibold uppercase tracking-[0.08em] transition ${
     active ? "text-white" : "text-white/92 hover:text-white"
   }`;
 }
@@ -73,10 +73,7 @@ export function ResultPage() {
 
   const [data, setData] = useState<FinalTeam[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({
-    key: "place_final",
-    direction: "asc",
-  });
+  const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection } | null>(null);
 
   useEffect(() => {
     let ignore = false;
@@ -108,6 +105,10 @@ export function ResultPage() {
   }, [leagueId]);
 
   const sorted = useMemo(() => {
+    if (!sort) {
+      return data;
+    }
+
     return [...data].sort((left, right) => {
       const compared = compareValues(left[sort.key], right[sort.key]);
       return sort.direction === "asc" ? compared : -compared;
@@ -115,9 +116,17 @@ export function ResultPage() {
   }, [data, sort]);
 
   function toggleSort(key: SortKey) {
-    setSort((current) => current.key === key
-      ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
-      : { key, direction: key === "name" ? "asc" : "desc" });
+    setSort((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: "asc" };
+      }
+
+      if (current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+
+      return null;
+    });
   }
 
   async function updateDiploma(team: FinalTeam, value: string) {
@@ -162,28 +171,28 @@ export function ResultPage() {
             <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
               <colgroup>
                 <col className="w-[8%]" />
+                <col className="w-[17%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[16%]" />
                 <col className="w-[18%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[12%]" />
-                <col className="w-[18%]" />
-                <col className="w-[8%]" />
                 <col className="w-[6%]" />
-                <col className="w-[6%]" />
+                <col className="w-[4.5%]" />
+                <col className="w-[4.5%]" />
               </colgroup>
               <thead>
                 <tr className="bg-[var(--color-primary)] text-white">
-                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_final")} className={headerButtonClass(sort.key === "place_final")}>Место {sortIcon(sort.key === "place_final", sort.direction)}</button></th>
-                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort.key === "name")}>Команда {sortIcon(sort.key === "name", sort.direction)}</button></th>
-                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_kvartaly")} className={headerButtonClass(sort.key === "place_kvartaly")}>Кварталы {sortIcon(sort.key === "place_kvartaly", sort.direction)}</button></th>
-                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_fudzi")} className={headerButtonClass(sort.key === "place_fudzi")}>Фудзи {sortIcon(sort.key === "place_fudzi", sort.direction)}</button></th>
-                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_sum")} className={headerButtonClass(sort.key === "place_sum")}>Сумма {sortIcon(sort.key === "place_sum", sort.direction)}</button></th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Диплом</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Спецноминации</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Благ.</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Дипл.</th>
-                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-[0.08em]">Ном.</th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_final")} className={headerButtonClass(sort?.key === "place_final")}>Место {sort ? sortIcon(sort.key === "place_final", sort.direction) : null}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>Команда {sort ? sortIcon(sort.key === "name", sort.direction) : null}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_kvartaly")} className={headerButtonClass(sort?.key === "place_kvartaly")}>Кварталы {sort ? sortIcon(sort.key === "place_kvartaly", sort.direction) : null}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_fudzi")} className={headerButtonClass(sort?.key === "place_fudzi")}>Фудзи {sort ? sortIcon(sort.key === "place_fudzi", sort.direction) : null}</button></th>
+                  <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_sum")} className={headerButtonClass(sort?.key === "place_sum")}>Сумма {sort ? sortIcon(sort.key === "place_sum", sort.direction) : null}</button></th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Диплом</th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Спецноминации</th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Благ.</th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Дипл.</th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Ном.</th>
                 </tr>
               </thead>
               <tbody>
@@ -193,16 +202,16 @@ export function ResultPage() {
                     className={`transition ${index % 2 === 0 ? "bg-[rgba(248,250,252,0.88)]" : "bg-[rgba(255,255,255,0.84)]"} hover:bg-[rgba(14,116,144,0.08)]`}
                   >
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center font-semibold">{team.place_final ?? "—"}</td>
-                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3">{team.name}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.name}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_kvartaly ?? "—"}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_fudzi ?? "—"}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_sum ?? "—"}</td>
-                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3">
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
                       <select
                         disabled={!can("teams", "update", team.id)}
                         value={team.diploma ?? ""}
                         onChange={(event) => void updateDiploma(team, event.target.value)}
-                        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-sm text-[var(--color-text-main)] outline-none"
+                        className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-center text-sm text-[var(--color-text-main)] outline-none"
                       >
                         <option value="">—</option>
                         {diplomaOptions.map((key) => (
@@ -212,7 +221,7 @@ export function ResultPage() {
                         ))}
                       </select>
                     </td>
-                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3">
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
                       <div className="space-y-2">
                         <div className="space-y-1 text-sm">
                           {team.special_nominations.length === 0 ? "Номинаций нет" : team.special_nominations.map((item, nominationIndex) => (
