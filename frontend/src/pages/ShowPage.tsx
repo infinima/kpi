@@ -3,7 +3,7 @@ import { useShowStore } from "@/store/useShowSocket";
 import { useUser } from "@/store";
 import { useSocketStore } from "@/store/useTableSocket";
 import {ensureUserSessionInitialized} from "@/store/useUserStore";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { Document, Page, pdfjs } from "react-pdf";
 import {ShowTable} from "@/components/ShowTable";
@@ -12,6 +12,7 @@ pdfjs.GlobalWorkerOptions.workerSrc =
   `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 export function ShowPage({ manageShowConnection = true }: { manageShowConnection?: boolean }) {
+  const navigate = useNavigate();
   const { show, isConnected, connect, disconnect } = useShowStore();
   const { leagueId } = useParams();
   const [dualMode, setDualMode] = useState(false);
@@ -189,13 +190,13 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
       ? "bg-black"
       : "bg-[#1364b3]";
   const containerClassName = manageShowConnection
-    ? "relative h-full min-h-[calc(100vh-2rem)] w-full overflow-hidden text-white"
+    ? "relative h-full min-h-[calc(100vh)] w-full overflow-hidden text-white"
     : "relative h-full w-full overflow-hidden text-white";
 
   // ========= UI ============
   // ========= UI ============
   return (
-    <div className="pointer-events-none h-full w-full">
+    <div className={`pointer-events-none h-full w-full ${backgroundClassName}`}>
       <div ref={containerRef} className={`${containerClassName} ${backgroundClassName}`}>
 
         <button
@@ -207,6 +208,13 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
 
         <button
           type="button"
+          aria-label="Назад"
+          onClick={() => navigate(-1)}
+          className="pointer-events-auto absolute left-1/2 top-0 z-20 h-24 w-24 -translate-x-1/2 rounded-full bg-transparent"
+        />
+
+        <button
+          type="button"
           aria-label="Полноэкранный режим"
           onClick={() => {
             const element = containerRef.current;
@@ -214,9 +222,19 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
               return;
             }
 
+            if (document.fullscreenElement === element) {
+              void document.exitFullscreen();
+              return;
+            }
+
             if (!document.fullscreenElement) {
               void element.requestFullscreen();
+              return;
             }
+
+            void document.exitFullscreen().catch(() => {
+              void element.requestFullscreen();
+            });
           }}
           className="pointer-events-auto absolute right-0 top-0 z-20 h-[25vw] w-[25vw] max-h-64 max-w-64 min-h-24 min-w-24 bg-transparent"
         />
