@@ -3,7 +3,6 @@ import { validate } from "../middlewares/validate.js";
 import { query } from "../../db/pool.js";
 import { checkPermission } from "../middlewares/check-permission.js";
 import {
-    GetLogsByObjectInput,
     GetLogsByUserInput,
     GetLogsByRecordInput
 } from "../schemas/logs.js";
@@ -65,7 +64,7 @@ async function paginateLogs(req: any, whereSql: string, params: any[]) {
          FROM logs
                   ${whereSql}
          ORDER BY id DESC
-         LIMIT ? OFFSET ?`,
+             LIMIT ? OFFSET ?`,
         [...params, pageSize, offset],
         req.user_id
     );
@@ -99,16 +98,16 @@ logsRouter.get(
 );
 
 logsRouter.get(
-    "/object/:object",
-    validate(GetLogsByObjectInput, "params"),
-    (req, res, next) => checkPermission((req as any).params.object, "access_history")(req, res, next),
+    "/user/:user_id",
+    validate(GetLogsByUserInput, "params"),
+    checkPermission("users", "access_actions_history"),
     async (req: any, res) => {
-        const { object } = req.validated.params;
+        const { user_id } = req.validated.params;
 
         const result = await paginateLogs(
             req,
-            `WHERE table_name = ?`,
-            [object]
+            `WHERE user_id = ?`,
+            [user_id]
         );
 
         res.json(result);
