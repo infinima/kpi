@@ -1140,9 +1140,11 @@ export default function LkPage() {
                                                     const paymentLink = getTeamPaymentLink(team);
                                                     const shouldShowPaymentLink = team.status === "ACCEPTED" && Boolean(paymentLink);
                                                     const shouldShowPaidState = team.status === "PAID";
-                                                    const canDownloadAppreciation = team.status === "ARRIVED";
+                                                    const appreciationsCount = Array.isArray(team.appreciations) ? team.appreciations.length : 0;
+                                                    const nominationsCount = Array.isArray(team.special_nominations) ? team.special_nominations.length : 0;
+                                                    const canDownloadAppreciation = team.status === "ARRIVED" && appreciationsCount > 0;
                                                     const canDownloadDiploma = team.league_status === "ENDED" && Boolean(team.diploma);
-                                                    const canDownloadNominations = team.league_status === "ENDED" && Boolean(team.special_nominations?.length);
+                                                    const canDownloadNominations = team.league_status === "ENDED" && nominationsCount > 0;
                                                     const teamFileBaseName = getTeamFileBaseName(team);
 
                                                     return (
@@ -1198,7 +1200,7 @@ export default function LkPage() {
                                                                     active
                                                                     onClick={() => void apiGetFile(`teams/${team.id}/appreciation`, `${teamFileBaseName}_благодарность.pdf`)}
                                                                 >
-                                                                    Скачать благодарности
+                                                                    {appreciationsCount === 1 ? "Скачать благодарность" : "Скачать благодарности"}
                                                                 </OutlineButton>
                                                             ) : null}
                                                             {canDownloadDiploma ? (
@@ -1206,7 +1208,7 @@ export default function LkPage() {
                                                                     active
                                                                     onClick={() => void apiGetFile(`teams/${team.id}/diploma`, `${teamFileBaseName}_${team.diploma === "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`)}
                                                                 >
-                                                                    Скачать дипломы
+                                                                    {team.diploma === "PARTICIPANT" ? "Скачать сертификат" : "Скачать диплом"}
                                                                 </OutlineButton>
                                                             ) : null}
                                                             {canDownloadNominations ? (
@@ -1214,7 +1216,7 @@ export default function LkPage() {
                                                                     active
                                                                     onClick={() => void apiGetFile(`teams/${team.id}/special-nominations`, `${teamFileBaseName}_спецноминации.pdf`)}
                                                                 >
-                                                                    Скачать номинации
+                                                                    {nominationsCount === 1 ? "Скачать номинацию" : "Скачать номинации"}
                                                                 </OutlineButton>
                                                             ) : null}
                                                             {team.owner_can_edit ? (
