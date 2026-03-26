@@ -13,6 +13,7 @@ import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
 import { getFudziTable } from "../../socket/services/fudzi-table.js";
 import { rankTeams } from "../../utils/rank-teams.js";
 import { rankFinal } from "../../utils/rank-teams-final.js";
+import { DEFAULT_TEAM_DOCUMENTS } from "../../utils/team-documents.js";
 
 import {
     GetOneLeagueInput,
@@ -730,8 +731,8 @@ leaguesRouter.post(
                 await query(
                     `INSERT INTO teams
                      (league_id, import_id, owner_user_id, name, members, status,
-                      answers_kvartaly, answers_fudzi, special_nominations, appreciations)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, '[]', '[]')`,
+                      answers_kvartaly, answers_fudzi, special_nominations, appreciations, documents)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, '[]', '[]', ?)`,
                     [
                         id,
                         t.id,
@@ -753,7 +754,8 @@ leaguesRouter.post(
                             questions: Array.from({ length: 16 }, () => ({
                                 status: "not_submitted"
                             }))
-                        })
+                        }),
+                        DEFAULT_TEAM_DOCUMENTS
                     ], (req as any).user_id
                 );
                 created++;

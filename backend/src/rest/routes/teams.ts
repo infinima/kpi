@@ -8,6 +8,7 @@ import { generateAppreciation } from "../../utils/generate-appreciation.js";
 import { generateDiploma } from "../../utils/generate-diploma.js";
 import { generateSpecialNominations } from "../../utils/generate-special-nominations.js";
 import { requestPaymentInfo } from "../../utils/payment.js";
+import { DEFAULT_TEAM_DOCUMENTS } from "../../utils/team-documents.js";
 import {
     loadTeamEmailContext,
     sendTeamAcceptedEmail,
@@ -41,7 +42,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -79,7 +80,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -137,7 +138,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -172,7 +173,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -206,7 +207,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -240,7 +241,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -276,7 +277,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -312,7 +313,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -350,7 +351,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -388,7 +389,7 @@ teamsRouter.get(
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
                     CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
-                    t.name, t.members, t.appreciations,
+                    t.name, t.members, t.appreciations, t.documents,
                     t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
                     t.status,
                     t.payment_link,
@@ -801,6 +802,7 @@ teamsRouter.post(
             const meals_count = data.meals_count ?? 0;
             const maintainer_full_name = data.maintainer_full_name ?? null;
             const maintainer_activity = data.maintainer_activity ?? null;
+            const documents = data.documents ?? DEFAULT_TEAM_DOCUMENTS;
 
             const answers_kvartaly = JSON.stringify(
                 Array.from({ length: 4 }, () => ({
@@ -826,8 +828,8 @@ teamsRouter.post(
             const result = await query(
                 `INSERT INTO teams
                  (league_id, owner_user_id, name, members, status, answers_kvartaly, answers_fudzi, special_nominations, appreciations,
-                  school, region, meals_count, maintainer_full_name, maintainer_activity)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  documents, school, region, meals_count, maintainer_full_name, maintainer_activity)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     data.league_id,
                     ownerUserId,
@@ -838,6 +840,7 @@ teamsRouter.post(
                     answers_fudzi,
                     special_nominations,
                     appreciations,
+                    documents,
                     school,
                     region,
                     meals_count,
@@ -1053,6 +1056,9 @@ teamsRouter.patch(
             }
             if (fields.region !== undefined) {
                 fields.region = String(fields.region);
+            }
+            if (fields.documents !== undefined) {
+                fields.documents = String(fields.documents);
             }
             if (fields.meals_count !== undefined) {
                 fields.meals_count = Number(fields.meals_count);

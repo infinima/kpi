@@ -57,6 +57,7 @@ export const TeamSchema = z.object({
 
     diploma: z.enum(["FIRST_DEGREE","SECOND_DEGREE","THIRD_DEGREE","PARTICIPANT"]).nullable(),
     special_nominations: z.array(z.string()),
+    documents: z.string(),
 
     created_at: z.string(),
     updated_at: z.string(),
@@ -102,6 +103,7 @@ export const CreateTeamInput = TeamSchema
         place_final: true,
         special_nominations: true,
         diploma: true,
+        documents: true,
     })
     .extend({
         members: MembersSchema,
@@ -109,6 +111,7 @@ export const CreateTeamInput = TeamSchema
         maintainer_full_name: z.string().min(1).nullable().optional(),
         maintainer_activity: TeamSchema.shape.maintainer_activity,
         is_reserve: z.boolean().optional(),
+        documents: z.string().optional(),
     });
 export const UpdateTeamInput = CreateTeamInput
     .partial()
@@ -118,6 +121,7 @@ export const UpdateTeamInput = CreateTeamInput
         status: TeamSchema.shape.status.optional(),
         owner_user_id: z.coerce.number().int().positive().nullable().optional(),
         appreciations: TeamSchema.shape.appreciations.optional(),
+        documents: z.string().optional(),
     });
 export const CheckTeamPaymentResponse = z.object({
     paid: z.boolean(),
