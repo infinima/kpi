@@ -17,6 +17,7 @@ export type TeamTableRowData = {
     owner_phone_number?: string | null;
     name: string;
     members: TeamMembersValue;
+    texts: string[];
     appreciations: string[];
     school: string;
     region: string;
@@ -60,6 +61,7 @@ export const teamStatusLabels: Record<string, string> = {
     ON_CHECKING: "На проверке",
     ACCEPTED: "Принята",
     PAID: "Оплачена",
+    ARRIVED: "Пришли",
 };
 
 export function getTeamColumnDisplayValue(row: TeamTableRowData, column: TeamColumn): string {
@@ -310,6 +312,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
     { key: "owner_email", label: "Email руководителя", width: 240, editable: false, type: "text" },
     { key: "owner_phone_number", label: "Телефон руководителя", width: 190, editable: false, type: "text" },
     { key: "members", label: "Участники", width: 320, editable: false, type: "text" },
+    { key: "texts", label: "Тексты", width: 260, editable: false, type: "text" },
     { key: "appreciations", label: "Благодарности", width: 260, editable: false, type: "text" },
     { key: "school", label: "Образовательная организация", width: 260, editable: true, type: "text" },
     { key: "region", label: "Регион", width: 180, editable: true, type: "text" },
@@ -327,6 +330,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "На проверке", value: "ON_CHECKING" },
             { label: "Принята", value: "ACCEPTED" },
             { label: "Оплачена", value: "PAID" },
+            { label: "Пришли", value: "ARRIVED" },
         ],
     },
     {

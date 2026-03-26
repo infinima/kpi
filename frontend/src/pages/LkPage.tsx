@@ -22,7 +22,7 @@ import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
 import { UsersSection } from "@/components/lk/UsersSection";
 import { MailingsSection } from "@/components/lk/MailingsSection";
-import { apiGet, apiPatch, apiPost } from "@/api";
+import { apiGet, apiGetFile, apiPatch, apiPost } from "@/api";
 import { useNotifications, useUser } from "@/store";
 import {
     downloadContractFile,
@@ -75,14 +75,17 @@ type OwnedTeam = {
     owner_can_edit?: boolean;
     name: string;
     members: string[];
+    texts?: string[];
     appreciations: string[];
     school: string;
     region: string;
     meals_count: number;
     maintainer_full_name: string | null;
     maintainer_activity: string | null;
-    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID";
+    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID" | "ARRIVED";
     payment_link?: string | number | null;
+    diploma?: "FIRST_DEGREE" | "SECOND_DEGREE" | "THIRD_DEGREE" | "PARTICIPANT" | null;
+    special_nominations?: string[];
     created_at: string;
     updated_at: string;
     event_id?: number;
@@ -211,6 +214,7 @@ const teamStatusLabels: Record<OwnedTeam["status"], string> = {
     ON_CHECKING: "На проверке",
     ACCEPTED: "Принята",
     PAID: "Оплачена",
+    ARRIVED: "Пришли",
 };
 
 function getTeamStatusLabel(status: OwnedTeam["status"] | undefined) {
@@ -235,6 +239,10 @@ function getTeamPaymentLink(team: OwnedTeam) {
     }
 
     return normalizedValue;
+}
+
+function getTeamFileBaseName(team: OwnedTeam) {
+    return team.name.trim().replace(/\s+/g, "_") || `team_${team.id}`;
 }
 
 function isMealsCountInvalid(value: string) {
@@ -1132,6 +1140,10 @@ export default function LkPage() {
                                                     const paymentLink = getTeamPaymentLink(team);
                                                     const shouldShowPaymentLink = team.status === "ACCEPTED" && Boolean(paymentLink);
                                                     const shouldShowPaidState = team.status === "PAID";
+                                                    const canDownloadAppreciation = team.status === "ARRIVED";
+                                                    const canDownloadDiploma = team.league_status === "ENDED" && Boolean(team.diploma);
+                                                    const canDownloadNominations = team.league_status === "ENDED" && Boolean(team.special_nominations?.length);
+                                                    const teamFileBaseName = getTeamFileBaseName(team);
 
                                                     return (
                                                 <div className="flex flex-col gap-6">
@@ -1179,6 +1191,30 @@ export default function LkPage() {
                                                                     disabled={checkingPaymentTeamId === team.id}
                                                                 >
                                                                     {checkingPaymentTeamId === team.id ? "Проверяем..." : "Проверить оплату"}
+                                                                </OutlineButton>
+                                                            ) : null}
+                                                            {canDownloadAppreciation ? (
+                                                                <OutlineButton
+                                                                    active
+                                                                    onClick={() => void apiGetFile(`teams/${team.id}/appreciation`, `${teamFileBaseName}_благодарность.pdf`)}
+                                                                >
+                                                                    Скачать благодарности
+                                                                </OutlineButton>
+                                                            ) : null}
+                                                            {canDownloadDiploma ? (
+                                                                <OutlineButton
+                                                                    active
+                                                                    onClick={() => void apiGetFile(`teams/${team.id}/diploma`, `${teamFileBaseName}_${team.diploma === "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`)}
+                                                                >
+                                                                    Скачать дипломы
+                                                                </OutlineButton>
+                                                            ) : null}
+                                                            {canDownloadNominations ? (
+                                                                <OutlineButton
+                                                                    active
+                                                                    onClick={() => void apiGetFile(`teams/${team.id}/special-nominations`, `${teamFileBaseName}_спецноминации.pdf`)}
+                                                                >
+                                                                    Скачать номинации
                                                                 </OutlineButton>
                                                             ) : null}
                                                             {team.owner_can_edit ? (
