@@ -23,6 +23,8 @@ import { ResultPage } from "@/pages/ResultPage";
 import { ShowPage } from "@/pages/ShowPage";
 import { ShowControlPage } from "@/pages/ShowControlPage";
 import { LogsPage } from "@/pages/LogsPage";
+import { TeamQrPage } from "@/pages/TeamQrPage";
+import { ReadQrPage } from "@/pages/ReadQrPage";
 
 function LeagueShowRedirect({ mode }: { mode: "show" | "controller" }) {
     const { leagueId } = useParams();
@@ -81,6 +83,9 @@ export default function App() {
                 <Route path="/locations" element={<Navigate to="/events" replace />} />
                 <Route path="/leagues" element={<Navigate to="/events" replace />} />
                 <Route path="/results" element={<Navigate to="/events" replace />} />
+                <Route path="/qr" element={<TeamQrPage />} />
+                <Route path="/scanner" element={<ReadQrPage />} />
+                <Route path="/read_qr" element={<Navigate to="/scanner" replace />} />
                 <Route path="/show/:leagueId" element={<ShowPage />} />
                 <Route path="/showcontroller/:leagueId" element={<ShowControlPage />} />
                 <Route path="*" element={<NotFoundPage />} />
