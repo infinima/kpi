@@ -72,6 +72,16 @@ export function registerKvartalyFinish(socket: Socket, io: Server): void {
 
             const table = await getKvartalyTable(Number(league_id));
             io.to(`league:${league_id}:kvartaly`).emit("data", table);
+            const teamRow = table.find((t: any) => t.id === team_id);
+            const totalScore = teamRow?.total ?? null;
+            io.to("bot").emit("update", {
+                type: "kvartaly_finish",
+                league_id,
+                team_id,
+                kvartal,
+                finished: Boolean(finished),
+                total: totalScore
+            });
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

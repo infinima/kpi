@@ -106,6 +106,22 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
 
             const table = await getKvartalyTable(Number(league_id));
             io.to(`league:${league_id}:kvartaly`).emit("data", table);
+            const teamRow = table.find((t: any) => t.id === team_id);
+            const qIndex = question_num - 1;
+            const quarterIndex = Math.floor(qIndex / 4);
+            const questionIndex = qIndex % 4;
+            const answerScore = teamRow?.quarters?.[quarterIndex]?.answers?.[questionIndex]?.score ?? null;
+            const totalScore = teamRow?.total ?? null;
+            io.to("bot").emit("update", {
+                type: "kvartaly_add_answer",
+                league_id,
+                team_id,
+                question_num,
+                delta_correct,
+                delta_incorrect,
+                score: answerScore,
+                total: totalScore
+            });
         } catch (err) {
             console.error(err);
             socket.emit("error_response", { error: { code: "INTERNAL_ERROR" } });

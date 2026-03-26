@@ -64,6 +64,15 @@ export function registerFudziSetPenalty(socket: Socket, io: Server): void {
 
             const table = await getFudziTable(league_id);
             io.to(`league:${league_id}:fudzi`).emit("data", table);
+            const teamRow = table.find((t: any) => t.id === team_id);
+            const totalScore = teamRow?.total ?? null;
+            io.to("bot").emit("update", {
+                type: "fudzi_set_penalty",
+                league_id,
+                team_id,
+                penalty,
+                total: totalScore
+            });
 
         } catch (err) {
             console.error(err);
