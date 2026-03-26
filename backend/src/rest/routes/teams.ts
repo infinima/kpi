@@ -38,6 +38,7 @@ teamsRouter.get(
 
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
+                    l.status AS league_status,
                     t.owner_user_id,
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
