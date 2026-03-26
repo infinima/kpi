@@ -55,6 +55,7 @@ const statusOptions = [
     { label: "На проверке", value: "ON_CHECKING" },
     { label: "Принята", value: "ACCEPTED" },
     { label: "Оплачена", value: "PAID" },
+    { label: "Пришли", value: "ARRIVED" },
 ];
 
 const diplomaOptions = [
@@ -233,7 +234,7 @@ export function TeamInfoModal() {
                                     href={paymentLink}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-block break-all text-sm font-medium text-[var(--color-primary)] underline underline-offset-2"
+                                    className="inline-block break-all text-sm text-[rgb(29,78,216)] underline decoration-[rgb(29,78,216)] underline-offset-2 transition hover:text-[rgb(30,64,175)] hover:decoration-[rgb(30,64,175)]"
                                 >
                                     {paymentLink}
                                 </a>
@@ -394,6 +395,17 @@ export function TeamInfoModal() {
                             readOnly={!isEditing}
                             onChange={(event) => setDraft((prev) => prev ? { ...prev, appreciations: parseTextAreaValue(event.target.value) } : prev)}
                             className={`${inputClassName(isChanged(draft.appreciations, payload.row.appreciations))} resize-none`}
+                        />
+                    </label>
+
+                    <label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">
+                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Документы</span>
+                        <textarea
+                            rows={4}
+                            value={buildTextAreaValue(draft.texts)}
+                            readOnly={!isEditing}
+                            onChange={(event) => setDraft((prev) => prev ? { ...prev, texts: parseTextAreaValue(event.target.value) } : prev)}
+                            className={`${inputClassName(isChanged(draft.texts, payload.row.texts))} resize-none`}
                         />
                     </label>
 

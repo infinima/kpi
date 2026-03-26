@@ -15,6 +15,7 @@ type TeamResponseRow = {
     owner_phone_number?: string | null;
     name: string;
     members: unknown;
+    texts?: string[] | string | null;
     appreciations: string[] | string;
     school: string;
     region: string;
@@ -108,6 +109,7 @@ function mapTeamResponseRow(row: TeamResponseRow): TeamTableRowData {
         owner_phone_number: row.owner_phone_number ?? "",
         name: row.name ?? "",
         members: parseMembers(row.members),
+        texts: parseStringArray(row.texts),
         appreciations: parseStringArray(row.appreciations),
         school: row.school ?? "",
         region: row.region ?? "",
@@ -170,6 +172,7 @@ export function EventTeamsPage() {
         const payload: Record<string, unknown> = {
             name: row.name,
             members: buildMembersRequestValue(row),
+            texts: row.texts,
             appreciations: row.appreciations,
             meals_count: row.meals_count,
             maintainer_full_name: row.maintainer_full_name || null,
@@ -202,6 +205,7 @@ export function EventTeamsPage() {
             league_id: row.league_id,
             name: row.name,
             members: buildMembersRequestValue(row),
+            texts: row.texts,
             appreciations: row.appreciations,
             school: row.school,
             region: row.region,
