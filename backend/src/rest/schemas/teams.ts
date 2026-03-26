@@ -42,7 +42,7 @@ export const TeamSchema = z.object({
         "мастер-класс в Технопарке (платно)",
         "заниматься своими делами"
     ]).nullable(),
-    status: z.enum(["IN_RESERVE", "ON_CHECKING", "ACCEPTED", "PAID"]),
+    status: z.enum(["IN_RESERVE", "ON_CHECKING", "ACCEPTED", "PAID", "ARRIVED"]),
     payment_link: z.string().min(1).nullable(),
 
     answers_kvartaly: AnswersKvartalySchema,

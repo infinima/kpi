@@ -780,7 +780,7 @@ teamsRouter.post(
                          FROM teams
                          WHERE league_id = ?
                            AND deleted_at IS NULL
-                           AND status IN ('ON_CHECKING','ACCEPTED','PAID')`,
+                           AND status IN ('ON_CHECKING','ACCEPTED','PAID','ARRIVED')`,
                         [data.league_id], userId
                     );
 
