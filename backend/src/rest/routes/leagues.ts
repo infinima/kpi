@@ -9,6 +9,7 @@ import { checkPermission } from "../middlewares/check-permission.js";
 import { saveFile } from "../../utils/save-file.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { generateTeamsNames } from "../../utils/generate-teams-names.js";
+import { generateTeamsExcel } from "../../utils/generate-teams-excel.js";
 import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
 import { getFudziTable } from "../../socket/services/fudzi-table.js";
 import { rankTeams } from "../../utils/rank-teams.js";
@@ -212,15 +213,6 @@ leaguesRouter.get(
             [id], (req as any).user_id
         );
 
-        if (!league) {
-            return res.status(404).json({
-                error: {
-                    code: "LEAGUE_NOT_FOUND",
-                    message: "League does not exist"
-                }
-            });
-        }
-
         const safeName = league.name
             .trim()
             .replace(/\s+/g, "_")
@@ -229,7 +221,7 @@ leaguesRouter.get(
         const rows = await query(
             `SELECT name
             FROM teams
-            WHERE league_id = ? AND deleted_at IS NULL
+            WHERE league_id = ? AND deleted_at IS NULL AND status = 'PAID'
              ORDER BY id`,
             [id], (req as any).user_id
         );
@@ -264,6 +256,84 @@ leaguesRouter.get(
             res.status(500).json({
                 error: {
                     code: "PDF_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+    }
+);
+
+// GET /api/leagues/:id/teams_excel
+leaguesRouter.get(
+    "/:id/teams_excel",
+    validate(GetOneLeagueInput, "params"),
+    checkNotDeleted("league"),
+    checkPermission("leagues", "print_documents"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [league] = await query(
+            "SELECT name FROM leagues WHERE id = ? AND deleted_at IS NULL",
+            [id], (req as any).user_id
+        );
+
+        const safeName = league.name
+            .trim()
+            .replace(/\s+/g, "_")
+            .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+
+        const rows = await query(
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.import_id,
+                    t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations, t.documents,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status, t.payment_link,
+                    t.answers_kvartaly, t.penalty_kvartaly, t.place_kvartaly,
+                    t.answers_fudzi, t.penalty_fudzi, t.place_fudzi, t.place_final,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.league_id = ? AND t.deleted_at IS NULL
+             ORDER BY t.id`,
+            [id], (req as any).user_id
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                error: {
+                    code: "NO_TEAMS",
+                    message: "League has no teams"
+                }
+            });
+        }
+
+        try {
+            const buffer = await generateTeamsExcel(rows);
+
+            const name = `${safeName}_команды.xlsx`;
+            const encoded = encodeURIComponent(name);
+
+            res.setHeader(
+                "Content-Type",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            );
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(buffer);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "EXCEL_GENERATION_FAILED",
                     message: String(e)
                 }
             });

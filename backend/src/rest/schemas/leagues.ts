@@ -189,6 +189,31 @@ registry.registerPath({
     },
 });
 
+// GET /api/leagues/{id}/teams_excel
+registry.registerPath({
+    method: "get",
+    path: "/api/leagues/{id}/teams_excel",
+    summary: "Скачать Excel со всеми командами лиги",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                    schema: { type: "string", format: "binary" },
+                },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist or has no teams" },
+        500: { description: "Excel generation failed" },
+    },
+});
+
 registry.registerPath({
     method: "get",
     path: "/api/leagues/{id}/final-table",

@@ -591,6 +591,19 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
+                                                {leagueNumber && can("leagues", "print_documents", leagueNumber) ? (
+                                                    <SidebarItem
+                                                        label="Команды (Excel)"
+                                                        icon={<Download size={16} />}
+                                                        onClick={() => apiGetFile(
+                                                            `leagues/${leagueInfo.id}/teams_excel`,
+                                                            `league_${leagueInfo.id}_teams.xlsx`,
+                                                            { error: true }
+                                                        )}
+                                                        collapsed={effectiveCollapsed}
+                                                    />
+                                                ) : null}
+
                                                 {leagueNumber && can("leagues", "get_show", leagueNumber) ? (
                                                     <SidebarItem
                                                         label="Презентация Фудзи"
