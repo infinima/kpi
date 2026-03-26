@@ -4,7 +4,15 @@ import {io, Socket} from "socket.io-client";
 import {useNotifications, useUser} from "@/store";
 import {ensureUserSessionInitialized} from "@/store/useUserStore";
 
-const SOCKET_URL = `${window.location.protocol}//${window.location.hostname}:3000`;
+function getSocketUrl(): string {
+  const { protocol, hostname, host } = window.location;
+  if (host === "localhost:5173") {
+    return `${protocol}//${hostname}:3000`;
+  }
+  return `${protocol}//${host}`;
+}
+
+const SOCKET_URL = getSocketUrl();
 let tableSocketConnectVersion = 0;
 
 function getSocketRouteConfig() {
