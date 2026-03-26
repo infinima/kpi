@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useOutletContext, useParams } from "react-router-dom";
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, X } from "lucide-react";
 import { useSocketStore } from "@/store/useTableSocket";
 import { useUser } from "@/store";
 
@@ -51,11 +51,11 @@ type KvartalyTeam = {
 };
 
 type StageType = "kvartaly" | "fudzi";
-type SortDirection = "asc" | "desc";
+type SortDirection = "asc" | "desc" | null;
 type SortState = {
     key: string;
     direction: SortDirection;
-};
+} | null;
 
 type PopupState =
     | {
@@ -143,7 +143,7 @@ function headerButtonClass(active: boolean) {
     }`;
 }
 
-function sortIcon(direction: SortDirection) {
+function sortIcon(direction: Exclude<SortDirection, null>) {
     return direction === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />;
 }
 
@@ -267,6 +267,10 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
     }, []);
 
     const sortedData = useMemo(() => {
+        if (!sort?.key || !sort.direction) {
+            return data;
+        }
+
         const getValue = (team: FudziTeam) => {
             if (sort.key === "name") return team.name;
             if (sort.key === "penalty") return team.penalty;
@@ -288,9 +292,21 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
     }, [data, sort]);
 
     function toggleSort(key: string) {
-        setSort((current) => current.key === key
-            ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
-            : { key, direction: key === "name" ? "asc" : "desc" });
+        setSort((current) => {
+            if (!current || current.key !== key) {
+                return { key, direction: "asc" };
+            }
+
+            if (current.direction === "asc") {
+                return { key, direction: "desc" };
+            }
+
+            if (current.direction === "desc") {
+                return null;
+            }
+
+            return { key, direction: "asc" };
+        });
     }
 
     function openPopup(event: React.MouseEvent, nextPopup: PopupState) {
@@ -317,9 +333,9 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
                     </colgroup>
                     <thead className="bg-[var(--color-primary)]">
                         <tr>
-                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort.key === "name")}>Команда {sort.key === "name" ? sortIcon(sort.direction) : null}</button></th>
-                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort.key === "penalty")}>Штраф {sort.key === "penalty" ? sortIcon(sort.direction) : null}</button></th>
-                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort.key === "total")}>Итого {sort.key === "total" ? sortIcon(sort.direction) : null}</button></th>
+                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>Команда {sort?.key === "name" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>Штраф {sort?.key === "penalty" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>Итого {sort?.key === "total" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             {Array.from({ length: 16 }).map((_, index) => {
                                 const key = `q${index + 1}`;
                                 const active = hoveredColumn === key;
@@ -330,9 +346,9 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
                                             onClick={() => toggleSort(key)}
                                             onMouseEnter={() => setHoveredColumn(key)}
                                             onMouseLeave={() => setHoveredColumn(null)}
-                                            className={headerButtonClass(sort.key === key)}
+                                            className={headerButtonClass(sort?.key === key)}
                                         >
-                                            {index + 1} {sort.key === key ? sortIcon(sort.direction) : null}
+                                            {index + 1} {sort?.key === key && sort.direction ? sortIcon(sort.direction) : null}
                                         </button>
                                     </th>
                                 );
@@ -433,6 +449,10 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
     }, []);
 
     const sortedData = useMemo(() => {
+        if (!sort?.key || !sort.direction) {
+            return data;
+        }
+
         const getValue = (team: KvartalyTeam) => {
             if (sort.key === "name") return team.name;
             if (sort.key === "penalty") return team.penalty;
@@ -459,9 +479,21 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
     }, [data, sort]);
 
     function toggleSort(key: string) {
-        setSort((current) => current.key === key
-            ? { key, direction: current.direction === "asc" ? "desc" : "asc" }
-            : { key, direction: key === "name" ? "asc" : "desc" });
+        setSort((current) => {
+            if (!current || current.key !== key) {
+                return { key, direction: "asc" };
+            }
+
+            if (current.direction === "asc") {
+                return { key, direction: "desc" };
+            }
+
+            if (current.direction === "desc") {
+                return null;
+            }
+
+            return { key, direction: "asc" };
+        });
     }
 
     function openPopup(event: React.MouseEvent, nextPopup: PopupState) {
@@ -488,9 +520,9 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                     </colgroup>
                     <thead className="bg-[var(--color-primary)] text-white">
                         <tr>
-                            <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort.key === "name")}>Команда {sort.key === "name" ? sortIcon(sort.direction) : null}</button></th>
-                            <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort.key === "total")}>Итого {sort.key === "total" ? sortIcon(sort.direction) : null}</button></th>
-                            <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort.key === "penalty")}>Штраф {sort.key === "penalty" ? sortIcon(sort.direction) : null}</button></th>
+                            <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>Команда {sort?.key === "name" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+                            <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>Итого {sort?.key === "total" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+                            <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>Штраф {sort?.key === "penalty" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             {Array.from({ length: 4 }).map((_, quarterIndex) => (
                                 <th key={quarterIndex} colSpan={5} className="sticky top-0 z-40 bg-[var(--color-primary)] px-2 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">
                                     Квартал {quarterIndex + 1}
@@ -511,9 +543,9 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                 onClick={() => toggleSort(key)}
                                                 onMouseEnter={() => setHoveredColumn(key)}
                                                 onMouseLeave={() => setHoveredColumn(null)}
-                                                className={headerButtonClass(sort.key === key)}
+                                                className={headerButtonClass(sort?.key === key)}
                                             >
-                                                {label} {sort.key === key ? sortIcon(sort.direction) : null}
+                                                {label} {sort?.key === key && sort.direction ? sortIcon(sort.direction) : null}
                                             </button>
                                         </th>
                                     );
@@ -543,6 +575,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                         cells={quarter.answers.map((answer, answerIndex) => {
                                             const key = `q${quarterIndex + 1}_${answerIndex + 1}`;
                                             const active = hoveredRow === team.id || hoveredColumn === key;
+                                            const isClosed = quarter.finished;
                                             const colorClass = answer.score > 0
                                                 ? "bg-[rgba(68,216,13,0.24)] text-[#166534]"
                                                 : answer.score < 0
@@ -554,7 +587,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                     key={key}
                                                     onMouseEnter={() => setHoveredColumn(key)}
                                                     onMouseLeave={() => setHoveredColumn(null)}
-                                                    onClick={canEditAnswers ? (event) => openPopup(event, {
+                                                    onClick={canEditAnswers && !isClosed ? (event) => openPopup(event, {
                                                         type: "kvartaly-answer",
                                                         teamId: team.id,
                                                         questionNumber: quarterIndex * 4 + answerIndex + 1,
@@ -564,7 +597,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                         x: 0,
                                                         y: 0,
                                                     }) : undefined}
-                                                    className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center transition ${colorClass} ${active ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
+                                                    className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center transition ${colorClass} ${active ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${isClosed ? "bg-[rgba(15,23,42,0.10)] text-[rgba(71,85,105,0.98)]" : ""} ${canEditAnswers && !isClosed ? "cursor-pointer" : ""}`}
                                                 >
                                                     {answer.score !== 0 ? answer.score : ""}
                                                 </td>
@@ -575,9 +608,9 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                 onMouseEnter={() => setHoveredColumn(`bonus_${quarterIndex + 1}`)}
                                                 onMouseLeave={() => setHoveredColumn(null)}
                                                 onClick={canEditAnswers ? (event) => openPopup(event, { type: "kvartaly-bonus", teamId: team.id, quarterIndex, finished: quarter.finished, width: 220, x: 0, y: 0 }) : undefined}
-                                                className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center font-semibold transition ${quarter.bonus > 0 ? "bg-[rgba(68,216,13,0.24)] text-[#166534]" : ""} ${(hoveredRow === team.id || hoveredColumn === `bonus_${quarterIndex + 1}`) ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
+                                                className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center font-semibold transition ${quarter.bonus > 0 ? "bg-[rgba(68,216,13,0.24)] text-[#166534]" : ""} ${quarter.finished ? "bg-[rgba(15,23,42,0.14)] text-[var(--color-text-main)]" : ""} ${(hoveredRow === team.id || hoveredColumn === `bonus_${quarterIndex + 1}`) ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
                                             >
-                                                {quarter.bonus > 0 ? quarter.bonus : ""}
+                                                {quarter.finished ? quarter.total : quarter.bonus > 0 ? quarter.bonus : ""}
                                             </td>
                                         )}
                                     />
@@ -609,8 +642,11 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                             </>
                         ) : popup.type === "kvartaly-bonus" ? (
                             <>
-                                <PopupButton onClick={() => { finishQuarter(popup.teamId, popup.quarterIndex + 1, !popup.finished); setPopup(null); }}>
-                                    {popup.finished ? "Снять завершение квартала" : "Завершить квартал"}
+                                <PopupButton onClick={() => { finishQuarter(popup.teamId, popup.quarterIndex + 1, !popup.finished); setPopup(null); }} variant={popup.finished ? "danger" : "success"}>
+                                    <span className="inline-flex items-center gap-2">
+                                        {popup.finished ? <X size={16} /> : <Check size={16} />}
+                                        <span>{popup.finished ? "Открыть квартал" : "Закрыть квартал"}</span>
+                                    </span>
                                 </PopupButton>
                             </>
                         ) : popup.type === "kvartaly-penalty" ? (

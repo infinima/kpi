@@ -102,6 +102,10 @@ export function KvartalRow({ item }: Props) {
     if(!canEditAnswers){
       return;
     }
+    const quarterIndex = Math.floor((q - 1) / 4);
+    if (item.quarters[quarterIndex]?.finished) {
+      return;
+    }
     const r = e.currentTarget.getBoundingClientRect();
     setPopup({ q, x: r.left, y: r.bottom + 4 });
   }
@@ -116,6 +120,10 @@ export function KvartalRow({ item }: Props) {
 
 
   function changeScore(q: number, dc: number, di: number) {
+    const quarterIndex = Math.floor((q - 1) / 4);
+    if (item.quarters[quarterIndex]?.finished) {
+      return;
+    }
     kvartalAddAnswer(item.id, q, dc, di);
   }
 
@@ -150,15 +158,17 @@ export function KvartalRow({ item }: Props) {
               {/* 4 вопроса */}
               {q.answers.slice(0, 4).map((a, i) => {
                 const qNum = base + i + 1;
+                const isQuarterFinished = q.finished;
 
                 // @ts-ignore
                 return (
                   <td
                     key={i}
                     onClick={(e) => openPopupAnswer(e, qNum)}
-                    className={`td text-center cursor-pointer
+                    className={`td text-center
                       border-r border-border
-                      hover:bg-hover dark:hover:bg-dark-hover  dark:border-dark-border
+                      dark:border-dark-border
+                      ${isQuarterFinished ? "cursor-not-allowed bg-[rgba(15,23,42,0.08)] text-[rgba(100,116,139,0.95)]" : "cursor-pointer hover:bg-hover dark:hover:bg-dark-hover"}
                       ${a.correct ? a.incorrect ? "text-yellow-500"  : "text-green-500": a.incorrect ? "text-red-500"  : "text-gray-500"}
                                   ${hoveredColumn === (qi-1) * 5 + i+5 ? "!bg-primary/10 dark:!bg-primary/20" : ""}\`}
 `}
@@ -179,7 +189,7 @@ export function KvartalRow({ item }: Props) {
                 className=
                   {`td text-center cursor-pointer border-r border-border
                   font-medium
-                  hover:bg-hover dark:hover:bg-dark-hover  dark:border-dark-border
+                  ${q.finished ? "bg-[rgba(15,23,42,0.08)]" : "hover:bg-hover dark:hover:bg-dark-hover"}  dark:border-dark-border
                   ${hoveredColumn === (qi-1) * 5 + 9? "!bg-primary/10 dark:!bg-primary/20" : ""}`}
 
 
@@ -372,7 +382,9 @@ export function KvartalRow({ item }: Props) {
               {item.quarters.map((q, qi) => (
                 <div
                   key={qi}
-                  className="border rounded-xl p-3 bg-hover/10 space-y-2 border-border dark:border-dark-border"
+                  className={`border rounded-xl p-3 space-y-2 border-border dark:border-dark-border ${
+                    q.finished ? "bg-[rgba(15,23,42,0.10)] opacity-85" : "bg-hover/10"
+                  }`}
                 >
                   <button
                     className="w-full flex justify-between items-center"
@@ -407,12 +419,13 @@ export function KvartalRow({ item }: Props) {
                   {openQuarter === qi && (
                     <div className="grid grid-cols-5 gap-2 pt-2 border-border dark:border-dark-border">
                       {q.answers.map((a, i) => {
-                        const qNum = qi * 5 + i + 1;
+                        const qNum = qi * 4 + i + 1;
 
                         return (
                           <button
                             key={i}
                             onClick={(e) => openPopupAnswer(e, qNum)}
+                            disabled={q.finished}
                             className="
                               rounded-lg border p-2 bg-surface dark:bg-dark-surface hover:dark:bg-dark-hover
                               text-center text-sm hover:bg-hover border-border dark:border-dark-border

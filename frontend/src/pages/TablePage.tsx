@@ -6,6 +6,24 @@ import { KvartalRow } from "@/components/KvartalRow";
 import type { FudziRow as TFudzi, KvartalRow as TKvartal } from "@/types";
 import { ChevronUp, ChevronDown } from "lucide-react";
 
+type SortDirection = "asc" | "desc" | null;
+type SortState = {
+  key: string;
+  direction: SortDirection;
+} | null;
+
+function compareValues(left: unknown, right: unknown) {
+  if (left == null && right == null) return 0;
+  if (left == null) return -1;
+  if (right == null) return 1;
+
+  if (typeof left === "number" && typeof right === "number") {
+    return left - right;
+  }
+
+  return String(left).localeCompare(String(right), "ru", { sensitivity: "base" });
+}
+
 export function TablesPage() {
   const { connect, disconnect, tableData, isConnected } = useSocketStore();
   const { eventName, locationName, leagueName, tableType } = useEventsNav();
@@ -15,6 +33,7 @@ export function TablesPage() {
 
   const [topPanelOpen, setTopPanelOpen] = useState(true);
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<SortState>(null);
 
   const filteredData = useMemo(() => {
     if (!tableData) return [];
@@ -26,6 +45,72 @@ export function TablesPage() {
       team.name.toLowerCase().includes(s)
     );
   }, [search, tableData]);
+
+  const sortedData = useMemo(() => {
+    if (!sort?.key || !sort.direction) {
+      return filteredData;
+    }
+
+    const getSortValue = (team: any) => {
+      if (sort.key === "name" || sort.key === "penalty" || sort.key === "total") {
+        return team[sort.key];
+      }
+
+      if (tableType === "fudzi" && sort.key.startsWith("fudzi-question-")) {
+        const questionIndex = Number(sort.key.replace("fudzi-question-", "")) - 1;
+        return team.answers?.[questionIndex]?.score ?? 0;
+      }
+
+      if (tableType === "kvartaly" && sort.key.startsWith("kvartaly-question-")) {
+        const questionIndex = Number(sort.key.replace("kvartaly-question-", "")) - 1;
+        const quarterIndex = Math.floor(questionIndex / 4);
+        const answerIndex = questionIndex % 4;
+        return team.quarters?.[quarterIndex]?.answers?.[answerIndex]?.score ?? 0;
+      }
+
+      if (tableType === "kvartaly" && sort.key.startsWith("kvartaly-bonus-")) {
+        const quarterIndex = Number(sort.key.replace("kvartaly-bonus-", "")) - 1;
+        return team.quarters?.[quarterIndex]?.bonus ?? 0;
+      }
+
+      return 0;
+    };
+
+    return [...filteredData].sort((left, right) => {
+      const compared = compareValues(getSortValue(left), getSortValue(right));
+      return sort.direction === "asc" ? compared : -compared;
+    });
+  }, [filteredData, sort, tableType]);
+
+  function toggleSort(key: string) {
+    setSort((current) => {
+      if (!current || current.key !== key) {
+        return { key, direction: "asc" };
+      }
+
+      if (current.direction === "asc") {
+        return { key, direction: "desc" };
+      }
+
+      if (current.direction === "desc") {
+        return null;
+      }
+
+      return { key, direction: "asc" };
+    });
+  }
+
+  function headerButtonClass(isActive: boolean) {
+    return `inline-flex items-center justify-center gap-1 rounded-md px-1 py-0.5 transition ${isActive ? "font-semibold" : ""}`;
+  }
+
+  function renderSortIcon(key: string) {
+    if (sort?.key !== key || !sort.direction) {
+      return null;
+    }
+
+    return sort.direction === "asc" ? <ChevronUp size={14} /> : <ChevronDown size={14} />;
+  }
 
   useEffect(() => {
     connect();
@@ -44,7 +129,9 @@ export function TablesPage() {
             border-b border-border dark:border-dark-border
           "
       >
-        Команда
+        <button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>
+          Команда {renderSortIcon("name")}
+        </button>
       </th>
 
 
@@ -61,7 +148,9 @@ export function TablesPage() {
           onMouseEnter={() => setHoveredColumn(i)}
           onMouseLeave={() => setHoveredColumn(null)}
         >
-          {i + 1}
+          <button type="button" onClick={() => toggleSort(`fudzi-question-${i + 1}`)} className={headerButtonClass(sort?.key === `fudzi-question-${i + 1}`)}>
+            {i + 1} {renderSortIcon(`fudzi-question-${i + 1}`)}
+          </button>
         </th>
       ))}
 
@@ -72,7 +161,9 @@ export function TablesPage() {
             border-b border-border dark:border-dark-border
           "
       >
-        Штраф
+        <button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>
+          Штраф {renderSortIcon("penalty")}
+        </button>
       </th>
 
       <th
@@ -82,7 +173,9 @@ export function TablesPage() {
             border-b border-border dark:border-dark-border
           "
       >
-        Итого
+        <button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>
+          Итого {renderSortIcon("total")}
+        </button>
       </th>
     </tr>
     </thead>
@@ -100,7 +193,9 @@ export function TablesPage() {
         "
         rowSpan={2}
       >
-        Команда
+        <button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>
+          Команда {renderSortIcon("name")}
+        </button>
       </th>
 
       {[1, 2, 3, 4].map((q) => (
@@ -119,7 +214,9 @@ export function TablesPage() {
 
         >
 
-          Квартал {q}
+          <span className="inline-flex items-center gap-1">
+            Квартал {q}
+          </span>
         </th>
       ))}
 
@@ -131,7 +228,9 @@ export function TablesPage() {
         "
         rowSpan={2}
       >
-        Штраф
+        <button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>
+          Штраф {renderSortIcon("penalty")}
+        </button>
       </th>
 
       <th
@@ -142,7 +241,9 @@ export function TablesPage() {
         "
         rowSpan={2}
       >
-        Итого
+        <button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>
+          Итого {renderSortIcon("total")}
+        </button>
       </th>
     </tr>
 
@@ -167,7 +268,13 @@ export function TablesPage() {
 
           >
 
-            {i === 4 ? "Бонус":(q-1) * 4 + i + 1}
+            <button
+              type="button"
+              onClick={() => toggleSort(i === 4 ? `kvartaly-bonus-${q}` : `kvartaly-question-${(q - 1) * 4 + i + 1}`)}
+              className={headerButtonClass(sort?.key === (i === 4 ? `kvartaly-bonus-${q}` : `kvartaly-question-${(q - 1) * 4 + i + 1}`))}
+            >
+              {i === 4 ? "Бонус" : (q - 1) * 4 + i + 1} {renderSortIcon(i === 4 ? `kvartaly-bonus-${q}` : `kvartaly-question-${(q - 1) * 4 + i + 1}`)}
+            </button>
           </th>
         ))
       )}
@@ -257,7 +364,7 @@ export function TablesPage() {
                   : renderKvartalyHeader()}
 
                 <tbody>
-                {tableData.map((team: TFudzi | TKvartal) =>
+                {sortedData.map((team: TFudzi | TKvartal) =>
                   tableType === "fudzi"
                     ? <FudziRow key={team.id} item={team as TFudzi} />
                     : <KvartalRow key={team.id} item={team as TKvartal} />
