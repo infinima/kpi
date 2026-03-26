@@ -38,6 +38,7 @@ teamsRouter.get(
 
         const rows = await query(
             `SELECT t.id, t.league_id, l.name AS league_name,
+                    l.status AS league_status,
                     t.owner_user_id,
                     u.email AS owner_email,
                     u.phone_number AS owner_phone_number,
@@ -990,6 +991,38 @@ teamsRouter.patch(
                         error: {
                             code: "FORBIDDEN_FIELDS",
                             message: `User cannot update fields: ${disallowed.join(", ")}`,
+                        },
+                    });
+                }
+            }
+
+            if (fields.diploma !== undefined || fields.special_nominations !== undefined) {
+                const [leagueRow] = await query(
+                    `
+                        SELECT l.status
+                        FROM leagues l
+                                 JOIN teams t ON t.league_id = l.id
+                        WHERE t.id = ? AND l.deleted_at IS NULL
+                        LIMIT 1
+                    `,
+                    [id],
+                    (req as any).user_id
+                );
+
+                if (!leagueRow) {
+                    return res.status(404).json({
+                        error: {
+                            code: "LEAGUE_NOT_FOUND",
+                            message: "League does not exist",
+                        },
+                    });
+                }
+
+                if (["AWARDING_IN_PROGRESS", "ENDED"].includes(leagueRow.status)) {
+                    return res.status(400).json({
+                        error: {
+                            code: "LEAGUE_STATUS_FORBIDDEN",
+                            message: "League status does not allow updating diploma or special nominations",
                         },
                     });
                 }
