@@ -12,7 +12,10 @@ export function registerConnection(
 ) {
     io.on("connection", async (socket: Socket) => {
         const type = socket.handshake.query.type;
-        const token = socket.handshake.query.token ?? null;
+        const tokenRaw = socket.handshake.query.token ?? null;
+        const token = Array.isArray(tokenRaw)
+            ? tokenRaw[0] ?? null
+            : tokenRaw;
 
         const allowedTypes = ["kvartaly", "fudzi", "show", "bot"];
         if (!allowedTypes.includes(String(type))) {
@@ -68,7 +71,7 @@ export function registerConnection(
         let user_id: number | null = null;
 
         if (token) {
-            const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+            const tokenHash = crypto.createHash("sha256").update(String(token)).digest("hex");
 
             const rows = await query(
                 `
@@ -101,6 +104,15 @@ export function registerConnection(
         socket.data.user_id = user_id;
 
         if (type === "show") {
+            if (league_id === null) {
+                socket.emit("error_response", {
+                    error: {
+                        code: "INVALID_LEAGUE_ID",
+                        message: "league_id must be a number"
+                    }
+                });
+                return socket.disconnect(true);
+            }
             const allowed = await checkSocketPermission(
                 user_id,
                 "leagues",
