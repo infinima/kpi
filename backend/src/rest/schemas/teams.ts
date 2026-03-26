@@ -71,6 +71,12 @@ export const GetTeamsByLeagueInput = z.object({
 export const GetTeamsByEventInput = z.object({
     event_id: z.coerce.number().int().positive(),
 });
+export const GetTeamsByUserInput = z.object({
+    user_id: z.coerce.number().int().positive(),
+});
+export const GetTeamsByUserUuidInput = z.object({
+    user_uuid: z.string().uuid(),
+});
 export const GetTeamsByLocationInput = z.object({
     location_id: z.coerce.number().int().positive(),
 });
@@ -338,6 +344,37 @@ registry.registerPath({
         200: { description: "OK" },
         400: { description: "The team is deleted or validation failed" },
         404: { description: "The team does not exist" },
+    },
+});
+
+// GET /api/teams/user/uuid/:user_uuid
+registry.registerPath({
+    method: "get",
+    path: "/api/teams/user/uuid/{user_uuid}",
+    summary: "Получить команды пользователя по uuid (owner_user_id)",
+    tags: ["Teams"],
+    security: [{ BearerAuth: [] }],
+    request: { params: GetTeamsByUserUuidInput },
+    responses: {
+        200: {
+            description: "OK",
+            content: { "application/json": { schema: z.array(TeamSchema) } },
+        },
+    },
+});
+// GET /api/teams/user/:user_id
+registry.registerPath({
+    method: "get",
+    path: "/api/teams/user/{user_id}",
+    summary: "Получить команды пользователя (owner_user_id)",
+    tags: ["Teams"],
+    security: [{ BearerAuth: [] }],
+    request: { params: GetTeamsByUserInput },
+    responses: {
+        200: {
+            description: "OK",
+            content: { "application/json": { schema: z.array(TeamSchema) } },
+        },
     },
 });
 

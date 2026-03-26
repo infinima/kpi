@@ -1,5 +1,6 @@
 import express from "express";
 import crypto from "crypto";
+import { v4 as uuidv4 } from "uuid";
 import bcrypt from "bcrypt";
 import { validate } from "../middlewares/validate.js";
 import { query } from "../../db/pool.js";
@@ -272,9 +273,10 @@ authRouter.post(
 
         const result = await query(
             `INSERT INTO users
-                (email, password_hash, last_name, first_name, patronymic, phone_number)
-             VALUES (?, ?, ?, ?, ?, ?)`,
+                (uuid, email, password_hash, last_name, first_name, patronymic, phone_number)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
             [
+                uuidv4(),
                 payload.email,
                 payload.password_hash,
                 payload.last_name,

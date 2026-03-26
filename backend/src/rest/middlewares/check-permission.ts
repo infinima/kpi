@@ -57,6 +57,7 @@ export function checkPermission(
             const rawId =
                 req.params.id ??
                 req.params.object_id ??
+                req.params.user_id ??
                 req.params.location_id ??
                 null;
 

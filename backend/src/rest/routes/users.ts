@@ -6,6 +6,7 @@ import { checkPermission } from "../middlewares/check-permission.js";
 
 import { GetOneUserInput, CreateUserInput, UpdateUserInput } from "../schemas/users.js";
 import bcrypt from "bcrypt";
+import { v4 as uuidv4 } from "uuid";
 
 export const usersRouter = express.Router();
 
@@ -95,9 +96,10 @@ usersRouter.post(
 
             const result = await query(
                 `INSERT INTO users 
-                    (email, password_hash, last_name, first_name, patronymic, phone_number)
-                 VALUES (?, ?, ?, ?, ?, ?)`,
+                    (uuid, email, password_hash, last_name, first_name, patronymic, phone_number)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
                 [
+                    uuidv4(),
                     data.email,
                     passwordHash,
                     data.last_name,

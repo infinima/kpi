@@ -19,6 +19,8 @@ import {
     GetTeamsByLeagueInput,
     GetTeamsByEventInput,
     GetTeamsByLocationInput,
+    GetTeamsByUserInput,
+    GetTeamsByUserUuidInput,
     GetOneTeamInput,
     CreateTeamInput,
     UpdateTeamInput
@@ -57,6 +59,98 @@ teamsRouter.get(
              ORDER BY ID DESC`,
             [userId],
             userId
+        );
+
+        res.json(rows);
+    }
+);
+
+// GET /api/teams/user/:user_id
+teamsRouter.get(
+    "/user/:user_id",
+    validate(GetTeamsByUserInput, "params"),
+    checkPermission("users", "get"),
+    async (req, res) => {
+        const { user_id } = (req as any).validated.params;
+
+        const rows = await query(
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status,
+                    t.payment_link,
+                    t.answers_kvartaly, t.answers_fudzi,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.owner_user_id = ? AND t.deleted_at IS NULL
+             ORDER BY ID DESC`,
+            [user_id],
+            (req as any).user_id
+        );
+
+        res.json(rows);
+    }
+);
+
+// GET /api/teams/user/uuid/:user_uuid
+teamsRouter.get(
+    "/user/uuid/:user_uuid",
+    validate(GetTeamsByUserUuidInput, "params"),
+    async (req, res, next) => {
+        await authRequired(req, res, async () => {
+            const { user_uuid } = (req as any).validated.params;
+
+            const [user] = await query(
+                `SELECT id FROM users WHERE uuid = ? AND deleted_at IS NULL LIMIT 1`,
+                [user_uuid],
+                (req as any).user_id
+            );
+
+            if (!user) {
+                return res.status(404).json({
+                    error: {
+                        code: "USER_NOT_FOUND",
+                        message: "User does not exist"
+                    }
+                });
+            }
+
+            (req as any).resolved_user_id = user.id;
+            (req as any).params.user_id = String(user.id);
+            return next();
+        });
+    },
+    checkPermission("users", "get"),
+    async (req, res) => {
+        const user_id = (req as any).resolved_user_id;
+
+        const rows = await query(
+            `SELECT t.id, t.league_id, l.name AS league_name,
+                    t.owner_user_id,
+                    u.email AS owner_email,
+                    u.phone_number AS owner_phone_number,
+                    CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name,
+                    t.name, t.members, t.appreciations,
+                    t.school, t.region, t.meals_count, t.maintainer_full_name, t.maintainer_activity,
+                    t.status,
+                    t.payment_link,
+                    t.answers_kvartaly, t.answers_fudzi,
+                    t.diploma, t.special_nominations,
+                    t.created_at, t.updated_at, t.deleted_at
+             FROM teams t
+                      LEFT JOIN leagues l ON l.id = t.league_id
+                      LEFT JOIN users u ON u.id = t.owner_user_id
+             WHERE t.owner_user_id = ? AND t.deleted_at IS NULL
+             ORDER BY ID DESC`,
+            [user_id],
+            (req as any).user_id
         );
 
         res.json(rows);
