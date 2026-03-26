@@ -22,7 +22,7 @@ export async function getKvartalyTable(league_id: number) {
         `
             SELECT id, name, penalty_kvartaly, answers_kvartaly
             FROM teams
-            WHERE league_id = ? AND deleted_at IS NULL
+            WHERE league_id = ? AND deleted_at IS NULL AND status = 'ARRIVED'
             ORDER BY id
         `,
         [league_id]

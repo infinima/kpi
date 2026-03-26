@@ -228,8 +228,8 @@ leaguesRouter.get(
 
         const rows = await query(
             `SELECT name
-             FROM teams
-             WHERE league_id = ? AND deleted_at IS NULL
+            FROM teams
+            WHERE league_id = ? AND deleted_at IS NULL
              ORDER BY id`,
             [id], (req as any).user_id
         );
@@ -290,7 +290,7 @@ leaguesRouter.get(
                 t.diploma,
                 JSON_EXTRACT(t.special_nominations, '$') AS special_nominations
             FROM teams t
-            WHERE t.league_id = ? AND t.deleted_at IS NULL
+            WHERE t.league_id = ? AND t.deleted_at IS NULL AND t.status = 'ARRIVED'
             ORDER BY t.id
         `, [id], (req as any).user_id);
 
@@ -535,7 +535,7 @@ leaguesRouter.post(
                                place_fudzi as fudzi,
                                place_final as final
                         FROM teams
-                        WHERE league_id = ?
+                        WHERE league_id = ? AND deleted_at IS NULL AND status = 'ARRIVED'
                     `, [id], (req as any).user_id);
 
                     // ---------- 3. Новый финальный рейтинг ----------

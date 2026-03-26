@@ -41,6 +41,19 @@ export function registerFudziSetCard(socket: Socket, io: Server): void {
             });
         }
 
+        const [rows2] = await db.query(
+            `SELECT id
+             FROM teams
+             WHERE id = ? AND league_id = ? AND deleted_at IS NULL AND status = 'ARRIVED'
+             LIMIT 1`,
+            [team_id, league_id], socket.data.user_id
+        );
+        if (rows2.length === 0) {
+            return socket.emit("error_response", {
+                error: { code: "TEAM_NOT_ARRIVED" }
+            });
+        }
+
         await db.query(
             `UPDATE teams
          SET answers_fudzi = JSON_SET(
