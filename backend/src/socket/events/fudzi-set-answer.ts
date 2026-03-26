@@ -74,5 +74,17 @@ export function registerFudziSetAnswer(socket: Socket, io: Server): void {
 
         const table = await getFudziTable(league_id);
         io.to(`league:${league_id}:fudzi`).emit("data", table);
+        const teamRow = table.find((t: any) => t.id === team_id);
+        const answerScore = teamRow?.answers?.[q]?.score ?? null;
+        const totalScore = teamRow?.total ?? null;
+        io.to("bot").emit("update", {
+            type: "fudzi_set_answer",
+            league_id,
+            team_id,
+            question_num,
+            status,
+            score: answerScore,
+            total: totalScore
+        });
     });
 }

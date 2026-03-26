@@ -11,42 +11,55 @@ export function registerConnection(
     onConnected: (socket: Socket) => void
 ) {
     io.on("connection", async (socket: Socket) => {
-        const league_id_raw = socket.handshake.query.league_id;
         const type = socket.handshake.query.type;
         const token = socket.handshake.query.token ?? null;
 
-        const league_id = Number(league_id_raw);
-        if (!league_id || Number.isNaN(league_id)) {
-            socket.emit("error_response", {
-                error: {
-                    code: "INVALID_LEAGUE_ID",
-                    message: "league_id must be a number"
-                }
-            });
-            return socket.disconnect(true);
-        }
-
-        const leagueExists = await query(
-            `SELECT 1 FROM leagues WHERE id = ? AND deleted_at IS NULL LIMIT 1`,
-            [league_id]
-        );
-
-        if (leagueExists.length === 0) {
-            socket.emit("error_response", {
-                error: {
-                    code: "LEAGUE_NOT_FOUND",
-                    message: "League does not exist"
-                }
-            });
-            return socket.disconnect(true);
-        }
-
-        const allowedTypes = ["kvartaly", "fudzi", "show"];
+        const allowedTypes = ["kvartaly", "fudzi", "show", "bot"];
         if (!allowedTypes.includes(String(type))) {
             socket.emit("error_response", {
                 error: {
                     code: "INVALID_SOCKET_TYPE",
-                    message: "Table type must be 'kvartaly', 'fudzi' or 'show'"
+                    message: "Table type must be 'kvartaly', 'fudzi', 'show' or 'bot'"
+                }
+            });
+            return socket.disconnect(true);
+        }
+
+        const league_id_raw = socket.handshake.query.league_id;
+        const league_id = league_id_raw !== undefined && league_id_raw !== null && league_id_raw !== ""
+            ? Number(league_id_raw)
+            : null;
+
+        if (type !== "bot") {
+            if (!league_id || Number.isNaN(league_id)) {
+                socket.emit("error_response", {
+                    error: {
+                        code: "INVALID_LEAGUE_ID",
+                        message: "league_id must be a number"
+                    }
+                });
+                return socket.disconnect(true);
+            }
+
+            const leagueExists = await query(
+                `SELECT 1 FROM leagues WHERE id = ? AND deleted_at IS NULL LIMIT 1`,
+                [league_id]
+            );
+
+            if (leagueExists.length === 0) {
+                socket.emit("error_response", {
+                    error: {
+                        code: "LEAGUE_NOT_FOUND",
+                        message: "League does not exist"
+                    }
+                });
+                return socket.disconnect(true);
+            }
+        } else if (league_id !== null && Number.isNaN(league_id)) {
+            socket.emit("error_response", {
+                error: {
+                    code: "INVALID_LEAGUE_ID",
+                    message: "league_id must be a number"
                 }
             });
             return socket.disconnect(true);
@@ -106,19 +119,25 @@ export function registerConnection(
             }
         }
 
-        socket.join(`league:${league_id}`);
-        socket.join(`league:${league_id}:${type}`);
+        if (type === "bot") {
+            socket.join("bot");
+        } else if (league_id !== null) {
+            socket.join(`league:${league_id}`);
+            socket.join(`league:${league_id}:${type}`);
+        }
 
         try {
             if (type === "kvartaly") {
-                const table = await getKvartalyTable(league_id);
+                const table = await getKvartalyTable(league_id as number);
                 socket.emit("data", table);
             } else if (type === "fudzi") {
-                const table = await getFudziTable(league_id);
+                const table = await getFudziTable(league_id as number);
                 socket.emit("data", table);
             } else if (type === "show") {
-                const show = await getShowState(league_id);
+                const show = await getShowState(league_id as number);
                 socket.emit("data", show);
+            } else if (type === "bot") {
+                // bot получает только дифф-обновления, без стартового состояния
             }
         } catch (err) {
             console.error(err);
