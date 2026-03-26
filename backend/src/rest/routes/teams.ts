@@ -1007,6 +1007,45 @@ teamsRouter.patch(
 
             const previousStatus = currentTeam?.status;
 
+            if (fields.status === "ARRIVED") {
+                const [leagueRow] = await query(
+                    `
+                        SELECT l.status
+                        FROM leagues l
+                                 JOIN teams t ON t.league_id = l.id
+                        WHERE t.id = ? AND l.deleted_at IS NULL
+                        LIMIT 1
+                    `,
+                    [id],
+                    (req as any).user_id
+                );
+
+                if (!leagueRow) {
+                    return res.status(404).json({
+                        error: {
+                            code: "LEAGUE_NOT_FOUND",
+                            message: "League does not exist",
+                        },
+                    });
+                }
+
+                const forbiddenStatuses = new Set([
+                    "NOT_STARTED",
+                    "REGISTRATION_IN_PROGRESS",
+                    "REGISTRATION_ENDED",
+                    "TEAMS_FIXED",
+                ]);
+
+                if (forbiddenStatuses.has(leagueRow.status)) {
+                    return res.status(400).json({
+                        error: {
+                            code: "LEAGUE_STATUS_FORBIDDEN",
+                            message: "League status does not allow setting ARRIVED",
+                        },
+                    });
+                }
+            }
+
             if (fields.status === "ACCEPTED") {
                 if (!currentTeam) {
                     return res.status(404).json({
