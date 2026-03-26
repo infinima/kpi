@@ -12,6 +12,7 @@ import {
     MapPin,
     Pencil,
     PlusSquare,
+    ScanLine,
     Trophy,
     Users
 } from "lucide-react";
@@ -324,12 +325,13 @@ export default function LkPage() {
     const navigate = useNavigate();
     const user = useUser((state) => state.user);
     const token = useUser((state) => state.token);
+    const can = useUser((state) => state.can);
     const fetchUser = useUser((state) => state.fetchUser);
     const logout = useUser((state) => state.logout);
     const notify = useNotifications((state) => state.addMessage);
     const canManageUsers = Boolean(user?.rights.users?.global?.includes("get"));
     const canManageMailings = Boolean(user?.rights.mailings?.global?.includes("get"));
-    console.log(user?.rights.mailings)
+    const canScanTeams = Boolean(user?.rights.teams?.global?.includes("get"));
 
     const [profileForm, setProfileForm] = useState<ProfileFormState>({
         first_name: "",
@@ -971,6 +973,19 @@ export default function LkPage() {
                                 <span className="flex items-center gap-3">
                                     <Mail size={18} />
                                     <span>Рассылки</span>
+                                </span>
+                                <ChevronRight size={16} />
+                            </Link>
+                        ) : null}
+
+                        {canScanTeams ? (
+                            <Link
+                                to="/scanner"
+                                className="mt-3 flex w-full items-center justify-between rounded-[24px] px-4 py-4 text-left text-[var(--color-text-main)] transition hover:bg-[rgba(255,255,255,0.7)]"
+                            >
+                                <span className="flex items-center gap-3">
+                                    <ScanLine size={18} />
+                                    <span>Сканировать команды</span>
                                 </span>
                                 <ChevronRight size={16} />
                             </Link>
