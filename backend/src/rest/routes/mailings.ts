@@ -205,7 +205,13 @@ function detectSelectionType(row: any): "manual" | "league" | "location" | "even
 }
 
 async function loadTeamsForMailingSelection(mailing: any, userId: number): Promise<TeamRow[]> {
-    const conditions: string[] = ["t.deleted_at IS NULL", "l.deleted_at IS NULL", "lo.deleted_at IS NULL", "e.deleted_at IS NULL"];
+    const conditions: string[] = [
+        "t.deleted_at IS NULL",
+        "l.deleted_at IS NULL",
+        "lo.deleted_at IS NULL",
+        "e.deleted_at IS NULL",
+        "t.status = 'PAID'"
+    ];
     const params: any[] = [];
 
     if (mailing.selection_league_id) {
