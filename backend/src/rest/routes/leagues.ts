@@ -204,7 +204,7 @@ leaguesRouter.get(
     "/:id/print_teams_names",
     validate(GetOneLeagueInput, "params"),
     checkNotDeleted("league"),
-    checkPermission("leagues", "print_documents"),
+    // checkPermission("leagues", "print_documents"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -221,7 +221,7 @@ leaguesRouter.get(
         const rows = await query(
             `SELECT name, school
             FROM teams
-            WHERE league_id = ? AND deleted_at IS NULL AND status = 'PAID'
+            WHERE league_id = ? AND deleted_at IS NULL AND (status = 'PAID' OR status = 'ARRIVED')
              ORDER BY id`,
             [id], (req as any).user_id
         );
