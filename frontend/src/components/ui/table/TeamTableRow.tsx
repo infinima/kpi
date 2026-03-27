@@ -17,6 +17,7 @@ export type TeamTableRowData = {
     owner_phone_number?: string | null;
     name: string;
     members: TeamMembersValue;
+    documents: string;
     texts: string[];
     appreciations: string[];
     school: string;
@@ -61,7 +62,7 @@ export const teamStatusLabels: Record<string, string> = {
     ON_CHECKING: "На проверке",
     ACCEPTED: "Принята",
     PAID: "Оплачена",
-    ARRIVED: "Пришли",
+    ARRIVED: "Прибыла",
 };
 
 export function getTeamColumnDisplayValue(row: TeamTableRowData, column: TeamColumn): string {
@@ -209,9 +210,20 @@ export function TeamTableRow({
                                 />
                             )
                         ) : (
-                            <div className="min-w-0 truncate text-sm font-medium sm:text-[15px]">
-                                {getTeamColumnDisplayValue(draft, column)}
-                            </div>
+                            column.key === "payment_link" && value ? (
+                                <a
+                                    href={String(value)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="block min-w-0 truncate text-sm text-[rgb(29,78,216)] underline decoration-[rgb(29,78,216)] underline-offset-2 transition hover:text-[rgb(30,64,175)] hover:decoration-[rgb(30,64,175)] sm:text-[15px]"
+                                >
+                                    {String(value)}
+                                </a>
+                            ) : (
+                                <div className="min-w-0 truncate text-sm font-medium sm:text-[15px]">
+                                    {getTeamColumnDisplayValue(draft, column)}
+                                </div>
+                            )
                         )}
                     </div>
                 );
@@ -330,7 +342,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "На проверке", value: "ON_CHECKING" },
             { label: "Принята", value: "ACCEPTED" },
             { label: "Оплачена", value: "PAID" },
-            { label: "Пришли", value: "ARRIVED" },
+            { label: "Прибыли", value: "ARRIVED" },
         ],
     },
     {

@@ -31,7 +31,7 @@ const teamStatusLabels: Record<TeamInfo["status"], string> = {
     ON_CHECKING: "На проверке",
     ACCEPTED: "Принята",
     PAID: "Оплачена",
-    ARRIVED: "Пришли",
+    ARRIVED: "Прибыла",
 };
 
 function getTeamStatusLabel(status: TeamInfo["status"]) {
@@ -423,7 +423,7 @@ export function ReadQrPage() {
                                                     className="px-4 py-3 text-sm shadow-none"
                                                     leftIcon={<CheckCircle2 size={14} />}
                                                 >
-                                                    {isArrived ? "Уже пришли" : "Пришли"}
+                                                    {isArrived ? "Уже прибыли" : "Прибыли"}
                                                 </PrimaryButton>
                                             </div>
                                         </div>

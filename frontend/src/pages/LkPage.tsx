@@ -214,7 +214,7 @@ const teamStatusLabels: Record<OwnedTeam["status"], string> = {
     ON_CHECKING: "На проверке",
     ACCEPTED: "Принята",
     PAID: "Оплачена",
-    ARRIVED: "Пришли",
+    ARRIVED: "Прибыла",
 };
 
 function getTeamStatusLabel(status: OwnedTeam["status"] | undefined) {

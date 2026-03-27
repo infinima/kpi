@@ -584,7 +584,7 @@ export default function EventsSidebar() {
                                                         icon={<Download size={16} />}
                                                         onClick={() => apiGetFile(
                                                             `leagues/${leagueInfo.id}/print_teams_names`,
-                                                            `league_${leagueInfo.id}_team_cards.pdf`,
+                                                            `${leagueInfo.name.replace(" ", "_")}_таблички.pdf`,
                                                             { error: true }
                                                         )}
                                                         collapsed={effectiveCollapsed}
@@ -597,7 +597,7 @@ export default function EventsSidebar() {
                                                         icon={<Download size={16} />}
                                                         onClick={() => apiGetFile(
                                                             `leagues/${leagueInfo.id}/teams_excel`,
-                                                            `league_${leagueInfo.id}_teams.xlsx`,
+                                                            `${leagueInfo.name.replace(" ", "_")}_команды.xlsx`,
                                                             { error: true }
                                                         )}
                                                         collapsed={effectiveCollapsed}
@@ -610,7 +610,7 @@ export default function EventsSidebar() {
                                                         icon={<Download size={16} />}
                                                         onClick={() => apiGetFile(
                                                             `leagues/${leagueInfo.id}/fudzi_presentation`,
-                                                            `league_${leagueInfo.id}_fudzi_presentation.pdf`,
+                                                            `${leagueInfo.name.replace(" ", "_")}_фудзи.pdf`,
                                                             { error: true }
                                                         )}
                                                         collapsed={effectiveCollapsed}

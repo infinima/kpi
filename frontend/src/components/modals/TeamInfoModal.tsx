@@ -55,7 +55,7 @@ const statusOptions = [
     { label: "На проверке", value: "ON_CHECKING" },
     { label: "Принята", value: "ACCEPTED" },
     { label: "Оплачена", value: "PAID" },
-    { label: "Пришли", value: "ARRIVED" },
+    { label: "Прибыла", value: "ARRIVED" },
 ];
 
 const diplomaOptions = [
@@ -318,7 +318,8 @@ export function TeamInfoModal() {
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Учебное заведение</span>
                         <input
                             value={draft.school}
-                            readOnly
+                            readOnly={!isEditing}
+                            onChange={(event) => setDraft((prev) => prev ? { ...prev, school: event.target.value } : prev)}
                             className={inputClassName(isChanged(draft.school, payload.row.school))}
                         />
                     </label>
@@ -327,7 +328,8 @@ export function TeamInfoModal() {
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Регион</span>
                         <input
                             value={draft.region}
-                            readOnly
+                            readOnly={!isEditing}
+                            onChange={(event) => setDraft((prev) => prev ? { ...prev, region: event.target.value } : prev)}
                             className={inputClassName(isChanged(draft.region, payload.row.region))}
                         />
                     </label>
@@ -388,37 +390,48 @@ export function TeamInfoModal() {
                     </label>
 
                     <label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">
-                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Благодарности</span>
-                        <textarea
-                            rows={4}
-                            value={buildTextAreaValue(draft.appreciations)}
-                            readOnly={!isEditing}
-                            onChange={(event) => setDraft((prev) => prev ? { ...prev, appreciations: parseTextAreaValue(event.target.value) } : prev)}
-                            className={`${inputClassName(isChanged(draft.appreciations, payload.row.appreciations))} resize-none`}
-                        />
-                    </label>
-
-                    <label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Документы</span>
                         <textarea
-                            rows={4}
-                            value={buildTextAreaValue(draft.texts)}
+                            rows={3}
+                            value={draft.documents}
                             readOnly={!isEditing}
-                            onChange={(event) => setDraft((prev) => prev ? { ...prev, texts: parseTextAreaValue(event.target.value) } : prev)}
-                            className={`${inputClassName(isChanged(draft.texts, payload.row.texts))} resize-none`}
+                            onChange={(event) => setDraft((prev) => prev ? { ...prev, documents: event.target.value } : prev)}
+                            className={`${inputClassName(isChanged(draft.documents, payload.row.documents))} resize-none`}
                         />
                     </label>
 
-                    <label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">
-                        <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Номинации</span>
-                        <textarea
-                            rows={3}
-                            value={buildTextAreaValue(draft.special_nominations)}
-                            readOnly={!isEditing}
-                            onChange={(event) => setDraft((prev) => prev ? { ...prev, special_nominations: parseTextAreaValue(event.target.value) } : prev)}
-                            className={`${inputClassName(isChanged(draft.special_nominations, payload.row.special_nominations))} resize-none`}
-                        />
-                    </label>
+                    {/*<label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">*/}
+                    {/*    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Благодарности</span>*/}
+                    {/*    <textarea*/}
+                    {/*        rows={4}*/}
+                    {/*        value={buildTextAreaValue(draft.appreciations)}*/}
+                    {/*        readOnly={!isEditing}*/}
+                    {/*        onChange={(event) => setDraft((prev) => prev ? { ...prev, appreciations: parseTextAreaValue(event.target.value) } : prev)}*/}
+                    {/*        className={`${inputClassName(isChanged(draft.appreciations, payload.row.appreciations))} resize-none`}*/}
+                    {/*    />*/}
+                    {/*</label>*/}
+
+                    {/*<label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">*/}
+                    {/*    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Документы</span>*/}
+                    {/*    <textarea*/}
+                    {/*        rows={4}*/}
+                    {/*        value={buildTextAreaValue(draft.texts)}*/}
+                    {/*        readOnly={!isEditing}*/}
+                    {/*        onChange={(event) => setDraft((prev) => prev ? { ...prev, texts: parseTextAreaValue(event.target.value) } : prev)}*/}
+                    {/*        className={`${inputClassName(isChanged(draft.texts, payload.row.texts))} resize-none`}*/}
+                    {/*    />*/}
+                    {/*</label>*/}
+
+                    {/*<label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">*/}
+                    {/*    <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Номинации</span>*/}
+                    {/*    <textarea*/}
+                    {/*        rows={3}*/}
+                    {/*        value={buildTextAreaValue(draft.special_nominations)}*/}
+                    {/*        readOnly={!isEditing}*/}
+                    {/*        onChange={(event) => setDraft((prev) => prev ? { ...prev, special_nominations: parseTextAreaValue(event.target.value) } : prev)}*/}
+                    {/*        className={`${inputClassName(isChanged(draft.special_nominations, payload.row.special_nominations))} resize-none`}*/}
+                    {/*    />*/}
+                    {/*</label>*/}
                 </div>
 
                 <div className="mt-5 flex justify-end gap-2 border-t border-[var(--color-border)] pt-4">

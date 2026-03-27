@@ -15,6 +15,7 @@ type TeamResponseRow = {
     owner_phone_number?: string | null;
     name: string;
     members: unknown;
+    documents?: string | null;
     texts?: string[] | string | null;
     appreciations: string[] | string;
     school: string;
@@ -109,6 +110,7 @@ function mapTeamResponseRow(row: TeamResponseRow): TeamTableRowData {
         owner_phone_number: row.owner_phone_number ?? "",
         name: row.name ?? "",
         members: parseMembers(row.members),
+        documents: row.documents ?? "",
         texts: parseStringArray(row.texts),
         appreciations: parseStringArray(row.appreciations),
         school: row.school ?? "",
@@ -172,6 +174,7 @@ export function EventTeamsPage() {
         const payload: Record<string, unknown> = {
             name: row.name,
             members: buildMembersRequestValue(row),
+            documents: row.documents,
             texts: row.texts,
             appreciations: row.appreciations,
             meals_count: row.meals_count,
@@ -205,6 +208,7 @@ export function EventTeamsPage() {
             league_id: row.league_id,
             name: row.name,
             members: buildMembersRequestValue(row),
+            documents: row.documents,
             texts: row.texts,
             appreciations: row.appreciations,
             school: row.school,
@@ -252,7 +256,7 @@ export function EventTeamsPage() {
                 loading={loading}
                 defaultLeagueId={leagueId ? Number(leagueId) : null}
                 defaultLeagueName={leagueId ? tableRows[0]?.league_name ?? "" : ""}
-                isColumnEditable={(columnKey, row) => canEditTeam(row.id) && columnKey !== "school" && columnKey !== "region"}
+                isColumnEditable={(columnKey, row) => canEditTeam(row.id)}
             />
         </section>
     );
