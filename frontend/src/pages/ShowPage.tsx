@@ -128,8 +128,17 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
 
         return (
           <div className="w-full h-full flex items-center justify-center bg-black">
-            <video src="/dark.mp4" className="max-w-full max-h-full" autoPlay={true} loop muted playsInline
-                   preload="auto"/>
+            <video
+                src="/dark.mp4"
+                className="max-w-full max-h-full object-cover pointer-events-none"
+                autoPlay
+                loop
+                muted
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                disableRemotePlayback
+            />
           </div>
         );
 
