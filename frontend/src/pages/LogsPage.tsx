@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, Database, History, ShieldUser } from "lucide-react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiGet } from "@/api";
+import { FudziLogRow } from "@/components/FudziLogRow";
+import { KvartalyLogRow } from "@/components/KvartalyLogRow";
 
 type LogEntity = "events" | "locations" | "leagues" | "teams" | "users" | "permissions" | "mailings";
 type PrimaryLogEntity = "events" | "locations" | "leagues" | "teams" | "users";
@@ -43,6 +45,24 @@ type LogsResponse = {
     total: number;
     max_page: number;
 };
+
+type FudziStatus = "correct" | "incorrect" | "not_submitted";
+
+type TeamStageLogChange =
+    | {
+        type: "fudzi";
+        record: LogRecord;
+        questionIndex: number | null;
+        penaltyChanged: boolean;
+    }
+    | {
+        type: "kvartaly";
+        record: LogRecord;
+        quarterIndex: number | null;
+        questionIndex: number | null;
+        penaltyChanged: boolean;
+        finishChanged: boolean;
+    };
 
 const ENTITY_META: Record<LogEntity, { label: string; singular: string }> = {
     events: { label: "Мероприятия", singular: "мероприятия" },
@@ -191,6 +211,113 @@ function getDiffEntries(log: LogRecord) {
     }));
 }
 
+function extractFudziChange(record: LogRecord): TeamStageLogChange | null {
+    const oldQuestions = isRecord(record.old_data) && isRecord(record.old_data.answers_fudzi) && Array.isArray(record.old_data.answers_fudzi.questions)
+        ? record.old_data.answers_fudzi.questions
+        : null;
+    const newQuestions = isRecord(record.new_data) && isRecord(record.new_data.answers_fudzi) && Array.isArray(record.new_data.answers_fudzi.questions)
+        ? record.new_data.answers_fudzi.questions
+        : null;
+    const oldPenalty = isRecord(record.old_data) ? Number(record.old_data.penalty_fudzi ?? 0) : 0;
+    const newPenalty = isRecord(record.new_data) ? Number(record.new_data.penalty_fudzi ?? 0) : 0;
+
+    if (oldQuestions && newQuestions) {
+        for (let index = 0; index < Math.max(oldQuestions.length, newQuestions.length); index += 1) {
+            const previous = isRecord(oldQuestions[index]) ? oldQuestions[index] : null;
+            const next = isRecord(newQuestions[index]) ? newQuestions[index] : null;
+            const oldStatus = (typeof previous?.status === "string" ? previous.status : "not_submitted") as FudziStatus;
+            const newStatus = (typeof next?.status === "string" ? next.status : "not_submitted") as FudziStatus;
+
+            if (oldStatus !== newStatus) {
+                return {
+                    type: "fudzi",
+                    record,
+                    questionIndex: index,
+                    penaltyChanged: oldPenalty !== newPenalty,
+                };
+            }
+        }
+    }
+
+    if (oldPenalty !== newPenalty) {
+        return {
+            type: "fudzi",
+            record,
+            questionIndex: null,
+            penaltyChanged: true,
+        };
+    }
+
+    return null;
+}
+
+function extractKvartalyChange(record: LogRecord): TeamStageLogChange | null {
+    const oldQuarters = isRecord(record.old_data) && Array.isArray(record.old_data.answers_kvartaly)
+        ? record.old_data.answers_kvartaly
+        : null;
+    const newQuarters = isRecord(record.new_data) && Array.isArray(record.new_data.answers_kvartaly)
+        ? record.new_data.answers_kvartaly
+        : null;
+    const oldPenalty = isRecord(record.old_data) ? Number(record.old_data.penalty_kvartaly ?? 0) : 0;
+    const newPenalty = isRecord(record.new_data) ? Number(record.new_data.penalty_kvartaly ?? 0) : 0;
+
+    if (oldQuarters && newQuarters) {
+        for (let quarterIndex = 0; quarterIndex < Math.max(oldQuarters.length, newQuarters.length); quarterIndex += 1) {
+            const previousQuarter = isRecord(oldQuarters[quarterIndex]) ? oldQuarters[quarterIndex] : null;
+            const nextQuarter = isRecord(newQuarters[quarterIndex]) ? newQuarters[quarterIndex] : null;
+            const oldFinished = Boolean(previousQuarter?.finished);
+            const newFinished = Boolean(nextQuarter?.finished);
+
+            if (oldFinished !== newFinished) {
+                return {
+                    type: "kvartaly",
+                    record,
+                    quarterIndex,
+                    questionIndex: null,
+                    penaltyChanged: oldPenalty !== newPenalty,
+                    finishChanged: true,
+                };
+            }
+
+            const oldAnswers = previousQuarter && Array.isArray(previousQuarter.questions) ? previousQuarter.questions : [];
+            const newAnswers = nextQuarter && Array.isArray(nextQuarter.questions) ? nextQuarter.questions : [];
+
+            for (let questionIndex = 0; questionIndex < Math.max(oldAnswers.length, newAnswers.length); questionIndex += 1) {
+                const previous = isRecord(oldAnswers[questionIndex]) ? oldAnswers[questionIndex] : null;
+                const next = isRecord(newAnswers[questionIndex]) ? newAnswers[questionIndex] : null;
+                const oldCorrect = Number(previous?.correct ?? 0);
+                const newCorrect = Number(next?.correct ?? 0);
+                const oldIncorrect = Number(previous?.incorrect ?? 0);
+                const newIncorrect = Number(next?.incorrect ?? 0);
+
+                if (oldCorrect !== newCorrect || oldIncorrect !== newIncorrect) {
+                    return {
+                        type: "kvartaly",
+                        record,
+                        quarterIndex,
+                        questionIndex,
+                        penaltyChanged: oldPenalty !== newPenalty,
+                        finishChanged: false,
+                    };
+                }
+            }
+        }
+    }
+
+    if (oldPenalty !== newPenalty) {
+        return {
+            type: "kvartaly",
+            record,
+            quarterIndex: null,
+            questionIndex: null,
+            penaltyChanged: true,
+            finishChanged: false,
+        };
+    }
+
+    return null;
+}
+
 function EmptyState({ title, description }: { title: string; description: string }) {
     return (
         <div className="rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.84)] px-6 py-8 text-center">
@@ -221,6 +348,161 @@ function ActorLink({ log, currentMode }: { log: LogRecord; currentMode: LogsPage
         >
             {label}
         </Link>
+    );
+}
+
+function TeamStageLogsSection({
+    teamId,
+    stage,
+}: {
+    teamId: number;
+    stage: "fudzi" | "kvartaly";
+}) {
+    const [page, setPage] = useState(1);
+    const [response, setResponse] = useState<LogsResponse | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [index, setIndex] = useState(0);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        async function load() {
+            setLoading(true);
+
+            try {
+                const data = await apiGet<LogsResponse>(`logs/object/teams/${teamId}?current_page=${page}&include=user`, { error: true });
+                if (!cancelled) {
+                    setResponse(data);
+                }
+            } catch {
+                if (!cancelled) {
+                    setResponse(null);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        }
+
+        void load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [page, teamId]);
+
+    const changes = useMemo(() => {
+        const rows = Array.isArray(response?.page) ? response.page : [];
+        return rows
+            .map((record) => stage === "fudzi" ? extractFudziChange(record) : extractKvartalyChange(record))
+            .filter((item): item is TeamStageLogChange => Boolean(item));
+    }, [response?.page, stage]);
+
+    useEffect(() => {
+        setIndex(0);
+    }, [page, stage]);
+
+    const current = changes[index] ?? null;
+    const title = stage === "fudzi" ? "Логи Фудзи" : "Логи Кварталов";
+
+    return (
+        <section className="rounded-[28px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.92)] p-5 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                    <h2 className="text-xl font-semibold text-[var(--color-text-main)]">{title}</h2>
+                    <div className="mt-1 text-sm text-[var(--color-text-secondary)]">
+                        История изменений ответов и штрафов команды.
+                    </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setIndex((currentIndex) => Math.max(0, currentIndex - 1))}
+                        disabled={loading || index <= 0}
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-main)] transition hover:bg-[var(--color-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        <ChevronLeft size={16} />
+                        Назад
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setIndex((currentIndex) => Math.min(changes.length - 1, currentIndex + 1))}
+                        disabled={loading || index >= changes.length - 1 || changes.length === 0}
+                        className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] px-4 py-2 text-sm text-[var(--color-text-main)] transition hover:bg-[var(--color-hover)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        Вперёд
+                        <ChevronRight size={16} />
+                    </button>
+                </div>
+            </div>
+
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.7)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+                <div>
+                    Запись {changes.length === 0 ? 0 : index + 1} из {changes.length}
+                </div>
+                <div>
+                    Страница {response?.current_page ?? page} из {response?.max_page ?? 1}
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setPage((currentPage) => Math.max(1, currentPage - 1))}
+                        disabled={loading || (response?.current_page ?? page) <= 1}
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] px-3 py-1.5 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        <ChevronLeft size={14} />
+                        Страница назад
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setPage((currentPage) => Math.min(response?.max_page ?? currentPage, currentPage + 1))}
+                        disabled={loading || (response?.current_page ?? page) >= (response?.max_page ?? 1)}
+                        className="inline-flex items-center gap-1 rounded-full border border-[var(--color-border)] px-3 py-1.5 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                        Страница вперёд
+                        <ChevronRight size={14} />
+                    </button>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="mt-4 text-sm text-[var(--color-text-secondary)]">Загружаем логи этапа…</div>
+            ) : !current ? (
+                <div className="mt-4 rounded-[22px] border border-dashed border-[var(--color-border)] px-4 py-5 text-sm text-[var(--color-text-secondary)]">
+                    Для этого этапа на текущей странице логов изменений не найдено.
+                </div>
+            ) : (
+                <div className="mt-4 space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3 rounded-[22px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] px-4 py-3 text-sm text-[var(--color-text-secondary)]">
+                        <div>{formatDateTime(current.record.created_at)}</div>
+                        <div><ActorLink log={current.record} currentMode="record" /></div>
+                    </div>
+
+                    {current.type === "fudzi" ? (
+                        <div className="space-y-3">
+                            <FudziLogRow change={current} />
+                            <div className="text-sm text-[var(--color-text-secondary)]">
+                                {current.questionIndex !== null ? `Изменён ответ на вопрос ${current.questionIndex + 1}. ` : ""}
+                                {current.penaltyChanged ? "Изменён штраф." : ""}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            <KvartalyLogRow change={current} />
+                            <div className="text-sm text-[var(--color-text-secondary)]">
+                                {current.questionIndex !== null && current.quarterIndex !== null
+                                    ? `Изменён ответ: квартал ${current.quarterIndex + 1}, вопрос ${current.quarterIndex * 4 + current.questionIndex + 1}. `
+                                    : ""}
+                                {current.finishChanged && current.quarterIndex !== null ? `Изменён статус квартала ${current.quarterIndex + 1}. ` : ""}
+                                {current.penaltyChanged ? "Изменён штраф." : ""}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+        </section>
     );
 }
 
@@ -348,6 +630,7 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
             ? "История изменений конкретной записи с кратким diff и сырыми данными."
             : "Общая лента изменений по ключевым сущностям: мероприятия, площадки, лиги, команды и пользователи.";
     const shouldShowBackButton = mode === "user-actions" || (mode === "record" && (resolvedEntity === "users" || resolvedEntity === "teams"));
+    const shouldShowTeamStageSections = mode === "record" && resolvedEntity === "teams" && Boolean(recordId);
     const backLink = mode === "record" && resolvedEntity
         ? `/logs?entity=${resolvedEntity}`
         : mode === "user-actions"
@@ -470,6 +753,13 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
                         : `Источник: ${resolvedEntity ? getEntityMeta(resolvedEntity).label.toLowerCase() : "логи"}`}
                 </div>
             </div>
+
+            {shouldShowTeamStageSections ? (
+                <div className="space-y-4">
+                    <TeamStageLogsSection teamId={recordId!} stage="fudzi" />
+                    <TeamStageLogsSection teamId={recordId!} stage="kvartaly" />
+                </div>
+            ) : null}
 
             {loading ? (
                 <EmptyState title="Загружаем логи" description="Получаем историю изменений и подготавливаем diff по последним записям." />
