@@ -83,12 +83,16 @@ export const KPIObjectEnum = z.enum([
     "permissions",
     "mailings"
 ]);
+const PermissionMap = z.record(z.string(), z.array(KPIPermissionEnum));
 export const PermissionOutput = z.record(
     KPIObjectEnum,
-    z.record(
-        z.string(), // "global" или id
-        z.array(KPIPermissionEnum).optional()
-    )
+    z.object({
+        global: z.array(KPIPermissionEnum).optional(),
+        ids: PermissionMap.optional(),
+        by_event: PermissionMap.optional(),
+        by_location: PermissionMap.optional(),
+        by_league: PermissionMap.optional()
+    })
 );
 
 

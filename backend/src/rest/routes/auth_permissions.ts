@@ -36,97 +36,32 @@ export interface PermissionRow {
 export interface PermissionOutput {
     [key: string]: {
         global?: KPIPermission[];
-        [id: string]: KPIPermission[] | undefined;
+        ids?: Record<string, KPIPermission[]>;
+        by_event?: Record<string, KPIPermission[]>;
+        by_location?: Record<string, KPIPermission[]>;
+        by_league?: Record<string, KPIPermission[]>;
     };
 }
 
-// правила глобальных
-const GLOBAL_ONLY: KPIPermission[] = ["create"];
-const GLOBAL_AND_IDS: KPIPermission[] = ["get", "restore", "access_history", "access_actions_history"];
+function addPermissionsToMap(
+    map: Record<string, KPIPermission[]>,
+    id: number,
+    perms: KPIPermission[]
+) {
+    const key = String(id);
+    if (!map[key]) map[key] = [];
+    const tgt = map[key];
 
-// -----------------------------------------------------
-// Утилиты: получение дочерних объектов
-// -----------------------------------------------------
-
-async function getChildIds(
-    object: KPIObject,
-    parentId: number
-): Promise<number[]> {
-    switch (object) {
-        case "locations":
-            return (
-                await query("SELECT id FROM locations WHERE event_id = ?", [
-                    parentId,
-                ])
-            ).map((r: any) => r.id);
-
-        case "leagues":
-            return (
-                await query("SELECT id FROM leagues WHERE location_id = ?", [
-                    parentId,
-                ])
-            ).map((r: any) => r.id);
-
-        case "teams":
-            return (
-                await query("SELECT id FROM teams WHERE league_id = ?", [
-                    parentId,
-                ])
-            ).map((r: any) => r.id);
-
-        default:
-            return [];
+    for (const p of perms) {
+        if (!tgt.includes(p)) tgt.push(p);
     }
 }
 
-// -----------------------------------------------------
-// Раскрытие scope
-// -----------------------------------------------------
-
-async function resolveScopedIds(
-    object: KPIObject,
-    scopeObj: "events" | "locations" | "leagues" | null,
-    scopeId: number | null
-): Promise<number[]> {
-    if (!scopeObj || !scopeId) return [];
-
-    if (scopeObj === "events") {
-        if (object === "events") return [scopeId];
-
-        const locs = await getChildIds("locations", scopeId);
-        if (object === "locations") return locs;
-
-        const leagues = (
-            await Promise.all(locs.map((l) => getChildIds("leagues", l)))
-        ).flat();
-        if (object === "leagues") return leagues;
-
-        const teams = (
-            await Promise.all(leagues.map((lg) => getChildIds("teams", lg)))
-        ).flat();
-        if (object === "teams") return teams;
+function addGlobalPermissions(out: PermissionOutput, object: KPIObject, perms: KPIPermission[]) {
+    if (!out[object].global) out[object].global = [];
+    for (const p of perms) {
+        if (!out[object].global!.includes(p)) out[object].global!.push(p);
     }
-
-    if (scopeObj === "locations") {
-        if (object === "locations") return [scopeId];
-
-        const leagues = await getChildIds("leagues", scopeId);
-        if (object === "leagues") return leagues;
-
-        const teams = (
-            await Promise.all(leagues.map((lg) => getChildIds("teams", lg)))
-        ).flat();
-        if (object === "teams") return teams;
-    }
-
-    if (scopeObj === "leagues") {
-        if (object === "leagues") return [scopeId];
-
-        const teams = await getChildIds("teams", scopeId);
-        if (object === "teams") return teams;
-    }
-
-    return [];
 }
 
 // -----------------------------------------------------
@@ -176,39 +111,7 @@ authPermissionsRouter.get(
             // ГЛОБАЛЬНЫЕ ПРАВА
             // ------------------------------------------------
             if (!row.object_id && !row.scope_object) {
-
-                if (!out[obj].global) out[obj].global = [];
-
-                for (const p of perms) {
-
-                    // 1. GLOBAL_ONLY остаются ТОЛЬКО в global
-                    if (GLOBAL_ONLY.includes(p)) {
-                        if (!out[obj].global!.includes(p))
-                            out[obj].global!.push(p);
-                    }
-
-                    // 2. GLOBAL_AND_IDS — и в global, и в ID
-                    if (GLOBAL_AND_IDS.includes(p)) {
-                        if (!out[obj].global!.includes(p))
-                            out[obj].global!.push(p);
-                    }
-                }
-
-                // теперь раскрываем ТОЛЬКО GLOBAL_AND_IDS и IDS_ONLY
-                const rowsIds = await query(`SELECT id FROM ${obj}`, []);
-                const ids = rowsIds.map((r: any) => r.id);
-
-                for (const id of ids) {
-                    if (!out[obj][id]) out[obj][id] = [];
-
-                    for (const p of perms) {
-                        if (p === "create") continue; // запрещено расширять
-                        if (!out[obj][id]!.includes(p)) {
-                            out[obj][id]!.push(p);
-                        }
-                    }
-                }
-
+                addGlobalPermissions(out, obj, perms);
                 continue;
             }
 
@@ -216,32 +119,27 @@ authPermissionsRouter.get(
             // ПРЯМЫЕ ПРАВА
             // ------------------------------------------------
             if (row.object_id) {
-                if (!out[obj][row.object_id]) out[obj][row.object_id] = [];
-
-                const tgt = out[obj][row.object_id] as KPIPermission[];
-
-                for (const p of perms) {
-                    if (!tgt.includes(p)) tgt.push(p);
-                }
+                if (!out[obj].ids) out[obj].ids = {};
+                addPermissionsToMap(out[obj].ids, row.object_id, perms);
             }
 
             // ------------------------------------------------
             // SCOPE-ПРАВА
             // ------------------------------------------------
             if (row.scope_object && row.scope_object_id) {
-                const ids = await resolveScopedIds(
-                    obj,
-                    row.scope_object,
-                    row.scope_object_id
-                );
+                if (row.scope_object === "events") {
+                    if (!out[obj].by_event) out[obj].by_event = {};
+                    addPermissionsToMap(out[obj].by_event, row.scope_object_id, perms);
+                }
 
-                for (const id of ids) {
-                    if (!out[obj][id]) out[obj][id] = [];
-                    const tgt = out[obj][id] as KPIPermission[];
+                if (row.scope_object === "locations") {
+                    if (!out[obj].by_location) out[obj].by_location = {};
+                    addPermissionsToMap(out[obj].by_location, row.scope_object_id, perms);
+                }
 
-                    for (const p of perms) {
-                        if (!tgt.includes(p)) tgt.push(p);
-                    }
+                if (row.scope_object === "leagues") {
+                    if (!out[obj].by_league) out[obj].by_league = {};
+                    addPermissionsToMap(out[obj].by_league, row.scope_object_id, perms);
                 }
             }
         }
