@@ -22,22 +22,42 @@ export function registerShowSetTimerIsEnabled(socket: Socket, io: Server) {
         }
 
         const league_id: number = socket.data.league_id;
-        const { enabled: is_enabled } = data;
+        const { enabled: is_enabled, minutes } = data ?? {};
 
         if (typeof is_enabled !== "boolean") {
             return socket.emit("error_response", { error: { code: "INVALID_TIMER_VALUE" } });
         }
 
         try {
-            await db.query(
-                `
-                UPDATE leagues
-                SET show_timer_is_enabled = ?
-                WHERE id = ?
-                `,
-                [is_enabled ? 1 : 0, league_id], socket.data.user_id
-            );
-
+            if (is_enabled) {
+                if (typeof minutes !== "number" || !Number.isFinite(minutes)) {
+                    return socket.emit("error_response", { error: { code: "INVALID_TIMER_VALUE" } });
+                }
+                const safeMinutes = Math.floor(minutes);
+                if (safeMinutes < 1 || safeMinutes > 120) {
+                    return socket.emit("error_response", { error: { code: "INVALID_TIMER_VALUE" } });
+                }
+                await db.query(
+                    `
+                    UPDATE leagues
+                    SET show_timer_minutes = ?,
+                        show_timer_started_at = NOW()
+                    WHERE id = ?
+                    `,
+                    [safeMinutes, league_id],
+                    socket.data.user_id
+                );
+            } else {
+                await db.query(
+                    `
+                    UPDATE leagues
+                    SET show_timer_started_at = NULL
+                    WHERE id = ?
+                    `,
+                    [league_id],
+                    socket.data.user_id
+                );
+            }
             const show = await getShowState(league_id);
             io.to(`league:${league_id}:show`).emit("data", show);
         } catch (err) {
