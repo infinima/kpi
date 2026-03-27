@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
     <meta name="supported-color-schemes" content="light dark" />
-    <title>QR для входа на площадку</title>
+    <title>Информация о входе на Турнир</title>
     <style>
         :root {
             color-scheme: light dark;
@@ -77,29 +77,7 @@
                         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
                             <tr>
                                 <td class="title" align="center" style="padding-bottom:12px;font-size:30px;line-height:36px;font-weight:800;color:#0f172a;">
-                                    QR для входа на площадку
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="text" align="center" style="padding-bottom:24px;font-size:16px;line-height:24px;color:#475569;">
-                                    Единый QR для входа всех ваших команд.
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding-bottom:20px;text-align:center;">
-                                    <div class="button-wrap" style="display:inline-block;border-radius:18px;background-color:#2563eb;">
-                                        <a class="button" href="{{QR_URL}}" style="display:inline-block;padding:16px 28px;border-radius:18px;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">
-                                            Войти
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding-bottom:20px;">
-                                    <div class="note" style="border:1px solid #e2e8f0;border-radius:18px;background-color:#f8fafc;padding:14px 16px;font-size:14px;line-height:22px;color:#475569;">
-                                        Если кнопка не открывается, используйте эту ссылку:
-                                        <a href="{{QR_URL}}" style="color:#2563eb;text-decoration:none;font-weight:700;word-break:break-all;">{{QR_URL}}</a>
-                                    </div>
+                                    Информация о входе на Турнир
                                 </td>
                             </tr>
                             <tr>
@@ -108,9 +86,31 @@
                                 </td>
                             </tr>
                             <tr>
+                                <td class="text" align="center" style="padding-bottom:24px;font-size:16px;line-height:24px;color:#475569;">
+                                    Используйте данный QR-код для входа всех ваших команд.
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:20px;text-align:center;">
+                                    <div class="button-wrap" style="display:inline-block;border-radius:18px;background-color:#2563eb;">
+                                        <a class="button" href="https://kpiturnir.ru/qr?title=Пропуск%20команд&data={{scanner_url_base64}}" style="display:inline-block;padding:16px 28px;border-radius:18px;font-size:16px;line-height:20px;font-weight:700;color:#ffffff;text-decoration:none;">
+                                            Открыть
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:20px;">
+                                    <div class="note" style="border:1px solid #e2e8f0;border-radius:18px;background-color:#f8fafc;padding:14px 16px;font-size:14px;line-height:22px;color:#475569;">
+                                        Если кнопка не работает, используйте эту ссылку:
+                                        <a href="https://kpiturnir.ru/qr?title=Пропуск%20команд&data={{scanner_url_base64}}" style="color:#2563eb;text-decoration:none;font-weight:700;word-break:break-all;">https://kpiturnir.ru/qr?title=Пропуск%20команд&data={{scanner_url_base64}}</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
                                 <td class="footer" align="center" style="padding-top:4px;font-size:13px;line-height:21px;color:#64748b;">
                                     Нужна помощь? Напишите на
-                                    <a class="footer-link" href="mailto:{{SUPPORT_EMAIL}}" style="color:#334155;font-weight:700;text-decoration:none;">{{SUPPORT_EMAIL}}</a>
+                                    <a class="footer-link" href="mailto:kpi@phtl.ru" style="color:#334155;font-weight:700;text-decoration:none;">kpi@phtl.ru</a>
                                 </td>
                             </tr>
                         </table>

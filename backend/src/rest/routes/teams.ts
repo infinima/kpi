@@ -14,6 +14,7 @@ import {
     sendTeamAcceptedEmail,
     sendTeamMovedToReserveEmail,
     sendTeamPaymentConfirmedEmail,
+    sendTeamRemovedFromTournamentEmail,
 } from "../../utils/team-email.js";
 
 import {
@@ -1287,6 +1288,15 @@ teamsRouter.delete(
             "UPDATE teams SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?",
             [id], (req as any).user_id
         );
+
+        try {
+            const ctx = await loadTeamEmailContext(Number(id));
+            if (ctx) {
+                await sendTeamRemovedFromTournamentEmail(ctx);
+            }
+        } catch (e) {
+            console.error("[email] failed to send removal email:", e);
+        }
 
         res.json({ success: true });
     }

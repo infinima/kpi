@@ -115,3 +115,10 @@ export async function sendTeamMovedToReserveEmail(context: TeamEmailContext): Pr
     const html = renderTeamTemplate("team-moved-to-reserve.html", context);
     await sendEmail(context.ownerEmail, "Команда переведена в резерв", html);
 }
+
+export async function sendTeamRemovedFromTournamentEmail(context: TeamEmailContext): Promise<void> {
+    if (!context.ownerEmail) return;
+
+    const html = renderTeamTemplate("team-removed-from-tournament.html", context);
+    await sendEmail(context.ownerEmail, "Команда снята с турнира", html);
+}
