@@ -3,7 +3,6 @@ import { query } from "../db/pool.js";
 import { getKvartalyTable } from "./services/kvartaly-table.js";
 import { getFudziTable } from "./services/fudzi-table.js";
 import { getShowState } from "./services/show.js";
-import { checkSocketPermission } from "./services/check-socket-permission.js";
 import crypto from "crypto";
 
 export function registerConnection(
@@ -86,16 +85,18 @@ export function registerConnection(
             );
 
             if (rows.length === 0) {
-                socket.emit("error_response", {
-                    error: {
-                        code: "INVALID_SESSION",
-                        message: "Invalid or expired token"
-                    }
-                });
-                return socket.disconnect(true);
+                if (type !== "show") {
+                    socket.emit("error_response", {
+                        error: {
+                            code: "INVALID_SESSION",
+                            message: "Invalid or expired token"
+                        }
+                    });
+                    return socket.disconnect(true);
+                }
+            } else {
+                user_id = rows[0].user_id;
             }
-
-            user_id = rows[0].user_id;
         }
 
         socket.data.league_id = league_id;
@@ -103,32 +104,14 @@ export function registerConnection(
         socket.data.token = token;
         socket.data.user_id = user_id;
 
-        if (type === "show") {
-            if (league_id === null) {
-                socket.emit("error_response", {
-                    error: {
-                        code: "INVALID_LEAGUE_ID",
-                        message: "league_id must be a number"
-                    }
-                });
-                return socket.disconnect(true);
-            }
-            const allowed = await checkSocketPermission(
-                user_id,
-                "leagues",
-                "get_show",
-                league_id
-            );
-
-            if (!allowed) {
-                socket.emit("error_response", {
-                    error: {
-                        code: "FORBIDDEN",
-                        message: "No permission: get_show"
-                    }
-                });
-                return socket.disconnect(true);
-            }
+        if (type === "show" && league_id === null) {
+            socket.emit("error_response", {
+                error: {
+                    code: "INVALID_LEAGUE_ID",
+                    message: "league_id must be a number"
+                }
+            });
+            return socket.disconnect(true);
         }
 
         if (type === "bot") {
