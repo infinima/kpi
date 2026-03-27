@@ -103,25 +103,27 @@ export async function generateTeamsNames(
         }
         if (schoolInfo) {
             for (const line of schoolInfo.lines) {
-                lines.push({ text: line, size: schoolInfo.size, lineHeight: schoolInfo.lineHeight });
+                lines.push({ text: line.replace("№", ""), size: schoolInfo.size, lineHeight: schoolInfo.lineHeight });
             }
         }
 
-        const gap = schoolInfo ? 8 : 0;
+        const gap = schoolInfo ? 50 : 0;
         const totalHeight =
             nameInfo.textHeight + (schoolInfo ? gap + schoolInfo.textHeight : 0);
-        const blockShiftY = 10;
+        const blockShiftY = -20;
 
         const firstLineHeight = lines.length ? lines[0].lineHeight : 0;
-        const topY = centerY + totalHeight / 2 - (firstLineHeight / 3) + blockShiftY;
+        const topY = centerY + totalHeight / 2 - (firstLineHeight / 6 * 5) + blockShiftY;
 
         const yPositions: number[] = [];
         let yCursor = topY;
+        let last = 0;
         for (let i = 0; i < lines.length; i++) {
             yPositions.push(yCursor);
             yCursor -= lines[i].lineHeight;
+            last = lines[i].lineHeight;
             if (schoolInfo && i === nameInfo.lines.length - 1) {
-                yCursor -= gap;
+                yCursor = yCursor - gap + last;
             }
         }
 
@@ -154,8 +156,7 @@ export async function generateTeamsNames(
         );
 
         for (let i = 0; i < lines.length; i++) {
-            const reversedIndex = lines.length - 1 - i;
-            drawAt(reversedIndex, yPositions[i]);
+            drawAt(i, yPositions[i]);
         }
 
         page.pushOperators(popGraphicsState());
@@ -169,6 +170,7 @@ export async function generateTeamsNames(
         const schoolText = team.school.trim() || " ";
         const schoolFit = fitText(schoolText, 28, 1);
 
+        // В каждой четверти: название, ниже школа
         // 2-я четверть (сверху) — перевёрнутый текст
         drawCenteredTextBlock(page, nameFit, schoolFit, 1, true);
         // 3-я четверть — прямой текст
