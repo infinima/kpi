@@ -219,7 +219,7 @@ leaguesRouter.get(
             .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
 
         const rows = await query(
-            `SELECT name
+            `SELECT name, school
             FROM teams
             WHERE league_id = ? AND deleted_at IS NULL AND status = 'PAID'
              ORDER BY id`,
@@ -235,8 +235,10 @@ leaguesRouter.get(
             });
         }
 
-        // @ts-ignore
-        const teamNames = rows.map(r => r.name);
+        const teamNames = rows.map((r: any) => ({
+            name: r.name ?? "",
+            school: r.school ?? ""
+        }));
 
         try {
             const buffer = await generateTeamsNames(teamNames);

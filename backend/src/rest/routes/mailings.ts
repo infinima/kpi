@@ -33,6 +33,18 @@ type TeamRow = {
     coach_full_name: string | null;
 };
 
+type MailingTemplateContext = {
+    name: string;
+    full_name: string;
+    email: string;
+    team_name: string;
+    league_name: string;
+    event_name: string;
+    event_year: string;
+    user_uuid: string;
+    scanner_url_base64: string;
+};
+
 function parseJson<T>(value: unknown, fallback: T): T {
     if (value == null) return fallback;
     if (typeof value === "string") {
@@ -75,6 +87,83 @@ function validateSingleAutoSelection(data: {
     if (selected.length > 1) {
         throw new Error("ONLY_ONE_SELECTION_SCOPE_ALLOWED");
     }
+}
+
+function renderMailingTemplate(template: string, context: MailingTemplateContext) {
+    return String(template ?? "").replace(/{{\s*([a-zA-Z0-9_]+)\s*}}/g, (_, key) => {
+        const value = (context as Record<string, string>)[key];
+        return value ?? "";
+    });
+}
+
+function resolveDisplayName(args: { firstName?: string | null; fullName?: string | null; email?: string | null }) {
+    const firstName = args.firstName?.trim();
+    if (firstName) return firstName;
+
+    const fullName = args.fullName?.trim();
+    if (fullName) return fullName;
+
+    const email = args.email?.trim();
+    if (!email) return "";
+    return email.split("@")[0] ?? "";
+}
+
+function base64UrlEncode(value: string) {
+    return Buffer.from(value, "utf8")
+        .toString("base64")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/g, "");
+}
+
+async function loadMailingRecipientContext(teamId: number, email: string, userId: number): Promise<MailingTemplateContext | null> {
+    const [row] = await query(
+        `
+            SELECT
+                t.name AS team_name,
+                l.name AS league_name,
+                e.name AS event_name,
+                YEAR(e.date) AS event_year,
+                u.first_name AS owner_first_name,
+                u.uuid AS owner_uuid,
+                CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS owner_full_name
+            FROM teams t
+                JOIN leagues l ON l.id = t.league_id
+                JOIN locations lo ON lo.id = l.location_id
+                JOIN events e ON e.id = lo.event_id
+                LEFT JOIN users u ON u.id = t.owner_user_id
+            WHERE t.id = ?
+            LIMIT 1
+        `,
+        [teamId],
+        userId
+    );
+
+    if (!row) return null;
+
+    const fullName = row.owner_full_name ? String(row.owner_full_name) : "";
+    const userUuid = row.owner_uuid ? String(row.owner_uuid) : "";
+    const scannerUrl = userUuid
+        ? `https://kpiturnir.ru/scanner?data=${userUuid}`
+        : "";
+    const scannerUrlBase64 = scannerUrl ? base64UrlEncode(scannerUrl) : "";
+    const name = resolveDisplayName({
+        firstName: row.owner_first_name ? String(row.owner_first_name) : "",
+        fullName,
+        email,
+    });
+
+    return {
+        name,
+        full_name: fullName,
+        email,
+        team_name: row.team_name ? String(row.team_name) : "",
+        league_name: row.league_name ? String(row.league_name) : "",
+        event_name: row.event_name ? String(row.event_name) : "",
+        event_year: row.event_year != null ? String(row.event_year) : "",
+        user_uuid: userUuid,
+        scanner_url_base64: scannerUrlBase64,
+    };
 }
 
 async function prepareMailingPayload(
@@ -333,10 +422,26 @@ async function sendMailToRecipient(args: {
         });
     }
 
+    let subject = mailing.subject;
+    let body = mailing.body;
+
+    if (recipient.team_id) {
+        const context = await loadMailingRecipientContext(
+            Number(recipient.team_id),
+            String(recipient.email ?? ""),
+            userId
+        );
+
+        if (context) {
+            subject = renderMailingTemplate(subject, context);
+            body = renderMailingTemplate(body, context);
+        }
+    }
+
     const providerMessageId = await sendEmail(
         recipient.email,
-        mailing.subject,
-        mailing.body,
+        subject,
+        body,
         attachments
     );
 

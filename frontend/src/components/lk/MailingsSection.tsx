@@ -118,6 +118,8 @@ const templateFields = [
   { token: "{{league_name}}", label: "Лига", description: "Название лиги" },
   { token: "{{event_name}}", label: "Мероприятие", description: "Название мероприятия" },
   { token: "{{event_year}}", label: "Год", description: "Год проведения мероприятия" },
+  { token: "{{user_uuid}}", label: "UUID", description: "UUID пользователя-владельца команды" },
+  { token: "{{scanner_url_base64}}", label: "Base64 URL", description: "Base64url от https://kpiturnir.ru/scanner?data={{user_uuid}}" },
 ] as const;
 const previewContext: Record<string, string> = {
   name: "Анна",
@@ -127,6 +129,8 @@ const previewContext: Record<string, string> = {
   league_name: "Старшая лига",
   event_name: "Турнир KPI",
   event_year: "2026",
+  user_uuid: "b3d5c5d4-6ad3-4d88-bc29-6fb3c6b4f5a4",
+  scanner_url_base64: "aHR0cHM6Ly9rcGl0dXJuaXIucnUvc2Nhbm5lcj9kYXRhPWIyZDVjNWQ0LTZhZDMtNGQ4OC1iYzI5LTZmYjNjNmI0ZjVhNA",
 };
 const defaultMailingBody = `<!doctype html>
 <html lang="ru">
