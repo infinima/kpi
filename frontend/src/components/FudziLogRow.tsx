@@ -5,13 +5,8 @@ type Status = "correct" | "incorrect" | "not_submitted";
 interface FudziChange {
   type: "fudzi";
   record: any;               // new_data
-  questionIndex: number;     // 0..15
-  oldStatus: Status;
-  newStatus: Status;
-  meta: {
-    created_at: string;
-    user_id: number;
-  };
+  questionIndex: number | null;     // 0..15
+  penaltyChanged?: boolean;
 }
 
 export function FudziLogRow({ change }: { change: FudziChange }) {
