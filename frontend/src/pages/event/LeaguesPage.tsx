@@ -25,13 +25,15 @@ export function LeaguesPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { eventId, locationId, leagueId } = useParams();
-    const { user } = useUser();
+    const { user, can } = useUser();
     const [leagues, setLeagues] = useState<LeagueItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [visibility, setVisibility] = useState<"active" | "deleted">("active");
     const canUseTable = canUseTableMode(user?.rights, "leagues");
     const canManage = canUseTable && visibility === "active";
-    const canSeeDeleted = Boolean(user?.rights.leagues?.global?.includes("restore"));
+    const eventScopeId = eventId ? Number(eventId) : null;
+    const locationScopeId = locationId ? Number(locationId) : null;
+    const canSeeDeleted = can("leagues", "restore", { eventId: eventScopeId, locationId: locationScopeId });
     const viewMode = getCollectionViewMode(searchParams, "leagues", canUseTable);
     const effectiveVisibility = viewMode === "table" ? visibility : "active";
 

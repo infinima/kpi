@@ -134,9 +134,17 @@ export function EventTeamsPage() {
     const notify = useNotifications((state) => state.addMessage);
     const [rows, setRows] = useState<TeamResponseRow[]>([]);
     const [loading, setLoading] = useState(false);
+    const eventScopeId = eventId ? Number(eventId) : null;
+    const locationScopeId = locationId ? Number(locationId) : null;
+    const leagueScopeId = leagueId ? Number(leagueId) : null;
 
     function canEditTeam(teamId: number) {
-        return can("teams", "update", teamId);
+        return can("teams", "update", {
+            id: teamId,
+            eventId: eventScopeId,
+            locationId: locationScopeId,
+            leagueId: leagueScopeId,
+        });
     }
 
     const tableRows = useMemo<TeamTableRowData[]>(() => {

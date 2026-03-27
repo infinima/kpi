@@ -40,7 +40,8 @@ export function LocationsPage() {
     const [visibility, setVisibility] = useState<"active" | "deleted">("active");
     const canUseTable = canUseTableMode(user?.rights, "locations");
     const canManage = canUseTable && visibility === "active";
-    const canSeeDeleted = Boolean(user?.rights.locations?.global?.includes("restore"));
+    const eventScopeId = eventId ? Number(eventId) : null;
+    const canSeeDeleted = can("locations", "restore", { eventId: eventScopeId });
     const viewMode = getCollectionViewMode(searchParams, "locations", canUseTable);
     const effectiveVisibility = viewMode === "table" ? visibility : "active";
 

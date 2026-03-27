@@ -74,6 +74,9 @@ export function ResultPage() {
   const [data, setData] = useState<FinalTeam[]>([]);
   const [loading, setLoading] = useState(true);
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection } | null>(null);
+  const eventScopeId = eventInfo?.id ?? null;
+  const locationScopeId = locationInfo?.id ?? null;
+  const leagueScopeId = leagueInfo?.id ?? (leagueId ? Number(leagueId) : null);
 
   useEffect(() => {
     let ignore = false;
@@ -196,7 +199,21 @@ export function ResultPage() {
                 </tr>
               </thead>
               <tbody>
-                {sorted.map((team, index) => (
+                {sorted.map((team, index) => {
+                  const canUpdateTeam = can("teams", "update", {
+                    id: team.id,
+                    eventId: eventScopeId,
+                    locationId: locationScopeId,
+                    leagueId: leagueScopeId,
+                  });
+                  const canGetTeam = can("teams", "get", {
+                    id: team.id,
+                    eventId: eventScopeId,
+                    locationId: locationScopeId,
+                    leagueId: leagueScopeId,
+                  });
+
+                  return (
                   <tr
                     key={team.id}
                     className={`transition ${index % 2 === 0 ? "bg-[rgba(248,250,252,0.88)]" : "bg-[rgba(255,255,255,0.84)]"} hover:bg-[rgba(14,116,144,0.08)]`}
@@ -208,7 +225,7 @@ export function ResultPage() {
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_sum ?? "—"}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
                       <select
-                        disabled={!can("teams", "update", team.id)}
+                        disabled={!canUpdateTeam}
                         value={team.diploma ?? ""}
                         onChange={(event) => void updateDiploma(team, event.target.value)}
                         className="w-full rounded-xl border border-[var(--color-border)] bg-white px-3 py-2 text-center text-sm text-[var(--color-text-main)] outline-none"
@@ -228,7 +245,7 @@ export function ResultPage() {
                             <div key={`${team.id}-${nominationIndex}`}>{item}</div>
                           ))}
                         </div>
-                        {can("teams", "update", team.id) ? (
+                        {canUpdateTeam ? (
                           <button
                             type="button"
                             onClick={() => openModal("final-nominations", {
@@ -245,7 +262,7 @@ export function ResultPage() {
                       </div>
                     </td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
-                      {can("teams", "get", team.id) ? (
+                      {canGetTeam ? (
                         <button
                           type="button"
                           onClick={() => void apiGetFile(`teams/${team.id}/appreciation`, `${team.name.replace(" ", "_")}_благодарность.pdf`)}
@@ -256,7 +273,7 @@ export function ResultPage() {
                       ) : null}
                     </td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
-                      {can("teams", "get", team.id) && team.diploma ? (
+                      {canGetTeam && team.diploma ? (
                         <button
                           type="button"
                           onClick={() => void apiGetFile(`teams/${team.id}/diploma`, `${team.name.replace(" ", "_")}_${team.diploma === "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`)}
@@ -267,7 +284,7 @@ export function ResultPage() {
                       ) : null}
                     </td>
                     <td className="border-b border-[var(--color-border)] px-3 py-3 text-center">
-                      {can("teams", "get", team.id) && team.special_nominations.length > 0 ? (
+                      {canGetTeam && team.special_nominations.length > 0 ? (
                         <button
                           type="button"
                           onClick={() => void apiGetFile(`teams/${team.id}/special-nominations`, `${team.name.replace(" ", "_")}_спецноминации.pdf`)}
@@ -278,7 +295,8 @@ export function ResultPage() {
                       ) : null}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

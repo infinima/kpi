@@ -66,7 +66,7 @@ function createDraft(user: UserRow): UserDraft {
 
 export function UsersSection() {
   const navigate = useNavigate();
-  const { user, can } = useUser();
+  const { can } = useUser();
   const openModal = useModalStore((state) => state.openModal);
   const [rows, setRows] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -76,7 +76,7 @@ export function UsersSection() {
   const [savingId, setSavingId] = useState<number | null>(null);
   const [query, setQuery] = useState("");
 
-  const canRestoreGlobally = Boolean(user?.rights.users?.global?.includes("restore"));
+  const canRestoreGlobally = can("users", "restore");
   const canManagePermissions = can("permissions", "get") && (can("permissions", "create") || can("permissions", "update"));
 
   async function loadUsers() {

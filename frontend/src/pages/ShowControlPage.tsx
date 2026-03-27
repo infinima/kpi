@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useShowStore } from "@/store/useShowSocket";
 import { useSocketStore } from "@/store/useTableSocket";
@@ -33,6 +33,7 @@ export function ShowControlPage() {
     showSetTimerIsEnabled,
   } = useShowStore();
   const outletContext = useOutletContext<EventsOutletContext | undefined>();
+  const [customTimerMinutes, setCustomTimerMinutes] = useState("3");
 
   useEffect(() => {
     connect();
@@ -49,6 +50,13 @@ export function ShowControlPage() {
   function handleStatusChange(status: string) {
     useSocketStore.getState().disconnect();
     showSetStatus(status as any);
+  }
+
+  function startTimer(minutes: number) {
+    if (!Number.isFinite(minutes) || minutes < 1) {
+      return;
+    }
+    showSetTimerIsEnabled(true, minutes);
   }
 
   return (
@@ -120,19 +128,65 @@ export function ShowControlPage() {
               {show.status === "FUDZI-PRESENTATION" ? (
                 <div className="mt-5 rounded-[24px] border border-[var(--color-border)] bg-[rgba(248,250,252,0.72)] p-4">
                   <div className="text-sm font-medium text-[var(--color-text-main)]">Управление слайдами</div>
-                  <div className="mt-4 flex items-center gap-2">
+                  <div className="mt-4 grid gap-2 sm:grid-cols-2">
                     <button
                       type="button"
-                      onClick={() => showSetTimerIsEnabled(!show.timer_is_enabled)}
-                      className={`inline-flex items-center gap-2 rounded-2xl px-4 py-3 text-sm transition ${
+                      onClick={() => startTimer(5)}
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-center text-sm text-[var(--color-text-main)] transition hover:border-[var(--color-primary-light)]"
+                    >
+                      <Timer size={16} />
+                      Запустить на 5 минут
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => startTimer(2)}
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-center text-sm text-[var(--color-text-main)] transition hover:border-[var(--color-primary-light)]"
+                    >
+                      <Timer size={16} />
+                      Запустить на 2 минуты
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => showSetTimerIsEnabled(false)}
+                      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-4 py-3 text-center text-sm transition sm:col-span-2 ${
                         show.timer_is_enabled
                           ? "bg-[var(--color-primary)] text-white"
                           : "border border-[var(--color-border)] bg-white text-[var(--color-text-main)]"
                       }`}
                     >
                       <Timer size={16} />
-                      {show.timer_is_enabled ? "Таймер включён" : "Таймер выключен"}
+                      {show.timer_is_enabled ? "Остановить таймер" : "Таймер остановлен"}
                     </button>
+                  </div>
+
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                    <input
+                      type="number"
+                      min={1}
+                      max={120}
+                      value={customTimerMinutes}
+                      onChange={(e) => setCustomTimerMinutes(e.target.value)}
+                      className="h-11 w-full rounded-2xl border border-[var(--color-border)] bg-white px-3 text-center text-sm text-[var(--color-text-main)] outline-none sm:w-28"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const minutes = Math.floor(Number(customTimerMinutes));
+                        if (!Number.isFinite(minutes) || minutes < 1 || minutes > 120) {
+                          return;
+                        }
+                        startTimer(minutes);
+                      }}
+                      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border border-[var(--color-border)] bg-white px-4 py-3 text-center text-sm text-[var(--color-text-main)] transition hover:border-[var(--color-primary-light)]"
+                    >
+                      <Timer size={16} />
+                      Запустить на любое время
+                    </button>
+                    {show.timer_is_enabled ? (
+                      <div className="text-sm text-[var(--color-text-secondary)]">
+                        Сейчас запущено на {show.timer_minutes} мин.
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="mt-4 flex items-center gap-2">

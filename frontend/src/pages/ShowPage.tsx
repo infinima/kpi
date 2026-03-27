@@ -29,7 +29,7 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
 
   const [pdfData, setPdfData] = useState<string | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
-  const [timeLeft, setTimeLeft] = useState(120);
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [pageWidth, setPageWidth] = useState<number | null>(null);
@@ -90,16 +90,32 @@ export function ShowPage({ manageShowConnection = true }: { manageShowConnection
 
   useEffect(() => {
     if (!show?.timer_is_enabled) {
-      setTimeLeft(120);
+      setTimeLeft(0);
       return;
     }
 
-    const id = setInterval(() => {
-      setTimeLeft(t => Math.max(0, t - 1));
-    }, 1000);
+    const startedAt = show.timer_started_at ? new Date(show.timer_started_at).getTime() : NaN;
+    const serverTime = show.server_time ? new Date(show.server_time).getTime() : NaN;
+    const durationSeconds = Math.max(0, Number(show.timer_minutes ?? 0) * 60);
+
+    if (!Number.isFinite(startedAt) || !Number.isFinite(serverTime) || durationSeconds <= 0) {
+      setTimeLeft(durationSeconds);
+      return;
+    }
+
+    const offset = Date.now() - serverTime;
+
+    const updateTimeLeft = () => {
+      const elapsedSeconds = Math.floor((Date.now() - offset - startedAt) / 1000);
+      setTimeLeft(Math.max(0, durationSeconds - elapsedSeconds));
+    };
+
+    updateTimeLeft();
+
+    const id = setInterval(updateTimeLeft, 250);
 
     return () => clearInterval(id);
-  }, [show?.timer_is_enabled]);
+  }, [show?.server_time, show?.timer_is_enabled, show?.timer_minutes, show?.timer_started_at]);
 
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, "0");
   const ss = String(timeLeft % 60).padStart(2, "0");

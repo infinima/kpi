@@ -25,7 +25,8 @@ export type PermissionEntity =
   "leagues" |
   "teams" |
   "users" |
-  "permissions";
+  "permissions" |
+  "mailings";
 
 export type PermissionAction =
   "get" |
@@ -42,15 +43,26 @@ export type PermissionAction =
   "edit_penalties" |
   "edit_photos";
 
+export type PermissionMap = Record<string, PermissionAction[]>;
+
 export type EntityPermissions = {
   global?: PermissionAction[];
-} & {
-  [id: string]: PermissionAction[];
+  ids?: PermissionMap;
+  by_event?: PermissionMap;
+  by_location?: PermissionMap;
+  by_league?: PermissionMap;
 };
 
 export interface PermissionsResponse {
-  [entity: string]: EntityPermissions;
+  [entity: string]: EntityPermissions | undefined;
 }
+
+type PermissionTarget = number | {
+  id?: number | null;
+  eventId?: number | null;
+  locationId?: number | null;
+  leagueId?: number | null;
+};
 
 interface User {
   tg_id: string;
@@ -73,7 +85,8 @@ interface UserState {
   clearSession: () => void;
   fetchUser: () => Promise<void>;
 
-  can: (entity: PermissionEntity, action: PermissionAction, objectId?: number) => boolean;
+  can: (entity: PermissionEntity, action: PermissionAction, target?: PermissionTarget) => boolean;
+  canGlobal: (entity: PermissionEntity, action: PermissionAction) => boolean;
 }
 
 export function ensureUserSessionInitialized(): Promise<void> {
@@ -170,22 +183,58 @@ export const useUser = create<UserState>((set, get) => ({
     });
   },
 
-  can: (entity: PermissionEntity, action: PermissionAction, id?: number) => {
+  can: (entity: PermissionEntity, action: PermissionAction, target?: PermissionTarget) => {
     const u = get().user;
     if (!u) return false;
 
     const perms = u.rights[entity];
     if (!perms) return false;
 
-    if (id !== undefined) {
-      const objRights = perms[id];
-      if (objRights && objRights.includes(action)) return true;
+    const globalRights = perms.global;
+    if (globalRights && globalRights.includes(action)) {
+      return true;
     }
 
-    const globalRights = perms.global;
-    return !!(globalRights && globalRights.includes(action));
+    const resolvedTarget = typeof target === "number"
+      ? { id: target }
+      : (target ?? {});
 
+    if (resolvedTarget.id !== undefined && resolvedTarget.id !== null) {
+      const objRights = perms.ids?.[String(resolvedTarget.id)];
+      if (objRights && objRights.includes(action)) {
+        return true;
+      }
+    }
 
+    if (resolvedTarget.eventId !== undefined && resolvedTarget.eventId !== null) {
+      const scopedRights = perms.by_event?.[String(resolvedTarget.eventId)];
+      if (scopedRights && scopedRights.includes(action)) {
+        return true;
+      }
+    }
+
+    if (resolvedTarget.locationId !== undefined && resolvedTarget.locationId !== null) {
+      const scopedRights = perms.by_location?.[String(resolvedTarget.locationId)];
+      if (scopedRights && scopedRights.includes(action)) {
+        return true;
+      }
+    }
+
+    if (resolvedTarget.leagueId !== undefined && resolvedTarget.leagueId !== null) {
+      const scopedRights = perms.by_league?.[String(resolvedTarget.leagueId)];
+      if (scopedRights && scopedRights.includes(action)) {
+        return true;
+      }
+    }
+
+    return false;
+  },
+
+  canGlobal: (entity: PermissionEntity, action: PermissionAction) => {
+    const u = get().user;
+    if (!u) return false;
+
+    return Boolean(u.rights[entity]?.global?.includes(action));
   },
 
 }));

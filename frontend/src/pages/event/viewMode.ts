@@ -21,9 +21,15 @@ export function canUseTableMode(rights: PermissionsResponse | undefined, entity:
         return false;
     }
 
-    return Object.values(entityRights).some((actions) =>
-        Array.isArray(actions) && actions.some((action) => MANAGE_ACTIONS.has(action))
-    );
+    const groups = [
+        entityRights.global,
+        ...Object.values(entityRights.ids ?? {}),
+        ...Object.values(entityRights.by_event ?? {}),
+        ...Object.values(entityRights.by_location ?? {}),
+        ...Object.values(entityRights.by_league ?? {}),
+    ];
+
+    return groups.some((actions) => Array.isArray(actions) && actions.some((action) => MANAGE_ACTIONS.has(action)));
 }
 
 export function getCollectionViewMode(

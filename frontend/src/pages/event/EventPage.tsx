@@ -37,7 +37,7 @@ export function EventsPage() {
 
     const canUseTable = canUseTableMode(user?.rights, "events");
     const canManage = canUseTable && visibility === "active";
-    const canSeeDeleted = Boolean(user?.rights.events?.global?.includes("restore"));
+    const canSeeDeleted = can("events", "restore");
     const viewMode = getCollectionViewMode(searchParams, "events", canUseTable);
     const effectiveVisibility = viewMode === "table" ? visibility : "active";
     const visibilityFilter = (

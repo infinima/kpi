@@ -14,7 +14,11 @@ export function MenuBar() {
 
     const location = useLocation()
     const navigate = useNavigate()
+    const eventIdMatch = location.pathname.match(/\/events\/(\d+)/)
+    const locationIdMatch = location.pathname.match(/\/location\/(\d+)/)
     const leagueIdMatch = location.pathname.match(/\/league\/(\d+)/)
+    const eventId = eventIdMatch?.[1] ? Number(eventIdMatch[1]) : null
+    const locationId = locationIdMatch?.[1] ? Number(locationIdMatch[1]) : null
     const leagueId = leagueIdMatch?.[1] ? Number(leagueIdMatch[1]) : null
     const leagueRouteMatch = location.pathname.match(/(\/events\/\d+\/location\/\d+\/league\/\d+)/)
     const leagueRouteBase = leagueRouteMatch?.[1] ?? null
@@ -28,11 +32,11 @@ export function MenuBar() {
         { id: "results", title: "Результаты", path: "/results" },
     ]
 
-    if (leagueId && can("leagues", "get_show", leagueId)) {
+    if (leagueId && can("leagues", "get_show", { id: leagueId, eventId, locationId })) {
         menuItems.push({ id: "show", title: "Показ", path: `/show/${leagueId}` })
     }
 
-    if (leagueId && can("leagues", "control_show", leagueId)) {
+    if (leagueId && can("leagues", "control_show", { id: leagueId, eventId, locationId })) {
         menuItems.push({
             id: "showControl",
             title: "Управление показом",

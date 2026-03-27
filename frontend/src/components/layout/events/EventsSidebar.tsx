@@ -343,11 +343,19 @@ export default function EventsSidebar() {
     const locationNumber = locationInfo?.id ?? (locationId ? Number(locationId) : undefined);
     const leagueNumber = leagueInfo?.id ?? (leagueId ? Number(leagueId) : undefined);
     const rights = user?.rights;
-    const canSeeTeams = !guest && can("teams", "get");
+    const canSeeTeams = !guest && can("teams", "get", {
+        eventId: eventNumber,
+        locationId: locationNumber,
+        leagueId: leagueNumber,
+    });
     const canSeeKvartalyResults = isLeagueStatusAtLeast(leagueInfo?.status, "KVARTALY_GAME");
     const canSeeFudziResults = isLeagueStatusAtLeast(leagueInfo?.status, "LUNCH");
     const canSeeOverallResults = leagueInfo?.status === "ENDED"
-        || (leagueNumber ? can("leagues", "print_documents", leagueNumber) : false);
+        || (leagueNumber ? can("leagues", "print_documents", {
+            id: leagueNumber,
+            eventId: eventNumber,
+            locationId: locationNumber,
+        }) : false);
 
     return (
         <aside
@@ -435,7 +443,7 @@ export default function EventsSidebar() {
                             <>
                                 {effectiveCollapsed ? <CollapsedDivider /> : null}
                                 <NestedGroup title={eventInfo.name} level={1} collapsed={effectiveCollapsed}>
-                                {eventNumber && can("events", "access_history", eventNumber) ? (
+                                {eventNumber && can("events", "access_history", { id: eventNumber }) ? (
                                     <SidebarItem
                                         to={`/events/${eventInfo.id}/history`}
                                         label="История изменений"
@@ -475,7 +483,7 @@ export default function EventsSidebar() {
                                     <>
                                         {effectiveCollapsed ? <CollapsedDivider /> : null}
                                         <NestedGroup title={locationInfo.name} level={1} collapsed={effectiveCollapsed}>
-                                        {locationNumber && can("locations", "access_history", locationNumber) ? (
+                                        {locationNumber && can("locations", "access_history", { id: locationNumber, eventId: eventNumber }) ? (
                                             <SidebarItem
                                                 to={`/events/${eventInfo.id}/location/${locationInfo.id}/history`}
                                                 label="История изменений"
@@ -515,7 +523,7 @@ export default function EventsSidebar() {
                                             <>
                                                 {effectiveCollapsed ? <CollapsedDivider /> : null}
                                                 <NestedGroup title={leagueInfo.name} level={1} collapsed={effectiveCollapsed}>
-                                                {leagueNumber && can("leagues", "access_history", leagueNumber) ? (
+                                                {leagueNumber && can("leagues", "access_history", { id: leagueNumber, eventId: eventNumber, locationId: locationNumber }) ? (
                                                     <SidebarItem
                                                         to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/history`}
                                                         label="История изменений"
@@ -560,7 +568,7 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "get_show", leagueNumber) ? (
+                                                {leagueNumber && can("leagues", "get_show", { id: leagueNumber, eventId: eventNumber, locationId: locationNumber }) ? (
                                                     <SidebarItem
                                                         to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/show`}
                                                         label="Показ"
@@ -569,7 +577,7 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "control_show", leagueNumber) ? (
+                                                {leagueNumber && can("leagues", "control_show", { id: leagueNumber, eventId: eventNumber, locationId: locationNumber }) ? (
                                                     <SidebarItem
                                                         to={`/events/${eventInfo.id}/location/${locationInfo.id}/league/${leagueInfo.id}/show-control`}
                                                         label="Управление показом"
@@ -578,7 +586,7 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "print_documents", leagueNumber) ? (
+                                                {leagueNumber && can("leagues", "print_documents", { id: leagueNumber, eventId: eventNumber, locationId: locationNumber }) ? (
                                                     <SidebarItem
                                                         label="Карточки команд"
                                                         icon={<Download size={16} />}
@@ -591,7 +599,7 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "print_documents", leagueNumber) ? (
+                                                {leagueNumber && can("leagues", "print_documents", { id: leagueNumber, eventId: eventNumber, locationId: locationNumber }) ? (
                                                     <SidebarItem
                                                         label="Команды (Excel)"
                                                         icon={<Download size={16} />}
@@ -604,7 +612,7 @@ export default function EventsSidebar() {
                                                     />
                                                 ) : null}
 
-                                                {leagueNumber && can("leagues", "get_show", leagueNumber) ? (
+                                                {leagueNumber && can("leagues", "get_show", { id: leagueNumber, eventId: eventNumber, locationId: locationNumber }) ? (
                                                     <SidebarItem
                                                         label="Презентация Фудзи"
                                                         icon={<Download size={16} />}

@@ -334,12 +334,13 @@ export default function LkPage() {
     const user = useUser((state) => state.user);
     const token = useUser((state) => state.token);
     const can = useUser((state) => state.can);
+    const canGlobal = useUser((state) => state.canGlobal);
     const fetchUser = useUser((state) => state.fetchUser);
     const logout = useUser((state) => state.logout);
     const notify = useNotifications((state) => state.addMessage);
-    const canManageUsers = Boolean(user?.rights.users?.global?.includes("get"));
-    const canManageMailings = Boolean(user?.rights.mailings?.global?.includes("get"));
-    const canScanTeams = Boolean(user?.rights.teams?.global?.includes("get"));
+    const canManageUsers = canGlobal("users", "get");
+    const canManageMailings = canGlobal("mailings", "get");
+    const canScanTeams = canGlobal("teams", "get");
 
     const [profileForm, setProfileForm] = useState<ProfileFormState>({
         first_name: "",

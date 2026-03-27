@@ -51,7 +51,8 @@ interface SocketState {
   ) => void;
 
   showSetTimerIsEnabled: (
-    enabled: boolean
+    enabled: boolean,
+    minutes?: number
   ) => void;
 
   showSetColorScheme: (
@@ -142,10 +143,11 @@ export const useShowStore = create<SocketState>((set, get) => ({
 
   showSetTimerIsEnabled: (
     enabled: boolean,
+    minutes?: number,
   ) => {
     const {socket} = get();
     if (!socket) return;
-    socket.emit("show_set_timer_is_enabled", {enabled});
+    socket.emit("show_set_timer_is_enabled", minutes === undefined ? {enabled} : {enabled, minutes});
   },
 
   showSetColorScheme: (

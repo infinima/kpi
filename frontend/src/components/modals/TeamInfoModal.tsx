@@ -155,7 +155,10 @@ export function TeamInfoModal() {
         return null;
     }
     const modalPayload = payload;
-    const canHistory = can("teams", "access_history", draft.id);
+    const canHistory = can("teams", "access_history", {
+        id: draft.id,
+        leagueId: draft.league_id,
+    });
 
     async function handleSave() {
         if (!canSave) {
