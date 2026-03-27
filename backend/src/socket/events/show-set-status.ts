@@ -39,8 +39,15 @@ export function registerShowSetStatus(socket: Socket, io: Server) {
 
         try {
             await db.query(
-                `UPDATE leagues SET show_status = ?, show_slide_num = 1, show_timer_is_enabled = false WHERE id = ?`,
-                [status, league_id], socket.data.user_id
+                `
+                UPDATE leagues
+                SET show_status = ?,
+                    show_slide_num = 1,
+                    show_timer_started_at = NULL
+                WHERE id = ?
+                `,
+                [status, league_id],
+                socket.data.user_id
             );
 
             const show = await getShowState(league_id);
