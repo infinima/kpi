@@ -31,7 +31,7 @@ export function TablesPage() {
   const hoveredColumn = useUI((s) => s.hoveredColumn);
   const setHoveredColumn = useUI((s) => s.setHoveredColumn);
 
-  const [topPanelOpen, setTopPanelOpen] = useState(true);
+  const [topPanelOpen, setTopPanelOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortState>(null);
 
@@ -101,7 +101,7 @@ export function TablesPage() {
   }
 
   function headerButtonClass(isActive: boolean) {
-    return `inline-flex items-center justify-center gap-1 rounded-md px-1 py-0.5 transition ${isActive ? "font-semibold" : ""}`;
+    return `inline-flex items-center justify-center gap-1 rounded-md px-0.5 py-0 text-[11px] leading-none transition ${isActive ? "font-semibold" : ""}`;
   }
 
   function renderSortIcon(key: string) {
@@ -140,7 +140,7 @@ export function TablesPage() {
         <th
           key={i}
           className={`
-              sticky top-0 z-30 th text-center w-10
+            sticky top-0 z-30 th text-center w-8
               bg-surface dark:bg-dark-surface
               border-b border-border dark:border-dark-border
               ${hoveredColumn === i ? "!bg-primary/40 dark:!bg-primary/80" : ""}
@@ -156,7 +156,7 @@ export function TablesPage() {
 
       <th
         className="
-            sticky top-0 z-30 th w-20
+            sticky top-0 z-30 th w-14
             bg-surface dark:bg-dark-surface
             border-b border-border dark:border-dark-border
           "
@@ -168,7 +168,7 @@ export function TablesPage() {
 
       <th
         className="
-            sticky top-0 z-30 th w-20
+            sticky top-0 z-30 th w-14
             bg-surface dark:bg-dark-surface
             border-b border-border dark:border-dark-border
           "
@@ -286,13 +286,13 @@ export function TablesPage() {
   // =====================================================================
 
   return (
-    <div className="flex flex-col h-[calc(100vh-78px-16px-16px-20px)] w-full overflow-hidden">
+    <div className="flex h-screen w-screen flex-col overflow-hidden">
 
       {/* ===== TOP PANEL ===== */}
       <div
         className="
           flex-shrink-0
-          px-4 md:px-6 lg:px-8 py-3
+          px-3 md:px-4 lg:px-5 py-2
           bg-surface dark:bg-dark-surface
           border-b border-border dark:border-dark-border
           shadow-card
@@ -336,7 +336,7 @@ export function TablesPage() {
       </div>
 
       {/* ====== SCROLLABLE CONTENT ====== */}
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar  py-4 w-full">
+      <div className="flex-1 min-h-0 w-full overflow-y-auto no-scrollbar py-2">
 
         {!isConnected && (
           <div className="p-3 rounded-lg bg-hover dark:bg-dark-hover text-sm opacity-75 text-center">
@@ -356,6 +356,7 @@ export function TablesPage() {
                 border border-border dark:border-dark-border
                 shadow-card
                 w-full
+                h-full
               "
             >
               <table className="w-full border-collapse text-sm">

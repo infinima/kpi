@@ -103,7 +103,7 @@ export function KvartalyTable({ data, variant = "show" }: KvartalyTableProps) {
               )),
               <th
                 key={`bonus_${q}`}
-                className={isSite ? "text-center border-r border-white/20" : "text-center border-r-[2px] border-[#1364b3]"}
+                className={isSite ? "text-center border-r border-white/20" : "text-center border-r-[2px] border-[#1364b1]"}
               >
                 Б
               </th>

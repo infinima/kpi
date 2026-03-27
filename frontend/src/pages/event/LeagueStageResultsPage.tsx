@@ -138,7 +138,7 @@ function compareValues(left: unknown, right: unknown) {
 }
 
 function headerButtonClass(active: boolean) {
-    return `flex w-full items-center justify-center gap-1 px-2 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em] transition ${
+    return `flex h-5 w-full items-center justify-center gap-1 px-0.5 py-0 text-center text-[10px] font-semibold uppercase tracking-[0.04em] leading-none transition ${
         active ? "text-white" : "text-white/92 hover:text-white"
     }`;
 }
@@ -149,7 +149,7 @@ function sortIcon(direction: Exclude<SortDirection, null>) {
 
 function getPopupPosition(event: React.MouseEvent, width: number, height: number) {
     const rect = event.currentTarget.getBoundingClientRect();
-    const gap = 2 + 350;
+    const gap = 2 + 125;
     const left = rect.left - width - gap;
     const top = rect.top + rect.height / 2 - height / 2;
 
@@ -207,12 +207,14 @@ function CounterRow({
     onIncrease,
     onDecrease,
     positive = false,
+    maxValue,
 }: {
     label: string;
     value: number;
     onIncrease: () => void;
     onDecrease: () => void;
     positive?: boolean;
+    maxValue?: number;
 }) {
     return (
         <div className="flex items-center justify-between gap-3 rounded-xl px-2 py-1">
@@ -230,13 +232,13 @@ function CounterRow({
                 <div className={`min-w-8 text-center text-sm font-semibold ${positive && value > 0 ? "text-[#166534]" : !positive && value > 0 ? "text-[#b91c1c]" : "text-[var(--color-text-main)]"}`}>
                     {value}
                 </div>
-                <button
+                {maxValue === undefined || value < maxValue ? (<button
                     type="button"
                     onClick={onIncrease}
                     className="flex h-8 w-8 items-center justify-center rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text-main)] transition hover:bg-[rgba(14,116,144,0.08)]"
                 >
                     +
-                </button>
+                </button>): null}
             </div>
         </div>
     );
@@ -249,7 +251,7 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
     const setAnswer = useSocketStore((state) => state.fudziSetAnswer);
     const setPenalty = useSocketStore((state) => state.fudziSetPenalty);
 
-    const [sort, setSort] = useState<SortState>({ key: "total", direction: "desc" });
+    const [sort, setSort] = useState<SortState>(null);
     const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
     const [popup, setPopup] = useState<PopupState | null>(null);
@@ -322,20 +324,21 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
     }
 
     return (
-        <section className="overflow-x-auto">
-            <div className="max-h-[calc(100vh-260px)] min-w-[1180px] overflow-auto rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
+        <section className="h-[calc(100vh-5rem)]  overflow-x-auto">
+            <div className="max-h-[calc(100vh-5rem)] min-w-[1040px] overflow-auto rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
                 <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
                     <colgroup>
                         <col className="w-[16%]" />
-                        <col className="w-[6%]" />
-                        <col className="w-[6%]" />
-                        {Array.from({ length: 16 }).map((_, index) => <col key={index} className="w-[4.5%]" />)}
+                        <col className="w-[4.5%]" />
+                        <col className="w-[4.5%]" />
+                        {Array.from({ length: 16 }).map((_, index) => <col key={index} className="w-[3.2%]" />)}
                     </colgroup>
                     <thead className="bg-[var(--color-primary)]">
                         <tr>
                             <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>Команда {sort?.key === "name" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
-                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>Штраф {sort?.key === "penalty" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>Итого {sort?.key === "total" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>Штраф {sort?.key === "penalty" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+
                             {Array.from({ length: 16 }).map((_, index) => {
                                 const key = `q${index + 1}`;
                                 const active = hoveredColumn === key;
@@ -364,13 +367,14 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
                                 className={rowIndex % 2 === 0 ? "bg-[rgba(248,250,252,0.88)]" : "bg-[rgba(255,255,255,0.84)]"}
                             >
                                 <td className={`border-b border-r border-[var(--color-border)] px-3 py-2 ${hoveredRow === team.id ? "bg-[rgba(14,116,144,0.08)]" : ""}`}>{team.name}</td>
+
+                                <td className={`border-b border-r border-[var(--color-border)] px-2 py-2 text-center font-semibold ${hoveredRow === team.id ? "bg-[rgba(14,116,144,0.08)]" : ""}`}>{team.total}</td>
                                 <td
                                     className={`border-b border-r border-[var(--color-border)] px-2 py-2 text-center font-semibold ${hoveredRow === team.id ? "bg-[rgba(14,116,144,0.08)]" : ""} ${team.penalty > 0 ? "text-[#b91c1c]" : ""} ${canEditPenalties ? "cursor-pointer" : ""}`}
                                     onClick={canEditPenalties ? (event) => openPopup(event, { type: "fudzi-penalty", teamId: team.id, penalty: team.penalty, width: 220, x: 0, y: 0 }) : undefined}
                                 >
                                     {team.penalty > 0 ? `-${team.penalty}` : ""}
                                 </td>
-                                <td className={`border-b border-r border-[var(--color-border)] px-2 py-2 text-center font-semibold ${hoveredRow === team.id ? "bg-[rgba(14,116,144,0.08)]" : ""}`}>{team.total}</td>
                                 {team.answers.map((answer, index) => {
                                     const key = `q${index + 1}`;
                                     const active = hoveredRow === team.id || hoveredColumn === key;
@@ -403,17 +407,41 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
                     <Popup popup={popup}>
                         {popup.type === "fudzi-answer" ? (
                             <>
-                                <PopupButton onClick={() => { setAnswer(popup.teamId, popup.questionIndex, "correct"); setPopup(null); }} variant="success">Отметить как верный</PopupButton>
-                                <PopupButton onClick={() => { setAnswer(popup.teamId, popup.questionIndex, "incorrect"); setPopup(null); }} variant="danger">Отметить как неверный</PopupButton>
-                                <PopupButton onClick={() => { setAnswer(popup.teamId, popup.questionIndex, "not_submitted"); setPopup(null); }}>Сбросить ответ</PopupButton>
+                                {(() => {
+                                    const team = sortedData.find((item) => item.id === popup.teamId);
+                                    const answer = team?.answers?.[popup.questionIndex - 1];
+                                    const currentStatus = answer?.status ?? "not_submitted";
+
+                                    return (
+                                        <>
+                                            {currentStatus !== "correct" ? (
+                                                <PopupButton onClick={() => { setAnswer(popup.teamId, popup.questionIndex, "correct"); setPopup(null); }} variant="success">Отметить как верный</PopupButton>
+                                            ) : null}
+                                            {currentStatus !== "incorrect" ? (
+                                                <PopupButton onClick={() => { setAnswer(popup.teamId, popup.questionIndex, "incorrect"); setPopup(null); }} variant="danger">Отметить как неверный</PopupButton>
+                                            ) : null}
+                                            {currentStatus !== "not_submitted" ? (
+                                                <PopupButton onClick={() => { setAnswer(popup.teamId, popup.questionIndex, "not_submitted"); setPopup(null); }}>Сбросить ответ</PopupButton>
+                                            ) : null}
+                                        </>
+                                    );
+                                })()}
                             </>
                         ) : popup.type === "fudzi-penalty" ? (
                             <>
-                                {popup.penalty > 0 ? (
-                                    <PopupButton onClick={() => { setPenalty(popup.teamId, Math.max(0, popup.penalty - 1)); setPopup(null); }}>Уменьшить штраф</PopupButton>
-                                ) : null}
-                                <PopupButton onClick={() => { setPenalty(popup.teamId, popup.penalty + 1); setPopup(null); }} variant="danger">Увеличить штраф</PopupButton>
-                                <PopupButton onClick={() => { setPenalty(popup.teamId, 0); setPopup(null); }}>Сбросить штраф</PopupButton>
+                                {(() => {
+                                    const team = sortedData.find((item) => item.id === popup.teamId);
+                                    const penalty = team?.penalty ?? popup.penalty;
+
+                                    return (
+                                        <CounterRow
+                                            label="Штраф"
+                                            value={penalty}
+                                            onIncrease={() => { setPenalty(popup.teamId, penalty + 1); }}
+                                            onDecrease={() => { setPenalty(popup.teamId, Math.max(0, penalty - 1)); }}
+                                        />
+                                    );
+                                })()}
                             </>
                         ) : null}
                     </Popup>
@@ -431,7 +459,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
     const finishQuarter = useSocketStore((state) => state.kvartalFinish);
     const setPenalty = useSocketStore((state) => state.kvartalSetPenalty);
 
-    const [sort, setSort] = useState<SortState>({ key: "total", direction: "desc" });
+    const [sort, setSort] = useState<SortState>(null);
     const [hoveredColumn, setHoveredColumn] = useState<string | null>(null);
     const [hoveredRow, setHoveredRow] = useState<number | null>(null);
     const [popup, setPopup] = useState<PopupState | null>(null);
@@ -509,14 +537,14 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
     }
 
     return (
-        <section className="overflow-x-auto">
-            <div className="max-h-[calc(100vh-260px)] min-w-[1320px] overflow-auto rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
+        <section className="h-[calc(100vh-5rem)] overflow-x-auto">
+            <div className="max-h-[calc(100vh-5rem)] min-w-[1120px] overflow-auto rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
                 <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
                     <colgroup>
                         <col className="w-[16%]" />
-                        <col className="w-[6%]" />
-                        <col className="w-[6%]" />
-                        {Array.from({ length: 20 }).map((_, index) => <col key={index} className="w-[3.6%]" />)}
+                        <col className="w-[4.5%]" />
+                        <col className="w-[4.5%]" />
+                        {Array.from({ length: 20 }).map((_, index) => <col key={index} className="w-[3.1%]" />)}
                     </colgroup>
                     <thead className="bg-[var(--color-primary)] text-white">
                         <tr>
@@ -524,7 +552,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                             <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>Итого {sort?.key === "total" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             <th rowSpan={2} className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>Штраф {sort?.key === "penalty" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             {Array.from({ length: 4 }).map((_, quarterIndex) => (
-                                <th key={quarterIndex} colSpan={5} className="sticky top-0 z-40 bg-[var(--color-primary)] px-2 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">
+                                <th key={quarterIndex} colSpan={5} className="sticky top-0 z-40 h-6 bg-[var(--color-primary)] px-1 py-0 text-center text-[10px] font-semibold uppercase tracking-[0.04em] leading-none">
                                     Квартал {quarterIndex + 1}
                                 </th>
                             ))}
@@ -537,7 +565,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                     const active = hoveredColumn === key;
 
                                     return (
-                                        <th key={key} className={`sticky top-[42px] z-40 bg-[var(--color-primary)] ${active ? "shadow-[inset_0_0_0_9999px_rgba(255,255,255,0.14)]" : ""}`}>
+                                        <th key={key} className={`sticky top-[24px] z-40 h-5 bg-[var(--color-primary)] ${active ? "shadow-[inset_0_0_0_9999px_rgba(255,255,255,0.14)]" : ""}`}>
                                             <button
                                                 type="button"
                                                 onClick={() => toggleSort(key)}
@@ -575,7 +603,6 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                         cells={quarter.answers.map((answer, answerIndex) => {
                                             const key = `q${quarterIndex + 1}_${answerIndex + 1}`;
                                             const active = hoveredRow === team.id || hoveredColumn === key;
-                                            const isClosed = quarter.finished;
                                             const colorClass = answer.score > 0
                                                 ? "bg-[rgba(68,216,13,0.24)] text-[#166534]"
                                                 : answer.score < 0
@@ -587,7 +614,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                     key={key}
                                                     onMouseEnter={() => setHoveredColumn(key)}
                                                     onMouseLeave={() => setHoveredColumn(null)}
-                                                    onClick={canEditAnswers && !isClosed ? (event) => openPopup(event, {
+                                                    onClick={canEditAnswers ? (event) => openPopup(event, {
                                                         type: "kvartaly-answer",
                                                         teamId: team.id,
                                                         questionNumber: quarterIndex * 4 + answerIndex + 1,
@@ -597,9 +624,9 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                         x: 0,
                                                         y: 0,
                                                     }) : undefined}
-                                                    className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center transition ${colorClass} ${active ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${isClosed ? "bg-[rgba(15,23,42,0.10)] text-[rgba(71,85,105,0.98)]" : ""} ${canEditAnswers && !isClosed ? "cursor-pointer" : ""}`}
+                                                    className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center transition ${colorClass} ${active ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
                                                 >
-                                                    {answer.score !== 0 ? answer.score : ""}
+                                                    {answer.score !== 0 ? answer.score : quarter.finished ? 0 : ""}
                                                 </td>
                                             );
                                         }).concat(
@@ -608,9 +635,9 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                                 onMouseEnter={() => setHoveredColumn(`bonus_${quarterIndex + 1}`)}
                                                 onMouseLeave={() => setHoveredColumn(null)}
                                                 onClick={canEditAnswers ? (event) => openPopup(event, { type: "kvartaly-bonus", teamId: team.id, quarterIndex, finished: quarter.finished, width: 220, x: 0, y: 0 }) : undefined}
-                                                className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center font-semibold transition ${quarter.bonus > 0 ? "bg-[rgba(68,216,13,0.24)] text-[#166534]" : ""} ${quarter.finished ? "bg-[rgba(15,23,42,0.14)] text-[var(--color-text-main)]" : ""} ${(hoveredRow === team.id || hoveredColumn === `bonus_${quarterIndex + 1}`) ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
+                                                className={`border-b border-r border-[var(--color-border)] px-1 py-2 text-center font-semibold transition ${quarter.bonus > 0 ? "bg-[rgba(68,216,13,0.24)] text-[#166534]" : ""} ${(hoveredRow === team.id || hoveredColumn === `bonus_${quarterIndex + 1}`) ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
                                             >
-                                                {quarter.finished ? quarter.total : quarter.bonus > 0 ? quarter.bonus : ""}
+                                                {quarter.bonus > 0 ? quarter.bonus : quarter.finished ? 0 : ""}
                                             </td>
                                         )}
                                     />
@@ -632,6 +659,7 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                                     onIncrease={() => { addAnswer(popup.teamId, popup.questionNumber, 1, 0); setPopup(null); }}
                                     onDecrease={() => { addAnswer(popup.teamId, popup.questionNumber, -1, 0); setPopup(null); }}
                                     positive
+                                    maxValue={1}
                                 />
                                 <CounterRow
                                     label="Неверных ответов"
@@ -651,11 +679,19 @@ function KvartalyResultsTable({ data, leagueId }: { data: KvartalyTeam[]; league
                             </>
                         ) : popup.type === "kvartaly-penalty" ? (
                             <>
-                                {popup.penalty > 0 ? (
-                                    <PopupButton onClick={() => { setPenalty(popup.teamId, Math.max(0, popup.penalty - 1)); setPopup(null); }}>Уменьшить штраф</PopupButton>
-                                ) : null}
-                                <PopupButton onClick={() => { setPenalty(popup.teamId, popup.penalty + 1); setPopup(null); }} variant="danger">Увеличить штраф</PopupButton>
-                                <PopupButton onClick={() => { setPenalty(popup.teamId, 0); setPopup(null); }}>Сбросить штраф</PopupButton>
+                                {(() => {
+                                    const team = sortedData.find((item) => item.id === popup.teamId);
+                                    const penalty = team?.penalty ?? popup.penalty;
+
+                                    return (
+                                        <CounterRow
+                                            label="Штраф"
+                                            value={penalty}
+                                            onIncrease={() => { setPenalty(popup.teamId, penalty + 1); }}
+                                            onDecrease={() => { setPenalty(popup.teamId, Math.max(0, penalty - 1)); }}
+                                        />
+                                    );
+                                })()}
                             </>
                         ) : null}
                     </Popup>
@@ -713,7 +749,7 @@ function LeagueStageResultsPage({
     const numericLeagueId = Number(leagueId);
 
     return (
-        <section className="space-y-6">
+        <section className="space-y-6 h-[calc(100vh-5rem)]">
             {/*<div className="space-y-2">*/}
             {/*    <div className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)]">*/}
             {/*        {title}*/}

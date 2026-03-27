@@ -71,6 +71,12 @@ const ACTION_META: Record<LogAction, { label: string; className: string }> = {
 
 const COLLECTION_ENTITIES: PrimaryLogEntity[] = ["events", "locations", "leagues", "teams", "users"];
 
+const FALLBACK_ENTITY_META = { label: "Неизвестная сущность", singular: "записи" } as const;
+const FALLBACK_ACTION_META = {
+    label: "Действие",
+    className: "border-[var(--color-border)] bg-[rgba(148,163,184,0.08)] text-[var(--color-text-secondary)]",
+} as const;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
     return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
@@ -131,7 +137,27 @@ function shortJson(value: unknown) {
 }
 
 function jsonBlock(value: unknown) {
-    return JSON.stringify(value, null, 2);
+    if (value === null || value === undefined) {
+        return "—";
+    }
+
+    try {
+        return JSON.stringify(value, null, 2) ?? "—";
+    } catch {
+        return String(value);
+    }
+}
+
+function getEntityMeta(entity: unknown) {
+    return typeof entity === "string" && entity in ENTITY_META
+        ? ENTITY_META[entity as LogEntity]
+        : FALLBACK_ENTITY_META;
+}
+
+function getActionMeta(action: unknown) {
+    return typeof action === "string" && action in ACTION_META
+        ? ACTION_META[action as LogAction]
+        : FALLBACK_ACTION_META;
 }
 
 function getDiffEntries(log: LogRecord) {
@@ -303,7 +329,7 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
     }, [actionsUserId, mode, page, recordId, resolvedEntity]);
 
     const filteredLogs = useMemo(() => {
-        const logs = response?.page ?? [];
+        const logs = Array.isArray(response?.page) ? response.page : [];
         if (actionFilter === "ALL") {
             return logs;
         }
@@ -314,7 +340,7 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
     const pageTitle = mode === "user-actions"
         ? `Журнал действий пользователя #${actionsUserId ?? "—"}`
         : mode === "record"
-            ? `История изменений ${resolvedEntity ? ENTITY_META[resolvedEntity].singular : "объекта"} #${recordId ?? "—"}`
+            ? `История изменений ${resolvedEntity ? getEntityMeta(resolvedEntity).singular : "объекта"} #${recordId ?? "—"}`
             : "Логи системы";
     const pageDescription = mode === "user-actions"
         ? "Все действия, выполненные выбранным пользователем в системе."
@@ -441,7 +467,7 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
                     <Database size={16} />
                     {mode === "user-actions"
                         ? "Источник: журнал действий пользователя"
-                        : `Источник: ${resolvedEntity ? ENTITY_META[resolvedEntity].label.toLowerCase() : "логи"}`}
+                        : `Источник: ${resolvedEntity ? getEntityMeta(resolvedEntity).label.toLowerCase() : "логи"}`}
                 </div>
             </div>
 
@@ -455,6 +481,8 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
                 <div className="space-y-4">
                     {filteredLogs.map((log) => {
                         const changes = getDiffEntries(log);
+                        const entityMeta = getEntityMeta(log.table_name);
+                        const actionMeta = getActionMeta(log.action);
 
                         return (
                             <article
@@ -465,11 +493,11 @@ export function LogsPage({ mode = "collection", entity }: LogsPageProps) {
                                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                                         <div className="space-y-3">
                                             <div className="flex flex-wrap items-center gap-2">
-                                                <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${ACTION_META[log.action].className}`}>
-                                                    {ACTION_META[log.action].label}
+                                                <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${actionMeta.className}`}>
+                                                    {actionMeta.label}
                                                 </span>
                                                 <span className="rounded-full border border-[var(--color-border)] bg-[rgba(248,250,252,0.9)] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">
-                                                    {ENTITY_META[log.table_name].label}
+                                                    {entityMeta.label}
                                                 </span>
                                                 {log.record_id ? (
                                                     <span className="rounded-full border border-[var(--color-border)] bg-white px-3 py-1 text-xs text-[var(--color-text-secondary)]">

@@ -392,7 +392,7 @@ export function TeamInfoModal() {
                     <label className="block space-y-2 rounded-2xl border border-[var(--color-border)] bg-[rgba(248,250,252,0.76)] p-4 lg:col-span-2">
                         <span className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">Документы</span>
                         <textarea
-                            rows={3}
+                            rows={5}
                             value={draft.documents}
                             readOnly={!isEditing}
                             onChange={(event) => setDraft((prev) => prev ? { ...prev, documents: event.target.value } : prev)}
