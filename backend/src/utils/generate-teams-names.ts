@@ -103,7 +103,7 @@ export async function generateTeamsNames(
         }
         if (schoolInfo) {
             for (const line of schoolInfo.lines) {
-                lines.push({ text: line, size: schoolInfo.size, lineHeight: schoolInfo.lineHeight });
+                lines.push({ text: line.replace("№", ""), size: schoolInfo.size, lineHeight: schoolInfo.lineHeight });
             }
         }
 
