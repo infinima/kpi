@@ -23,7 +23,7 @@ locationsRouter.get(
         const { event_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT id, event_id, name, address, created_at, updated_at, deleted_at
+            `SELECT id, event_id, name, address, photo_album_url, created_at, updated_at, deleted_at
              FROM locations
              WHERE event_id = ? AND deleted_at IS NULL`,
             [event_id], (req as any).user_id
@@ -43,7 +43,7 @@ locationsRouter.get(
         const { event_id } = (req as any).validated.params;
 
         const rows = await query(
-            `SELECT id, event_id, name, address, created_at, updated_at, deleted_at
+            `SELECT id, event_id, name, address, photo_album_url, created_at, updated_at, deleted_at
              FROM locations
              WHERE event_id = ? AND deleted_at IS NOT NULL`,
             [event_id], (req as any).user_id
@@ -62,7 +62,7 @@ locationsRouter.get(
         const { id } = (req as any).validated.params;
 
         const [row] = await query(
-            "SELECT id, event_id, name, address, created_at, updated_at, deleted_at FROM locations WHERE id = ?",
+            "SELECT id, event_id, name, address, photo_album_url, created_at, updated_at, deleted_at FROM locations WHERE id = ?",
             [id], (req as any).user_id
         );
 
@@ -81,8 +81,8 @@ locationsRouter.post(
 
         try {
             const result = await query(
-                "INSERT INTO locations (event_id, name, address) VALUES (?, ?, ?)",
-                [data.event_id, data.name, data.address], (req as any).user_id
+                "INSERT INTO locations (event_id, name, address, photo_album_url) VALUES (?, ?, ?, ?)",
+                [data.event_id, data.name, data.address, data.photo_album_url ?? null], (req as any).user_id
             );
 
             res.json({ id: result.insertId });

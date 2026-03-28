@@ -7,6 +7,7 @@ export const LocationSchema = z.object({
     event_id: z.coerce.number().int().positive(),
     name: z.string().min(1),
     address: z.string().min(1),
+    photo_album_url: z.string().url().nullable(),
     created_at: z.string(),
     updated_at: z.string(),
     deleted_at: z.string().nullable(),
@@ -22,6 +23,8 @@ export const CreateLocationInput = LocationSchema.omit({
     created_at: true,
     updated_at: true,
     deleted_at: true,
+}).extend({
+    photo_album_url: LocationSchema.shape.photo_album_url.optional(),
 });
 export const UpdateLocationInput = CreateLocationInput
     .partial()
