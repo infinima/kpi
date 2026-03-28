@@ -285,6 +285,8 @@ const emptyTeamForm = (): TeamFormState => ({
     acceptedOffer: false,
 });
 
+
+
 function InfoBadge({ icon, text }: { icon: ReactNode; text: string }) {
     return (
         <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[rgba(255,255,255,0.78)] px-3 py-1.5 text-xs text-[var(--color-text-secondary)]">
@@ -1141,7 +1143,9 @@ export default function LkPage() {
                                                     const paymentLink = getTeamPaymentLink(team);
                                                     const shouldShowPaymentLink = team.status === "ACCEPTED" && Boolean(paymentLink);
                                                     const shouldShowPaidState = team.status === "PAID";
-                                                    const appreciationsCount = Array.isArray(team.appreciations) ? team.appreciations.length : 0;
+                                                    const appreciationsCount = Array.isArray(team.appreciations)
+                                                        ? team.appreciations.filter((item) => String(item ?? "").trim().length > 0).length
+                                                        : 0;
                                                     const nominationsCount = Array.isArray(team.special_nominations) ? team.special_nominations.length : 0;
                                                     const canDownloadAppreciation = team.status === "ARRIVED" && appreciationsCount > 0;
                                                     const canDownloadDiploma = team.league_status === "ENDED" && Boolean(team.diploma);

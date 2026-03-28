@@ -1,4 +1,4 @@
-import { useLocation, useParams } from "react-router-dom";
+import {useLocation, useParams} from "react-router-dom";
 
 type RouteState = {
   eventName?: string;

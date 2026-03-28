@@ -72,6 +72,7 @@ export function mapLeagueEntityRows(rows: Array<{ id: number; location_id: numbe
         name: row.name,
         max_teams_count: row.max_teams_count ?? 0,
         status: row.status,
+        fudzi_presentation: "fudzi_presentation" in row ? (row as { fudzi_presentation?: string | null }).fudzi_presentation ?? "" : "",
         created_at: row.created_at ?? "",
         updated_at: row.updated_at ?? "",
         deleted_at: row.deleted_at ?? "",

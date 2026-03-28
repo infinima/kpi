@@ -249,6 +249,7 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
     const canEditAnswers = !guest && can("leagues", "edit_answers", leagueId);
     const canEditPenalties = !guest && can("leagues", "edit_penalties", leagueId);
     const setAnswer = useSocketStore((state) => state.fudziSetAnswer);
+    const setCard = useSocketStore((state) => state.fudziSetCard);
     const setPenalty = useSocketStore((state) => state.fudziSetPenalty);
 
     const [sort, setSort] = useState<SortState>(null);
@@ -275,6 +276,7 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
 
         const getValue = (team: FudziTeam) => {
             if (sort.key === "name") return team.name;
+            if (sort.key === "has_card") return Number(Boolean(team.has_card));
             if (sort.key === "penalty") return team.penalty;
             if (sort.key === "total") return team.total;
             if (sort.key.startsWith("q")) {
@@ -325,10 +327,11 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
 
     return (
         <section className="h-[calc(100vh-5rem)]  overflow-x-auto">
-            <div className="max-h-[calc(100vh-5rem)] min-w-[1040px] overflow-auto rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
+            <div className="max-h-[calc(100vh-5rem)] min-w-[1110px] overflow-auto rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
                 <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
                     <colgroup>
                         <col className="w-[16%]" />
+                        <col className="w-[3%]" />
                         <col className="w-[4.5%]" />
                         <col className="w-[4.5%]" />
                         {Array.from({ length: 16 }).map((_, index) => <col key={index} className="w-[3.2%]" />)}
@@ -336,6 +339,7 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
                     <thead className="bg-[var(--color-primary)]">
                         <tr>
                             <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>Команда {sort?.key === "name" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
+                            <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("has_card")} className={headerButtonClass(sort?.key === "has_card")}>Кар. {sort?.key === "has_card" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("total")} className={headerButtonClass(sort?.key === "total")}>Итого {sort?.key === "total" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
                             <th className="sticky top-0 z-40 bg-[var(--color-primary)]"><button type="button" onClick={() => toggleSort("penalty")} className={headerButtonClass(sort?.key === "penalty")}>Штраф {sort?.key === "penalty" && sort.direction ? sortIcon(sort.direction) : null}</button></th>
 
@@ -367,6 +371,17 @@ function FudziResultsTable({ data, leagueId }: { data: FudziTeam[]; leagueId: nu
                                 className={rowIndex % 2 === 0 ? "bg-[rgba(248,250,252,0.88)]" : "bg-[rgba(255,255,255,0.84)]"}
                             >
                                 <td className={`border-b border-r border-[var(--color-border)] px-3 py-2 ${hoveredRow === team.id ? "bg-[rgba(14,116,144,0.08)]" : ""}`}>{team.name}</td>
+                                <td
+                                    className={`border-b border-r border-[var(--color-border)] px-2 py-2 text-center font-semibold transition ${
+                                        team.has_card
+                                            ? "bg-[rgba(68,216,13,0.24)] text-[#166534]"
+                                            : "bg-[rgba(237,66,66,0.2)] text-[#b91c1c]"
+                                    } ${hoveredRow === team.id ? "shadow-[inset_0_0_0_9999px_rgba(14,116,144,0.08)]" : ""} ${canEditAnswers ? "cursor-pointer" : ""}`}
+                                    onClick={canEditAnswers ? () => setCard(team.id, !team.has_card) : undefined}
+                                    title={canEditAnswers ? "Переключить наличие карточки" : undefined}
+                                >
+                                    {team.has_card ? "+" : "-"}
+                                </td>
 
                                 <td className={`border-b border-r border-[var(--color-border)] px-2 py-2 text-center font-semibold ${hoveredRow === team.id ? "bg-[rgba(14,116,144,0.08)]" : ""}`}>{team.total}</td>
                                 <td
