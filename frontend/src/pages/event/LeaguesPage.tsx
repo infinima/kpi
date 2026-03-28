@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FileText, Trash2 } from "lucide-react";
+import { FileText, Trash2, Upload } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
+import type { EntityTableColumn } from "@/components/ui/table/EntityTableRow";
 import { LeagueCard } from "@/components/ui/cards/LeagueCard";
 import { EntityTable } from "@/components/ui/table/EntityTable";
 import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import OutlineButton from "@/components/ui/OutlineButton";
 import { leagueEntityColumns, mapLeagueEntityRows } from "@/pages/event/entityTableConfigs";
-import { useUser } from "@/store";
+import { useNotifications, useUser } from "@/store";
 import { canUseTableMode, getCollectionViewMode } from "@/pages/event/viewMode";
 
 type LeagueItem = {
@@ -15,10 +17,45 @@ type LeagueItem = {
     name: string;
     status: string;
     max_teams_count: number;
+    fudzi_presentation?: string | null;
     created_at?: string;
     updated_at?: string;
     deleted_at?: string | null;
 };
+
+function pickPdfFile(onSelect: (file: File) => void) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "application/pdf,.pdf";
+    input.style.position = "fixed";
+    input.style.left = "-9999px";
+    document.body.appendChild(input);
+
+    input.onchange = () => {
+        const file = input.files?.[0];
+        document.body.removeChild(input);
+        if (file) {
+            onSelect(file);
+        }
+    };
+
+    input.oncancel = () => {
+        if (document.body.contains(input)) {
+            document.body.removeChild(input);
+        }
+    };
+
+    input.click();
+}
+
+function fileToBase64(file: File) {
+    return new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result ?? ""));
+        reader.onerror = () => reject(reader.error ?? new Error("FILE_READ_FAILED"));
+        reader.readAsDataURL(file);
+    });
+}
 
 export function LeaguesPage() {
     const location = useLocation();
@@ -26,7 +63,9 @@ export function LeaguesPage() {
     const [searchParams] = useSearchParams();
     const { eventId, locationId, leagueId } = useParams();
     const { user, can } = useUser();
+    const notify = useNotifications((state) => state.addMessage);
     const [leagues, setLeagues] = useState<LeagueItem[]>([]);
+    const [uploadingLeagueIds, setUploadingLeagueIds] = useState<Record<number, boolean>>({});
     const [loading, setLoading] = useState(true);
     const [visibility, setVisibility] = useState<"active" | "deleted">("active");
     const canUseTable = canUseTableMode(user?.rights, "leagues");
@@ -86,6 +125,47 @@ export function LeaguesPage() {
     }, [effectiveVisibility, locationId]);
 
     const rows = useMemo(() => mapLeagueEntityRows(leagues), [leagues]);
+    const columns = useMemo<EntityTableColumn[]>(() => [
+        ...leagueEntityColumns.slice(0, 5),
+        {
+            key: "fudzi_presentation",
+            label: "Фудзи PDF",
+            width: 1.15,
+            editable: false,
+            searchable: false,
+            sortable: false,
+            renderCell: (row) => {
+                const rowId = Number(row.id);
+                const hasPresentation = Boolean(row.fudzi_presentation);
+                const isUploading = Boolean(uploadingLeagueIds[rowId]);
+
+                return (
+                    <div className="flex items-center justify-between gap-2">
+                        {canManage ? (
+                            <OutlineButton
+                                active
+                                loading={isUploading}
+                                loadingText=""
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    pickPdfFile((file) => {
+                                        void handlePresentationUpload(rowId, file);
+                                    });
+                                }}
+                                className="min-w-[116px] px-3 py-2 text-xs shadow-none"
+                            >
+                                <span className="inline-flex items-center gap-1">
+                                    <Upload size={14} />
+                                    {hasPresentation ? "Заменить" : "Загрузить"}
+                                </span>
+                            </OutlineButton>
+                        ) : null}
+                    </div>
+                );
+            },
+        },
+        ...leagueEntityColumns.slice(5),
+    ], [canManage, uploadingLeagueIds]);
     const visibilityFilter = (
         canSeeDeleted ? (
             <button
@@ -143,6 +223,37 @@ export function LeaguesPage() {
         await loadLeagues();
     }
 
+    async function handlePresentationUpload(leagueRowId: number, file: File) {
+        const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+        if (!isPdf) {
+            notify({
+                type: "error",
+                text: "Можно загружать только PDF.",
+            });
+            return;
+        }
+
+        try {
+            setUploadingLeagueIds((prev) => ({ ...prev, [leagueRowId]: true }));
+            const fudzi_presentation = await fileToBase64(file);
+
+            await apiPatch(`leagues/${leagueRowId}`, { fudzi_presentation }, {
+                success: "Презентация фудзи загружена",
+                error: true,
+            });
+
+            setLeagues((prev) =>
+                prev.map((league) =>
+                    league.id === leagueRowId
+                        ? { ...league, fudzi_presentation: `uploaded:${Date.now()}` }
+                        : league
+                )
+            );
+        } finally {
+            setUploadingLeagueIds((prev) => ({ ...prev, [leagueRowId]: false }));
+        }
+    }
+
     async function handleRestore(row: EntityTableRowData) {
         await apiPost(`leagues/${row.id}/restore`, undefined, {
             success: "Лига восстановлена",
@@ -191,7 +302,7 @@ export function LeaguesPage() {
                 </div>
             ) : viewMode === "table" ? (
                 <EntityTable
-                    columns={leagueEntityColumns}
+                    columns={columns}
                     data={rows}
                     onCreate={canManage ? handleCreate : undefined}
                     onUpdate={canManage ? handleUpdate : undefined}

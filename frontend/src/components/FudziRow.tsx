@@ -181,7 +181,6 @@ export function FudziRow({ item }: Props) {
           {item.name}
         </td>
 
-
         {/* Вопросы 1..16 */}
         {item.answers.map((a, i) => (
           <td
@@ -247,7 +246,6 @@ export function FudziRow({ item }: Props) {
                   </button>
                 </div>
               </div>
-
 
             </div>
 

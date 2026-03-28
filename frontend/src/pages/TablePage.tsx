@@ -134,8 +134,6 @@ export function TablesPage() {
         </button>
       </th>
 
-
-
       {[...Array(16)].map((_, i) => (
         <th
           key={i}

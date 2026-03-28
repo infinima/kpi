@@ -118,6 +118,15 @@ export function ResultPage() {
     });
   }, [data, sort]);
 
+  const canDownloadDocuments = useMemo(() => {
+    return sorted.some((team) => can("teams", "get", {
+      id: team.id,
+      eventId: eventScopeId,
+      locationId: locationScopeId,
+      leagueId: leagueScopeId,
+    }));
+  }, [can, eventScopeId, leagueScopeId, locationScopeId, sorted]);
+
   function toggleSort(key: SortKey) {
     setSort((current) => {
       if (!current || current.key !== key) {
@@ -170,7 +179,7 @@ export function ResultPage() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <div className="min-w-[1240px] overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]">
+          <div className={`${canDownloadDocuments ? "min-w-[1240px]" : "min-w-[1100px]"} overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]`}>
             <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
               <colgroup>
                 <col className="w-[8%]" />
@@ -180,9 +189,13 @@ export function ResultPage() {
                 <col className="w-[8%]" />
                 <col className="w-[16%]" />
                 <col className="w-[18%]" />
-                <col className="w-[6%]" />
-                <col className="w-[4.5%]" />
-                <col className="w-[4.5%]" />
+                {canDownloadDocuments ? (
+                  <>
+                    <col className="w-[6%]" />
+                    <col className="w-[4.5%]" />
+                    <col className="w-[4.5%]" />
+                  </>
+                ) : null}
               </colgroup>
               <thead>
                 <tr className="bg-[var(--color-primary)] text-white">
@@ -193,9 +206,13 @@ export function ResultPage() {
                   <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_sum")} className={headerButtonClass(sort?.key === "place_sum")}>Сумма {sort ? sortIcon(sort.key === "place_sum", sort.direction) : null}</button></th>
                   <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Диплом</th>
                   <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Спецноминации</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Благ.</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Дипл.</th>
-                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Ном.</th>
+                  {canDownloadDocuments ? (
+                    <>
+                      <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Благ.</th>
+                      <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Дипл.</th>
+                      <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Ном.</th>
+                    </>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
@@ -261,39 +278,43 @@ export function ResultPage() {
                         ) : null}
                       </div>
                     </td>
-                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
-                      {canGetTeam ? (
-                        <button
-                          type="button"
-                          onClick={() => void apiGetFile(`teams/${team.id}/appreciation`, `${team.name.replace(" ", "_")}_благодарность.pdf`)}
-                          className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
-                        >
-                          <Download size={14} />
-                        </button>
-                      ) : null}
-                    </td>
-                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
-                      {canGetTeam && team.diploma ? (
-                        <button
-                          type="button"
-                          onClick={() => void apiGetFile(`teams/${team.id}/diploma`, `${team.name.replace(" ", "_")}_${team.diploma === "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`)}
-                          className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
-                        >
-                          <Download size={14} />
-                        </button>
-                      ) : null}
-                    </td>
-                    <td className="border-b border-[var(--color-border)] px-3 py-3 text-center">
-                      {canGetTeam && team.special_nominations.length > 0 ? (
-                        <button
-                          type="button"
-                          onClick={() => void apiGetFile(`teams/${team.id}/special-nominations`, `${team.name.replace(" ", "_")}_спецноминации.pdf`)}
-                          className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
-                        >
-                          <Download size={14} />
-                        </button>
-                      ) : null}
-                    </td>
+                    {canDownloadDocuments ? (
+                      <>
+                        <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
+                          {canGetTeam ? (
+                            <button
+                              type="button"
+                              onClick={() => void apiGetFile(`teams/${team.id}/appreciation`, `${team.name.replace(" ", "_")}_благодарность.pdf`)}
+                              className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                            >
+                              <Download size={14} />
+                            </button>
+                          ) : null}
+                        </td>
+                        <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">
+                          {canGetTeam && team.diploma ? (
+                            <button
+                              type="button"
+                              onClick={() => void apiGetFile(`teams/${team.id}/diploma`, `${team.name.replace(" ", "_")}_${team.diploma === "PARTICIPANT" ? "сертификат" : "диплом"}.pdf`)}
+                              className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                            >
+                              <Download size={14} />
+                            </button>
+                          ) : null}
+                        </td>
+                        <td className="border-b border-[var(--color-border)] px-3 py-3 text-center">
+                          {canGetTeam && team.special_nominations.length > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => void apiGetFile(`teams/${team.id}/special-nominations`, `${team.name.replace(" ", "_")}_спецноминации.pdf`)}
+                              className="inline-flex items-center gap-1 text-sm text-[var(--color-primary)] transition hover:opacity-80"
+                            >
+                              <Download size={14} />
+                            </button>
+                          ) : null}
+                        </td>
+                      </>
+                    ) : null}
                   </tr>
                   );
                 })}
