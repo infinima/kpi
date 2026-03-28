@@ -18,7 +18,7 @@ function resolveGeneratorId(eventId: number, available: number[]): number {
     return Math.max(...available);
 }
 
-const AVAILABLE_EVENT_IDS = [1];
+const AVAILABLE_EVENT_IDS = [1, 2];
 
 async function generateDiplomaEvent1(
     teamName: string,
@@ -62,13 +62,16 @@ async function generateDiplomaEvent1(
 
     // ===== Layout =====
     const teamFontSize = 45;
-    const teamMaxWidth = 400;
-    const teamStartX = 43;
+    const totalWidthUnits = 234;
+    const leftWidthUnits = 66;
+    const rightWidthUnits = 168;
+    const rightAreaX = width * (leftWidthUnits / totalWidthUnits);
+    const rightAreaWidth = width * (rightWidthUnits / totalWidthUnits);
+    const teamMaxWidth = rightAreaWidth;
     const teamBaseY = degree == "PARTICIPANT" ? 485 : 455;
     const teamBaseYDelta = 25;
 
     const memberFontSize = 22;
-    const memberStartX = 41;
     const memberStartY = 325;
 
     const yearY = 24;
@@ -105,8 +108,10 @@ async function generateDiplomaEvent1(
 
     teamLines.forEach((line, i) => {
         const y = teamBaseY - i * (teamFontSize + 6);
+        const lineWidth = mainFont.widthOfTextAtSize(line, teamFontSize);
+        const x = rightAreaX + Math.max(0, (rightAreaWidth - lineWidth) / 2);
         page.drawText(line, {
-            x: teamStartX,
+            x,
             y: y - (teamLinesNum === 1 ? teamBaseYDelta : 0),
             size: teamFontSize,
             font: mainFont
@@ -116,8 +121,10 @@ async function generateDiplomaEvent1(
     // ===== Участники (всегда 4 по требованию) =====
     members.slice(0, 4).forEach((fullName, i) => {
         const y = memberStartY - i * (memberFontSize + 4);
+        const lineWidth = futuraFont.widthOfTextAtSize(fullName, memberFontSize);
+        const x = rightAreaX + Math.max(0, (rightAreaWidth - lineWidth) / 2);
         page.drawText(fullName, {
-            x: memberStartX,
+            x,
             y,
             size: memberFontSize,
             font: futuraFont
@@ -136,8 +143,110 @@ async function generateDiplomaEvent1(
     return Buffer.from(await pdfDoc.save());
 }
 
+async function generateDiplomaEvent2(
+    teamName: string,
+    members: string[],
+    degree: "FIRST_DEGREE" | "SECOND_DEGREE" | "THIRD_DEGREE" | "PARTICIPANT",
+    year: string = new Date().getFullYear().toString()
+): Promise<Buffer> {
+    const templateMap = {
+        FIRST_DEGREE: "diploma_first_degree_template.pdf",
+        SECOND_DEGREE: "diploma_second_degree_template.pdf",
+        THIRD_DEGREE: "diploma_third_degree_template.pdf",
+        PARTICIPANT: "diploma_participant_template.pdf"
+    };
+
+    const templatePath = path.resolve(
+        __dirname,
+        "../static/papers/2/" + templateMap[degree]
+    );
+    const templateBytes = fs.readFileSync(templatePath);
+
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    // @ts-ignore
+    pdfDoc.registerFontkit(fontkit);
+
+    const page = pdfDoc.getPages()[0];
+    const { width } = page.getSize();
+
+    const mainFontBytes = fs.readFileSync(
+        path.resolve(__dirname, "../static/Garamond.ttf")
+    );
+    const mainFont = await pdfDoc.embedFont(mainFontBytes);
+
+    page.setFontColor(rgb(0, 0, 0));
+
+    const teamFontSize = 40;
+    const totalWidthUnits = 260;
+    const leftWidthUnits = 66;
+    const rightWidthUnits = 194;
+    const rightAreaX = width * (leftWidthUnits / totalWidthUnits);
+    const rightAreaWidth = width * (rightWidthUnits / totalWidthUnits);
+    const teamMaxWidth = rightAreaWidth;
+    const teamBaseY = 458;
+    const teamBaseYDelta = 25;
+
+    const memberFontSize = 20;
+    const memberStartY = 325;
+
+    function splitTextIntoLines(
+        text: string,
+        font: any,
+        fontSize: number,
+        maxWidth: number
+    ): string[] {
+        const words = text.split(" ");
+        const lines: string[] = [];
+        let current = "";
+
+        for (const word of words) {
+            const attempt = (current ? current + " " : "") + word;
+            const w = font.widthOfTextAtSize(attempt, fontSize);
+
+            if (w <= maxWidth) {
+                current = attempt;
+            } else {
+                if (current) lines.push(current);
+                current = word;
+            }
+        }
+        if (current) lines.push(current);
+        return lines;
+    }
+
+    const teamLines = splitTextIntoLines(teamName, mainFont, teamFontSize, teamMaxWidth).slice(0, 3);
+    const teamLinesNum = teamLines.length;
+
+    teamLines.forEach((line, i) => {
+        const y = teamBaseY - i * (teamFontSize - 6);
+        const lineWidth = mainFont.widthOfTextAtSize(line, teamFontSize);
+        const x = rightAreaX + Math.max(0, (rightAreaWidth - lineWidth) / 2);
+        page.drawText(line, {
+            x,
+            y: y - (teamLinesNum === 1 ? teamBaseYDelta : 0),
+            size: teamFontSize,
+            font: mainFont
+        });
+    });
+
+    members.slice(0, 4).forEach((fullName, i) => {
+        const y = memberStartY - i * (memberFontSize + 4);
+        const lineWidth = mainFont.widthOfTextAtSize(fullName, memberFontSize);
+        const x = rightAreaX + Math.max(0, (rightAreaWidth - lineWidth) / 2);
+        page.drawText(fullName, {
+            x,
+            y,
+            size: memberFontSize,
+            font: mainFont
+        });
+    });
+
+    return Buffer.from(await pdfDoc.save());
+}
+
 const DIPLOMA_GENERATORS: Record<number, DiplomaGenerator> = {
     1: ({ teamName, members, degree, year }) => generateDiplomaEvent1(teamName, members, degree, year),
+    2: ({ teamName, members, degree, year }) => generateDiplomaEvent2(teamName, members, degree, year),
 };
 
 export async function generateDiploma(

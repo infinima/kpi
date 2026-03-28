@@ -10,6 +10,7 @@ import { saveFile } from "../../utils/save-file.js";
 import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { generateTeamsNames } from "../../utils/generate-teams-names.js";
 import { generateTeamsExcel } from "../../utils/generate-teams-excel.js";
+import { generateAwardsScript } from "../../utils/generate-awards-script.js";
 import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
 import { getFudziTable } from "../../socket/services/fudzi-table.js";
 import { rankTeams } from "../../utils/rank-teams.js";
@@ -204,7 +205,7 @@ leaguesRouter.get(
     "/:id/print_teams_names",
     validate(GetOneLeagueInput, "params"),
     checkNotDeleted("league"),
-    // checkPermission("leagues", "print_documents"),
+    checkPermission("leagues", "print_documents"),
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -336,6 +337,153 @@ leaguesRouter.get(
             res.status(500).json({
                 error: {
                     code: "EXCEL_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+    }
+);
+
+// GET /api/leagues/:id/awards-script
+leaguesRouter.get(
+    "/:id/awards-script",
+    validate(GetOneLeagueInput, "params"),
+    checkNotDeleted("league"),
+    checkPermission("leagues", "print_documents"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [league] = await query(
+            `SELECT l.name,
+                    lo.name AS location_name,
+                    e.name AS event_name
+             FROM leagues l
+                      JOIN locations lo ON lo.id = l.location_id
+                      JOIN events e ON e.id = lo.event_id
+             WHERE l.id = ? AND l.deleted_at IS NULL`,
+            [id], (req as any).user_id
+        );
+
+        if (!league) {
+            return res.status(404).json({
+                error: {
+                    code: "LEAGUE_NOT_FOUND",
+                    message: "League does not exist"
+                }
+            });
+        }
+
+        const rows = await query(
+            `SELECT
+                 t.name,
+                 t.region,
+                 t.school,
+                 t.special_nominations,
+                 t.diploma
+             FROM teams t
+             WHERE t.league_id = ? AND t.deleted_at IS NULL`,
+            [id], (req as any).user_id
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                error: {
+                    code: "NO_TEAMS",
+                    message: "League has no teams"
+                }
+            });
+        }
+
+        const nominationMap = new Map<string, Array<{ name: string; region: string | null; school: string | null }>>();
+        const placeMap = new Map<number, Array<{ name: string; region: string | null; school: string | null }>>();
+        const diplomaToPlace: Record<string, number> = {
+            FIRST_DEGREE: 1,
+            SECOND_DEGREE: 2,
+            THIRD_DEGREE: 3
+        };
+
+        for (const row of rows as any[]) {
+            let nominations: string[] = [];
+            if (row.special_nominations) {
+                try {
+                    nominations = Array.isArray(row.special_nominations)
+                        ? row.special_nominations
+                        : JSON.parse(row.special_nominations);
+                } catch {
+                    nominations = [];
+                }
+            }
+
+            if (Array.isArray(nominations)) {
+                for (const nom of nominations) {
+                    const name = String(nom ?? "").trim();
+                    if (!name) continue;
+                    if (!nominationMap.has(name)) nominationMap.set(name, []);
+                    nominationMap.get(name)!.push({
+                        name: row.name,
+                        region: row.region ?? null,
+                        school: row.school ?? null
+                    });
+                }
+            }
+
+            const rawDiploma = row.diploma ? String(row.diploma) : null;
+            const place = rawDiploma ? diplomaToPlace[rawDiploma] ?? null : null;
+            if (place !== null) {
+                if (!placeMap.has(place)) placeMap.set(place, []);
+                placeMap.get(place)!.push({
+                    name: row.name,
+                    region: row.region ?? null,
+                    school: row.school ?? null
+                });
+            }
+        }
+
+        const collator = new Intl.Collator("ru");
+
+        const nominations = Array.from(nominationMap.entries())
+            .sort(([a], [b]) => collator.compare(a, b))
+            .map(([title, teams]) => ({
+                title,
+                teams: teams.sort((a, b) => collator.compare(a.name, b.name))
+            }));
+
+        const places = [3, 2, 1].map((place) => ({
+            title: `${place} место`,
+            teams: (placeMap.get(place) ?? []).sort((a, b) => collator.compare(a.name, b.name))
+        }));
+
+        try {
+            const pdf = await generateAwardsScript({
+                header: {
+                    eventName: league.event_name ?? "",
+                    locationName: league.location_name ?? "",
+                    leagueName: league.name ?? ""
+                },
+                nominations,
+                places
+            });
+
+            const safeName = league.name
+                .trim()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+
+            const fileName = `${safeName}_сценарий_награждения.pdf`;
+            const encoded = encodeURIComponent(fileName);
+
+            res.setHeader("Content-Type", "application/pdf");
+            res.setHeader(
+                "Content-Disposition",
+                `inline; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(pdf);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "PDF_GENERATION_FAILED",
                     message: String(e)
                 }
             });

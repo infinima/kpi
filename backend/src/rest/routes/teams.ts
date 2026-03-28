@@ -421,11 +421,11 @@ teamsRouter.get(
 
         const [row] = await query(
             `SELECT
-             t.name,
-             t.appreciations,
-             e.id AS event_id,
-             e.name AS event_name,
-             YEAR(e.date) AS event_year
+                 t.name,
+                 t.appreciations,
+                 e.documents_generator_id AS documents_generator_id,
+                 e.name AS event_name,
+                 YEAR(e.date) AS event_year
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
                       JOIN locations lo ON lo.id = l.location_id
@@ -448,7 +448,7 @@ teamsRouter.get(
         const appreciations = row.appreciations;
         const eventName = row.event_name;
         const eventYear = String(row.event_year);
-        const eventId = Number(row.event_id);
+        const eventId = Number(row.documents_generator_id);
 
         try {
             const pdf = await generateAppreciation(
@@ -461,7 +461,7 @@ teamsRouter.get(
             const safeName = row.name
                 .trim()
                 .replace(/\s+/g, "_")
-                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+                .replace(/[^a-zA-Zа-яА-ЯёЁ0-9_]/g, "_");
 
             const fileName = `${safeName}_благодарность.pdf`;
             const encoded = encodeURIComponent(fileName);
@@ -499,7 +499,7 @@ teamsRouter.get(
                  t.name AS team_name,
                  t.members,
                  t.diploma,
-                 e.id AS event_id,
+                 e.documents_generator_id AS documents_generator_id,
                  e.name AS event_name,
                  YEAR(e.date) AS event_year,
                  CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS coach_full_name
@@ -534,7 +534,7 @@ teamsRouter.get(
 
         const teamName = row.team_name;
         const eventYear = String(row.event_year);
-        const eventId = Number(row.event_id);
+        const eventId = Number(row.documents_generator_id);
         const { participants, coach } = normalizeTeamMembers(row.members);
         const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : (coach ?? "");
         const membersList = coachName
@@ -562,9 +562,16 @@ teamsRouter.get(
             const safeName = teamName
                 .trim()
                 .replace(/\s+/g, "_")
-                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+                .replace(/[^a-zA-Zа-яА-ЯёЁ0-9_]/g, "_");
 
-            const fileName = `${safeName}_диплом_${row.diploma}.pdf`;
+            const diplomaNameMap: Record<string, string> = {
+                FIRST_DEGREE: "диплом_1_степени",
+                SECOND_DEGREE: "диплом_2_степени",
+                THIRD_DEGREE: "диплом_3_степени",
+                PARTICIPANT: "сертификат_участника"
+            };
+            const suffix = diplomaNameMap[String(row.diploma)] ?? `диплом_${row.diploma}`;
+            const fileName = `${safeName}_${suffix}.pdf`;
             const encoded = encodeURIComponent(fileName);
 
             res.setHeader("Content-Type", "application/pdf");
@@ -600,7 +607,7 @@ teamsRouter.get(
                  t.name AS team_name,
                  t.members,
                  t.special_nominations,
-                 e.id AS event_id,
+                 e.documents_generator_id AS documents_generator_id,
                  YEAR(e.date) AS event_year,
                  CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS coach_full_name
              FROM teams t
@@ -625,7 +632,7 @@ teamsRouter.get(
 
         const teamName = row.team_name;
         const eventYear = String(row.event_year);
-        const eventId = Number(row.event_id);
+        const eventId = Number(row.documents_generator_id);
         const { participants, coach } = normalizeTeamMembers(row.members);
         const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : (coach ?? "");
         const members = coachName
@@ -653,7 +660,7 @@ teamsRouter.get(
             const safeName = teamName
                 .trim()
                 .replace(/\s+/g, "_")
-                .replace(/[^a-zA-Zа-яА-Я0-9_]/g, "_");
+                .replace(/[^a-zA-Zа-яА-ЯёЁ0-9_]/g, "_");
 
             const fileName = `${safeName}_спецноминации.pdf`;
             const encoded = encodeURIComponent(fileName);

@@ -214,6 +214,31 @@ registry.registerPath({
     },
 });
 
+// GET /api/leagues/{id}/awards-script
+registry.registerPath({
+    method: "get",
+    path: "/api/leagues/{id}/awards-script",
+    summary: "Скачать PDF сценария награждения лиги",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/pdf": {
+                    schema: { type: "string", format: "binary" },
+                },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist or has no teams" },
+        500: { description: "PDF generation failed" },
+    },
+});
+
 registry.registerPath({
     method: "get",
     path: "/api/leagues/{id}/final-table",
