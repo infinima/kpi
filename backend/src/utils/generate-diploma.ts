@@ -3,11 +3,24 @@ import * as fontkit from "fontkit";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function generateDiploma(
+type DiplomaGenerator = (params: {
+    teamName: string;
+    members: string[];
+    degree: "FIRST_DEGREE" | "SECOND_DEGREE" | "THIRD_DEGREE" | "PARTICIPANT";
+    year: string;
+}) => Promise<Buffer>;
+
+function resolveGeneratorId(eventId: number, available: number[]): number {
+    if (available.includes(eventId)) return eventId;
+    return Math.max(...available);
+}
+
+const AVAILABLE_EVENT_IDS = [1];
+
+async function generateDiplomaEvent1(
     teamName: string,
     members: string[],
     degree: "FIRST_DEGREE" | "SECOND_DEGREE" | "THIRD_DEGREE" | "PARTICIPANT",
@@ -23,7 +36,7 @@ export async function generateDiploma(
 
     const templatePath = path.resolve(
         __dirname,
-        "../static/" + templateMap[degree]
+        "../static/papers/1/" + templateMap[degree]
     );
     const templateBytes = fs.readFileSync(templatePath);
 
@@ -121,4 +134,20 @@ export async function generateDiploma(
     });
 
     return Buffer.from(await pdfDoc.save());
+}
+
+const DIPLOMA_GENERATORS: Record<number, DiplomaGenerator> = {
+    1: ({ teamName, members, degree, year }) => generateDiplomaEvent1(teamName, members, degree, year),
+};
+
+export async function generateDiploma(
+    teamName: string,
+    members: string[],
+    degree: "FIRST_DEGREE" | "SECOND_DEGREE" | "THIRD_DEGREE" | "PARTICIPANT",
+    eventId: number,
+    year: string = new Date().getFullYear().toString()
+): Promise<Buffer> {
+    const resolvedId = resolveGeneratorId(eventId, AVAILABLE_EVENT_IDS);
+    const generator = DIPLOMA_GENERATORS[resolvedId];
+    return generator({ teamName, members, degree, year });
 }

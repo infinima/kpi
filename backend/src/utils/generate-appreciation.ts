@@ -3,17 +3,29 @@ import * as fontkit from "fontkit";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function generateAppreciation(
+type AppreciationGenerator = (params: {
+    teachersNames: string[];
+    eventName: string;
+    year: string;
+}) => Promise<Buffer>;
+
+function resolveGeneratorId(eventId: number, available: number[]): number {
+    if (available.includes(eventId)) return eventId;
+    return Math.max(...available);
+}
+
+const AVAILABLE_EVENT_IDS = [1];
+
+async function generateAppreciationEvent1(
     teachersNames: string[],
     eventName: string,
     year: string = new Date().getFullYear().toString()
 ): Promise<Buffer> {
 
-    const templatePath = path.resolve(__dirname, "../static/appreciation_template.pdf");
+    const templatePath = path.resolve(__dirname, "../static/papers/1/appreciation_template.pdf");
     const templateBytes = fs.readFileSync(templatePath);
 
     const templatePdf = await PDFDocument.load(templateBytes);
@@ -77,4 +89,19 @@ export async function generateAppreciation(
     }
 
     return Buffer.from(await pdfDoc.save());
+}
+
+const APPRECIATION_GENERATORS: Record<number, AppreciationGenerator> = {
+    1: ({ teachersNames, eventName, year }) => generateAppreciationEvent1(teachersNames, eventName, year),
+};
+
+export async function generateAppreciation(
+    teachersNames: string[],
+    eventName: string,
+    eventId: number,
+    year: string = new Date().getFullYear().toString()
+): Promise<Buffer> {
+    const resolvedId = resolveGeneratorId(eventId, AVAILABLE_EVENT_IDS);
+    const generator = APPRECIATION_GENERATORS[resolvedId];
+    return generator({ teachersNames, eventName, year });
 }

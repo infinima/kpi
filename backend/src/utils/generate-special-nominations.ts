@@ -3,11 +3,24 @@ import * as fontkit from "fontkit";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export async function generateSpecialNominations(
+type SpecialNominationsGenerator = (params: {
+    teamName: string;
+    members: string[];
+    specialNominations: string[];
+    year: string;
+}) => Promise<Buffer>;
+
+function resolveGeneratorId(eventId: number, available: number[]): number {
+    if (available.includes(eventId)) return eventId;
+    return Math.max(...available);
+}
+
+const AVAILABLE_EVENT_IDS = [1];
+
+async function generateSpecialNominationsEvent1(
     teamName: string,
     members: string[],
     specialNominations: string[],
@@ -16,7 +29,7 @@ export async function generateSpecialNominations(
 
     const templatePath = path.resolve(
         __dirname,
-        "../static/special_nomination_template.pdf"
+        "../static/papers/1/special_nomination_template.pdf"
     );
     const templateBytes = fs.readFileSync(templatePath);
 
@@ -132,4 +145,21 @@ export async function generateSpecialNominations(
     }
 
     return Buffer.from(await pdfDoc.save());
+}
+
+const SPECIAL_NOMINATIONS_GENERATORS: Record<number, SpecialNominationsGenerator> = {
+    1: ({ teamName, members, specialNominations, year }) =>
+        generateSpecialNominationsEvent1(teamName, members, specialNominations, year),
+};
+
+export async function generateSpecialNominations(
+    teamName: string,
+    members: string[],
+    specialNominations: string[],
+    eventId: number,
+    year: string = new Date().getFullYear().toString()
+): Promise<Buffer> {
+    const resolvedId = resolveGeneratorId(eventId, AVAILABLE_EVENT_IDS);
+    const generator = SPECIAL_NOMINATIONS_GENERATORS[resolvedId];
+    return generator({ teamName, members, specialNominations, year });
 }

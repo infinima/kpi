@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { normalizeTeamMembers } from "./normalize-team-members.js";
 
 type TeamRow = {
     id: number;
@@ -135,7 +136,7 @@ export async function generateTeamsExcel(teams: TeamRow[]): Promise<Buffer> {
     worksheet.columns = columns;
 
     for (const team of teams) {
-        const members = normalizeJson<string[]>(team.members, []);
+        const { participants: members } = normalizeTeamMembers(team.members);
 
         worksheet.addRow({
             id: team.id,

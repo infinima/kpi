@@ -7,6 +7,7 @@ import { authRequired } from "../middlewares/auth-required.js";
 import { generateAppreciation } from "../../utils/generate-appreciation.js";
 import { generateDiploma } from "../../utils/generate-diploma.js";
 import { generateSpecialNominations } from "../../utils/generate-special-nominations.js";
+import { normalizeTeamMembers } from "../../utils/normalize-team-members.js";
 import { requestPaymentInfo } from "../../utils/payment.js";
 import { DEFAULT_TEAM_DOCUMENTS } from "../../utils/team-documents.js";
 import {
@@ -420,10 +421,11 @@ teamsRouter.get(
 
         const [row] = await query(
             `SELECT
-                 t.name,
-                 t.appreciations,
-                 e.name AS event_name,
-                 YEAR(e.date) AS event_year
+             t.name,
+             t.appreciations,
+             e.id AS event_id,
+             e.name AS event_name,
+             YEAR(e.date) AS event_year
              FROM teams t
                       JOIN leagues l ON l.id = t.league_id
                       JOIN locations lo ON lo.id = l.location_id
@@ -446,11 +448,13 @@ teamsRouter.get(
         const appreciations = row.appreciations;
         const eventName = row.event_name;
         const eventYear = String(row.event_year);
+        const eventId = Number(row.event_id);
 
         try {
             const pdf = await generateAppreciation(
                 appreciations,
                 eventName,
+                eventId,
                 eventYear
             );
 
@@ -495,6 +499,7 @@ teamsRouter.get(
                  t.name AS team_name,
                  t.members,
                  t.diploma,
+                 e.id AS event_id,
                  e.name AS event_name,
                  YEAR(e.date) AS event_year,
                  CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS coach_full_name
@@ -529,11 +534,12 @@ teamsRouter.get(
 
         const teamName = row.team_name;
         const eventYear = String(row.event_year);
-        const baseMembers = Array.isArray(row.members) ? row.members.slice(0, 4) : [];
-        const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : "";
+        const eventId = Number(row.event_id);
+        const { participants, coach } = normalizeTeamMembers(row.members);
+        const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : (coach ?? "");
         const membersList = coachName
-            ? [coachName, ...baseMembers].slice(0, 4)
-            : baseMembers;
+            ? [coachName, ...participants].slice(0, 4)
+            : participants.slice(0, 4);
 
         if (membersList.length < 1) {
             return res.status(400).json({
@@ -549,6 +555,7 @@ teamsRouter.get(
                 teamName,
                 membersList,
                 row.diploma,
+                eventId,
                 eventYear
             );
 
@@ -593,6 +600,7 @@ teamsRouter.get(
                  t.name AS team_name,
                  t.members,
                  t.special_nominations,
+                 e.id AS event_id,
                  YEAR(e.date) AS event_year,
                  CONCAT_WS(' ', u.last_name, u.first_name, u.patronymic) AS coach_full_name
              FROM teams t
@@ -617,11 +625,12 @@ teamsRouter.get(
 
         const teamName = row.team_name;
         const eventYear = String(row.event_year);
-        const baseMembers = Array.isArray(row.members) ? row.members.slice(0, 4) : [];
-        const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : "";
+        const eventId = Number(row.event_id);
+        const { participants, coach } = normalizeTeamMembers(row.members);
+        const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : (coach ?? "");
         const members = coachName
-            ? [coachName, ...baseMembers].slice(0, 4)
-            : baseMembers;
+            ? [coachName, ...participants].slice(0, 4)
+            : participants.slice(0, 4);
 
         if (!Array.isArray(row.special_nominations) || row.special_nominations.length === 0) {
             return res.status(400).json({
@@ -637,6 +646,7 @@ teamsRouter.get(
                 teamName,
                 members,
                 row.special_nominations,
+                eventId,
                 eventYear
             );
 
