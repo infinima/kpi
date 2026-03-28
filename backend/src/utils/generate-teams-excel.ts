@@ -82,6 +82,8 @@ function formatTeamStatus(value: string): string {
             return "Оплачена";
         case "ARRIVED":
             return "Прибыла";
+        case "DOCUMENTS_SUBMITTED":
+            return "Сдала документы";
         default:
             return value;
     }

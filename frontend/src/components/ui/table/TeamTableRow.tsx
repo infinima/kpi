@@ -63,6 +63,7 @@ export const teamStatusLabels: Record<string, string> = {
     ACCEPTED: "Принята",
     PAID: "Оплачена",
     ARRIVED: "Прибыла",
+    DOCUMENTS_SUBMITTED: "Сдала документы",
 };
 
 export function getTeamColumnDisplayValue(row: TeamTableRowData, column: TeamColumn): string {
@@ -343,6 +344,7 @@ export const TEAM_TABLE_COLUMNS: TeamColumn[] = [
             { label: "Принята", value: "ACCEPTED" },
             { label: "Оплачена", value: "PAID" },
             { label: "Прибыли", value: "ARRIVED" },
+            { label: "Сдала документы", value: "DOCUMENTS_SUBMITTED" },
         ],
     },
     {

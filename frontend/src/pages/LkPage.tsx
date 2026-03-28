@@ -82,7 +82,7 @@ type OwnedTeam = {
     meals_count: number;
     maintainer_full_name: string | null;
     maintainer_activity: string | null;
-    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID" | "ARRIVED";
+    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID" | "ARRIVED" | "DOCUMENTS_SUBMITTED";
     payment_link?: string | number | null;
     diploma?: "FIRST_DEGREE" | "SECOND_DEGREE" | "THIRD_DEGREE" | "PARTICIPANT" | null;
     special_nominations?: string[];
@@ -215,6 +215,7 @@ const teamStatusLabels: Record<OwnedTeam["status"], string> = {
     ACCEPTED: "Принята",
     PAID: "Оплачена",
     ARRIVED: "Прибыла",
+    DOCUMENTS_SUBMITTED: "Сдала документы",
 };
 
 function getTeamStatusLabel(status: OwnedTeam["status"] | undefined) {

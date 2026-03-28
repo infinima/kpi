@@ -52,7 +52,7 @@ export function registerKvartalyAddAnswer(socket: Socket, io: Server): void {
         const [rows2] = await db.query(
             `SELECT id
              FROM teams
-             WHERE id = ? AND league_id = ? AND deleted_at IS NULL AND status = 'ARRIVED'
+             WHERE id = ? AND league_id = ? AND deleted_at IS NULL AND status = 'DOCUMENTS_SUBMITTED'
              LIMIT 1`,
             [team_id, league_id], socket.data.user_id
         );

@@ -799,7 +799,7 @@ teamsRouter.post(
                          FROM teams
                          WHERE league_id = ?
                            AND deleted_at IS NULL
-                           AND status IN ('ON_CHECKING','ACCEPTED','PAID','ARRIVED')`,
+                           AND status IN ('ON_CHECKING','ACCEPTED','PAID','ARRIVED','DOCUMENTS_SUBMITTED')`,
                         [data.league_id], userId
                     );
 
@@ -1058,7 +1058,7 @@ teamsRouter.patch(
 
             const previousStatus = currentTeam?.status;
 
-            if (fields.status === "ARRIVED") {
+            if (fields.status === "ARRIVED" || fields.status === "DOCUMENTS_SUBMITTED") {
                 const [leagueRow] = await query(
                     `
                         SELECT l.status
@@ -1091,7 +1091,7 @@ teamsRouter.patch(
                     return res.status(400).json({
                         error: {
                             code: "LEAGUE_STATUS_FORBIDDEN",
-                            message: "League status does not allow setting ARRIVED",
+                            message: "League status does not allow setting ARRIVED or DOCUMENTS_SUBMITTED",
                         },
                     });
                 }

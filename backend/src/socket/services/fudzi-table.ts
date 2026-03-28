@@ -23,7 +23,7 @@ export async function getFudziTable(league_id: number) {
         `
             SELECT id, name, answers_fudzi, penalty_fudzi
             FROM teams
-            WHERE league_id = ? AND deleted_at IS NULL AND status = 'ARRIVED'
+            WHERE league_id = ? AND deleted_at IS NULL AND status = 'DOCUMENTS_SUBMITTED'
             ORDER BY id
         `,
         [league_id]

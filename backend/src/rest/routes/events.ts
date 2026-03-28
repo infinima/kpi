@@ -45,7 +45,7 @@ eventsRouter.get("/registration", async (req, res) => {
              l.deleted_at AS league_deleted_at,
              SUM(CASE   
                      WHEN t.deleted_at IS NULL
-                         AND t.status IN ('ON_CHECKING','ACCEPTED','PAID','ARRIVED')
+                         AND t.status IN ('ON_CHECKING','ACCEPTED','PAID','ARRIVED','DOCUMENTS_SUBMITTED')
                          THEN 1
                      ELSE 0
                  END) AS teams_count,

@@ -19,7 +19,7 @@ type TeamInfo = {
     meals_count: number;
     maintainer_full_name?: string | null;
     maintainer_activity?: string | null;
-    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID" | "ARRIVED";
+    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "PAID" | "ARRIVED" | "DOCUMENTS_SUBMITTED";
     created_at: string;
     updated_at: string;
 };
@@ -32,6 +32,7 @@ const teamStatusLabels: Record<TeamInfo["status"], string> = {
     ACCEPTED: "Принята",
     PAID: "Оплачена",
     ARRIVED: "Прибыла",
+    DOCUMENTS_SUBMITTED: "Сдала документы",
 };
 
 function getTeamStatusLabel(status: TeamInfo["status"]) {

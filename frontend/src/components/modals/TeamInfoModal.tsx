@@ -56,6 +56,7 @@ const statusOptions = [
     { label: "Принята", value: "ACCEPTED" },
     { label: "Оплачена", value: "PAID" },
     { label: "Прибыла", value: "ARRIVED" },
+    { label: "Сдала документы", value: "DOCUMENTS_SUBMITTED" },
 ];
 
 const diplomaOptions = [
