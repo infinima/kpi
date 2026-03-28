@@ -6,6 +6,7 @@ export const EventSchema = z.object({
     id: z.coerce.number().int().positive(),
     name: z.string().min(1),
     date: z.iso.date(),
+    documents_generator_id: z.coerce.number().int().positive(),
     created_at: z.string(),
     updated_at: z.string(),
     deleted_at: z.string().nullable(),
@@ -50,8 +51,10 @@ export const CreateEventInput = EventSchema
         created_at: true,
         updated_at: true,
         deleted_at: true,
+        documents_generator_id: true,
     })
     .extend({
+        documents_generator_id: z.coerce.number().int().positive().optional(),
         photo: z.string().regex(
             /^data:image\/(png|jpe?g|webp);base64,/i,
             "Must be base64 square image string"

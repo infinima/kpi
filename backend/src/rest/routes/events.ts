@@ -12,7 +12,7 @@ export const eventsRouter = express.Router();
 // GET /api/events
 eventsRouter.get("/", async (req, res) => {
     const events = await query(
-        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL ORDER BY id DESC",
+        "SELECT id, name, date, documents_generator_id, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NULL ORDER BY id DESC",
         [], (req as any).user_id
     );
     res.json(events);
@@ -125,7 +125,7 @@ eventsRouter.get("/deleted",
     checkPermission("events", "restore"),
     async (req, res) => {
     const events = await query(
-        "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NOT NULL",
+        "SELECT id, name, date, documents_generator_id, created_at, updated_at, deleted_at FROM events WHERE deleted_at IS NOT NULL",
         [], (req as any).user_id
     );
     res.json(events);
@@ -140,7 +140,7 @@ eventsRouter.get(
         const { id } = (req as any).validated.params;
 
         const [event] = await query(
-            "SELECT id, name, date, created_at, updated_at, deleted_at FROM events WHERE id = ?",
+            "SELECT id, name, date, documents_generator_id, created_at, updated_at, deleted_at FROM events WHERE id = ?",
             [id], (req as any).user_id
         );
 
@@ -197,8 +197,8 @@ eventsRouter.post(
             const photoPath = await savePhoto(data.photo);
 
             const result = await query(
-                "INSERT INTO events (name, date, photo) VALUES (?, ?, ?)",
-                [data.name, data.date, photoPath], (req as any).user_id
+                "INSERT INTO events (name, date, documents_generator_id, photo) VALUES (?, ?, ?, ?)",
+                [data.name, data.date, data.documents_generator_id ?? null, photoPath], (req as any).user_id
             );
 
             res.json({ id: result.insertId });
