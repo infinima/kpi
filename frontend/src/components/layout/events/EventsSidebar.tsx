@@ -666,6 +666,23 @@ export default function EventsSidebar() {
                                                                 />
                                                             ) : null}
 
+                                                            {leagueNumber && can("leagues", "print_documents", {
+                                                                id: leagueNumber,
+                                                                eventId: eventNumber,
+                                                                locationId: locationNumber
+                                                            }) ? (
+                                                                <SidebarItem
+                                                                    label="Презинтация награждения"
+                                                                    icon={<Download size={16}/>}
+                                                                    onClick={() => apiGetFile(
+                                                                        `leagues/${leagueInfo.id}/awarding-presentation`,
+                                                                        `${leagueInfo.name.replace(" ", "_")}_награждение.pptx`,
+                                                                        {error: true}
+                                                                    )}
+                                                                    collapsed={effectiveCollapsed}
+                                                                />
+                                                            ) : null}
+
                                                             {leagueNumber && can("leagues", "get_show", {
                                                                 id: leagueNumber,
                                                                 eventId: eventNumber,
