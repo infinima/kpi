@@ -5,13 +5,14 @@ type LocationCardProps = {
     id: number;
     name: string;
     address: string;
+    photoAlbumUrl?: string | null;
     deleted_at?: string | null;
     selected?: boolean;
     onClick: () => void;
     children?: ReactNode;
 };
 
-export function LocationCard({ id, name, address, deleted_at, selected = false, onClick, children }: LocationCardProps) {
+export function LocationCard({ id, name, address, photoAlbumUrl, deleted_at, selected = false, onClick, children }: LocationCardProps) {
     return (
         <div
             className={`
@@ -33,6 +34,18 @@ export function LocationCard({ id, name, address, deleted_at, selected = false, 
                         <div className="mt-1.5 line-clamp-2 text-sm text-[var(--color-text-secondary)]">
                             Адрес: {address}
                         </div>
+                        {photoAlbumUrl ? (
+                            <a
+                                href={photoAlbumUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(event) => event.stopPropagation()}
+                                className="mt-3 inline-flex max-w-full items-center justify-center rounded-xl border border-[var(--color-primary-light)] bg-[rgba(14,116,144,0.1)] px-3 py-2 text-sm font-medium text-[var(--color-primary)] transition hover:bg-[rgba(14,116,144,0.16)]"
+                                title={photoAlbumUrl}
+                            >
+                                <span className="truncate">Открыть ссылку</span>
+                            </a>
+                        ) : null}
                         {deleted_at ? (
                             <div className="mt-1 text-sm text-[var(--color-error)]">
                                 Удалено: {new Date(deleted_at).toLocaleString("ru-RU")}

@@ -1,3 +1,5 @@
+import { createElement } from "react";
+import type { MouseEvent as ReactMouseEvent } from "react";
 import type { EntityTableColumn, EntityTableRowData } from "@/components/ui/table/EntityTableRow";
 
 export const eventEntityColumns: EntityTableColumn[] = [
@@ -13,6 +15,37 @@ export const locationEntityColumns: EntityTableColumn[] = [
     { key: "event_id", label: "ID мероприятия", width: 0.8, editable: false, searchable: true, sortable: true, type: "number" },
     { key: "name", label: "Площадка", width: 1.5, editable: true, required: true, searchable: true, sortable: true, type: "text" },
     { key: "address", label: "Адрес", width: 2, editable: true, required: true, searchable: true, sortable: true, type: "text" },
+    {
+        key: "photo_album_url",
+        label: "Ссылка",
+        width: 1.7,
+        editable: true,
+        searchable: true,
+        sortable: true,
+        type: "text",
+        renderCell: (row) => {
+            const value = typeof row.photo_album_url === "string" ? row.photo_album_url.trim() : "";
+
+            if (!value) {
+                return null;
+            }
+
+            const shortValue = value.length > 10 ? `${value.slice(0, 10)}...` : value;
+
+            return createElement(
+                "a",
+                {
+                    href: value,
+                    target: "_blank",
+                    rel: "noreferrer",
+                    onClick: (event: ReactMouseEvent<HTMLAnchorElement>) => event.stopPropagation(),
+                    className: "truncate text-[var(--color-primary)] underline underline-offset-2",
+                    title: value,
+                },
+                shortValue
+            );
+        },
+    },
     { key: "created_at", label: "Создано", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
     { key: "updated_at", label: "Обновлено", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
 ];
@@ -37,7 +70,7 @@ export const leagueEntityColumns: EntityTableColumn[] = [
     { key: "id", label: "ID", width: 0.55, editable: false, searchable: true, sortable: true, type: "number" },
     { key: "location_id", label: "ID площадки", width: 0.75, editable: false, searchable: true, sortable: true, type: "number" },
     { key: "name", label: "Лига", width: 1.5, editable: true, required: true, searchable: true, sortable: true, type: "text" },
-    { key: "max_teams_count", label: "Команд", width: 0.8, editable: true, searchable: true, sortable: true, type: "number" },
+    { key: "max_teams_count", label: "Макс команд", width: 0.8, editable: true, searchable: true, sortable: true, type: "number" },
     { key: "status", label: "Статус", width: 1.45, editable: true, searchable: true, sortable: true, type: "select", options: leagueStatusOptions },
     { key: "created_at", label: "Создано", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
     { key: "updated_at", label: "Обновлено", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
@@ -54,12 +87,13 @@ export function mapEventEntityRows(rows: Array<{ id: number; name: string; date:
     }));
 }
 
-export function mapLocationEntityRows(rows: Array<{ id: number; event_id: number; name: string; address: string; created_at?: string; updated_at?: string; deleted_at?: string | null }>): EntityTableRowData[] {
+export function mapLocationEntityRows(rows: Array<{ id: number; event_id: number; name: string; address: string; photo_album_url?: string | null; created_at?: string; updated_at?: string; deleted_at?: string | null }>): EntityTableRowData[] {
     return rows.map((row) => ({
         id: row.id,
         event_id: row.event_id,
         name: row.name,
         address: row.address,
+        photo_album_url: row.photo_album_url ?? "",
         created_at: row.created_at ?? "",
         updated_at: row.updated_at ?? "",
     }));

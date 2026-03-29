@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { FileText, Trash2 } from "lucide-react";
 import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { apiDelete, apiGet, apiPatch, apiPost } from "@/api";
+import { BaseImage } from "@/components/BaseImage";
 import { LocationCard } from "@/components/ui/cards/LocationCard";
 import { EntityTable } from "@/components/ui/table/EntityTable";
 import type { EntityTableRowData } from "@/components/ui/table/EntityTableRow";
@@ -14,6 +15,7 @@ type LocationItem = {
     event_id: number;
     name: string;
     address: string;
+    photo_album_url?: string | null;
     created_at?: string;
     updated_at?: string;
     deleted_at?: string | null;
@@ -169,6 +171,7 @@ export function LocationsPage() {
         await apiPatch(`locations/${updatedRow.id}`, {
             name: updatedRow.name,
             address: updatedRow.address,
+            photo_album_url: String(updatedRow.photo_album_url ?? "").trim() || null,
         }, {
             success: "Площадка обновлена",
             error: true,
@@ -181,6 +184,7 @@ export function LocationsPage() {
                         ...location,
                         name: String(updatedRow.name ?? ""),
                         address: String(updatedRow.address ?? ""),
+                        photo_album_url: String(updatedRow.photo_album_url ?? "").trim() || null,
                     }
                     : location
             )
@@ -213,6 +217,7 @@ export function LocationsPage() {
             event_id: Number(eventId),
             name: newRow.name,
             address: newRow.address,
+            photo_album_url: String(newRow.photo_album_url ?? "").trim() || null,
         }, {
             success: "Площадка создана",
             error: true,
@@ -225,6 +230,7 @@ export function LocationsPage() {
                 event_id: Number(eventId),
                 name: String(newRow.name ?? ""),
                 address: String(newRow.address ?? ""),
+                photo_album_url: String(newRow.photo_album_url ?? "").trim() || null,
             },
         ]);
     }
@@ -307,6 +313,7 @@ export function LocationsPage() {
                             id={item.id}
                             name={item.name}
                             address={item.address}
+                            photoAlbumUrl={item.photo_album_url}
                             deleted_at={item.deleted_at}
                             selected={String(item.id) === String(locationId)}
                             onClick={() => navigate({ pathname: `/events/${eventId}/location/${item.id}`, search: location.search })}
