@@ -31,6 +31,22 @@ import { MembersSchema } from "../schemas/teams.js";
 
 export const leaguesRouter = express.Router();
 
+const LEAGUE_STATUS_FLOW = [
+    "NOT_STARTED",
+    "REGISTRATION_IN_PROGRESS",
+    "REGISTRATION_ENDED",
+    "TEAMS_FIXED",
+    "ARRIVAL_IN_PROGRESS",
+    "ARRIVAL_ENDED",
+    "KVARTALY_GAME",
+    "LUNCH",
+    "FUDZI_GAME",
+    "FUDZI_GAME_BREAK",
+    "GAMES_ENDED",
+    "AWARDING_IN_PROGRESS",
+    "ENDED"
+];
+
 // GET /api/leagues/location/:location_id
 leaguesRouter.get(
     "/location/:location_id",
@@ -87,69 +103,32 @@ leaguesRouter.get(
     }
 );
 
-// GET /api/leagues/:id/accounts
-leaguesRouter.get(
-    "/:id/accounts",
-    validate(GetOneLeagueInput, "params"),
-    checkNotDeleted("league"),
-    checkPermission("leagues", "update"),
-    async (req, res) => {
-        const { id } = (req as any).validated.params;
-
-        if (id === 1) {
-            res.json({
-                show: {
-                    login: "league1_show@kpiturnir.ru",
-                    password: "25448779"
-                },
-                check: {
-                    login: "league1_check@kpiturnir.ru",
-                    password: "5u2D3w!Q"
-                }
-            })
-        } else if (id === 2) {
-            res.json({
-                show: {
-                    login: "league2_show@kpiturnir.ru",
-                    password: "58232559"
-                },
-                check: {
-                    login: "league2_check@kpiturnir.ru",
-                    password: "NjS%iD5n"
-                }
-            })
-        } else if (id === 3) {
-            res.json({
-                show: {
-                    login: "league3_show@kpiturnir.ru",
-                    password: "98795653"
-                },
-                check: {
-                    login: "league3_check@kpiturnir.ru",
-                    password: "%YA9S8Qu"
-                }
-            })
-        } else {
-            res.json({
-                show: {
-                    login: "league4_show@kpiturnir.ru",
-                    password: "28229955"
-                },
-                check: {
-                    login: "league4_check@kpiturnir.ru",
-                    password: "mj*9Sf4V"
-                }
-            })
-        }
-    }
-);
-
 // GET /api/leagues/:id/fudzi_presentation
 leaguesRouter.get(
     "/:id/fudzi_presentation",
     validate(GetOneLeagueInput, "params"),
     checkNotDeleted("league"),
-    checkPermission("leagues", "get_show"),
+    async (req, res, next) => {
+        const { id } = (req as any).validated.params;
+        const [league] = await query("SELECT status FROM leagues WHERE id = ?", [id], (req as any).user_id);
+
+        if (!league) {
+            return res.status(404).json({
+                error: {
+                    code: "LEAGUE_NOT_FOUND",
+                    message: "The league does not exist"
+                }
+            });
+        }
+
+        const isPublicByStatus = ['FUDZI_GAME','FUDZI_GAME_BREAK','GAMES_ENDED','AWARDING_IN_PROGRESS','ENDED'].includes(league.status);
+
+        if (isPublicByStatus) {
+            return next();
+        }
+
+        return checkPermission("leagues", "get_show")(req, res, next);
+    },
     async (req, res) => {
         const { id } = (req as any).validated.params;
 
@@ -789,29 +768,13 @@ leaguesRouter.post(
         const { id } = (req as any).validated.params;
         const { new_status } = (req as any).validated.body;
 
-        const statuses = [
-            "NOT_STARTED",
-            "REGISTRATION_IN_PROGRESS",
-            "REGISTRATION_ENDED",
-            "TEAMS_FIXED",
-            "ARRIVAL_IN_PROGRESS",
-            "ARRIVAL_ENDED",
-            "KVARTALY_GAME",
-            "LUNCH",
-            "FUDZI_GAME",
-            "FUDZI_GAME_BREAK",
-            "GAMES_ENDED",
-            "AWARDING_IN_PROGRESS",
-            "ENDED"
-        ];
-
         const [league] = await query(
             "SELECT status FROM leagues WHERE id = ? AND deleted_at IS NULL",
             [id], (req as any).user_id
         );
 
-        const currentIndex = statuses.indexOf(league.status);
-        const nextIndex = statuses.indexOf(new_status);
+        const currentIndex = LEAGUE_STATUS_FLOW.indexOf(league.status);
+        const nextIndex = LEAGUE_STATUS_FLOW.indexOf(new_status);
 
         if (Math.abs(nextIndex - currentIndex) !== 1) {
             return res.status(400).json({
