@@ -537,9 +537,7 @@ teamsRouter.get(
         const eventId = Number(row.documents_generator_id);
         const { participants, coach } = normalizeTeamMembers(row.members);
         const coachName = row.coach_full_name ? String(row.coach_full_name).trim() : (coach ?? "");
-        const membersList = coachName
-            ? [coachName, ...participants].slice(0, 4)
-            : participants.slice(0, 4);
+        const membersList = participants.slice(0, 4);
 
         if (membersList.length < 1) {
             return res.status(400).json({
