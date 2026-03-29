@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Camera, CheckCircle2, Search, Square } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import jsQR from "jsqr";
 import { apiGet, apiPatch } from "@/api";
 import PrimaryButton from "@/components/ui/PrimaryButton";
 import OutlineButton from "@/components/ui/OutlineButton";
@@ -75,6 +76,7 @@ export function ReadQrPage() {
     const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
     const videoRef = useRef<HTMLVideoElement | null>(null);
+    const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const streamRef = useRef<MediaStream | null>(null);
     const rafRef = useRef<number | null>(null);
 
@@ -88,11 +90,29 @@ export function ReadQrPage() {
     const [scannerEnabled, setScannerEnabled] = useState(false);
     const [scannerStatus, setScannerStatus] = useState("Сканирование выключено");
 
-    const barcodeSupported = typeof window !== "undefined" && "BarcodeDetector" in window;
-
     useEffect(() => {
         setUuidInput(uuidFromQuery);
     }, [uuidFromQuery]);
+
+    function getCameraErrorMessage(rawError: unknown) {
+        const error = rawError as DOMException | undefined;
+
+        switch (error?.name) {
+            case "NotAllowedError":
+            case "PermissionDeniedError":
+                return "Доступ к камере запрещён в браузере или системе.";
+            case "NotFoundError":
+            case "DevicesNotFoundError":
+                return "Камера не найдена на устройстве.";
+            case "NotReadableError":
+            case "TrackStartError":
+                return "Камера занята другим приложением или недоступна.";
+            case "SecurityError":
+                return "Камера доступна только на https или localhost.";
+            default:
+                return "Не удалось открыть камеру.";
+        }
+    }
 
     function stopScanner() {
         if (rafRef.current) {
@@ -114,7 +134,7 @@ export function ReadQrPage() {
     useEffect(() => stopScanner, []);
 
     useEffect(() => {
-        if (!scannerEnabled || !barcodeSupported) {
+        if (!scannerEnabled) {
             return;
         }
 
@@ -143,16 +163,41 @@ export function ReadQrPage() {
                     await videoRef.current.play();
                 }
 
-                setScannerStatus("Наведите камеру на QR со ссылкой scanner");
+                setScannerStatus(
+                    detector
+                        ? "Наведите камеру на QR со ссылкой scanner"
+                        : "Наведите камеру на QR со ссылкой scanner, используем резервный режим"
+                );
 
                 const scan = async () => {
-                    if (cancelled || !videoRef.current || !detector) {
+                    if (cancelled || !videoRef.current) {
                         return;
                     }
 
                     try {
-                        const results = await detector.detect(videoRef.current);
-                        const rawValue = results[0]?.rawValue;
+                        let rawValue: string | undefined;
+
+                        if (detector) {
+                            const results = await detector.detect(videoRef.current);
+                            rawValue = results[0]?.rawValue;
+                        } else {
+                            const video = videoRef.current;
+                            const canvas = canvasRef.current ?? document.createElement("canvas");
+                            const context = canvas.getContext("2d", { willReadFrequently: true });
+
+                            if (!canvasRef.current) {
+                                canvasRef.current = canvas;
+                            }
+
+                            if (context && video.videoWidth > 0 && video.videoHeight > 0) {
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+                                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                                rawValue = jsQR(imageData.data, imageData.width, imageData.height)?.data;
+                            }
+                        }
 
                         if (rawValue) {
                             const uuid = extractUuidFromScannerPayload(rawValue);
@@ -177,8 +222,8 @@ export function ReadQrPage() {
                 };
 
                 void scan();
-            } catch {
-                setScannerStatus("Не удалось открыть камеру");
+            } catch (cameraError) {
+                setScannerStatus(getCameraErrorMessage(cameraError));
                 stopScanner();
             }
         }
@@ -189,7 +234,7 @@ export function ReadQrPage() {
             cancelled = true;
             stopScanner();
         };
-    }, [barcodeSupported, scannerEnabled, setSearchParams]);
+    }, [scannerEnabled, setSearchParams]);
 
     useEffect(() => {
         if (!uuidFromQuery) {
@@ -328,11 +373,6 @@ export function ReadQrPage() {
                                 <PrimaryButton
                                     active
                                     onClick={() => {
-                                        if (!barcodeSupported) {
-                                            setError("BarcodeDetector для QR не поддерживается в этом браузере.");
-                                            return;
-                                        }
-
                                         setError(null);
                                         setScannerEnabled(true);
                                     }}
