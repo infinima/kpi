@@ -359,7 +359,7 @@ export default function EventsSidebar() {
         locationId: locationNumber,
         leagueId: leagueNumber,
     });
-    const canSeeKvartalyResults = isLeagueStatusAtLeast(leagueInfo?.status, "KVARTALY_GAME");
+    const canSeeKvartalyResults = isLeagueStatusAtLeast(leagueInfo?.status, "ARRIVAL_ENDED");
     const canSeeFudziResults = isLeagueStatusAtLeast(leagueInfo?.status, "LUNCH");
     const canSeeOverallResults = leagueInfo?.status === "ENDED"
         || (leagueNumber ? can("leagues", "print_documents", {
