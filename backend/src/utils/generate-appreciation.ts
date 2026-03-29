@@ -121,9 +121,17 @@ async function generateAppreciationEvent2(
     );
     const piFont = await pdfDoc.embedFont(piFontBytes);
 
+    const { width } = (await PDFDocument.load(templateBytes)).getPages()[0].getSize();
+    const totalWidthUnits = 260;
+    const leftWidthUnits = 66;
+    const rightWidthUnits = 194;
+    const rightAreaX = width * (leftWidthUnits / totalWidthUnits);
+    const rightAreaWidth = width * (rightWidthUnits / totalWidthUnits);
+
     const teacherFontSize = 45;
-    const teacherBaseY = 517;
-    const teacherX = 43;
+    const teacherMaxWidth = rightAreaWidth;
+    const teacherBaseY = 476;
+    const teacherBaseYDelta = 25;
 
     const yearY = 24;
 
@@ -134,14 +142,41 @@ async function generateAppreciationEvent2(
 
         page.setFontColor(rgb(0, 0, 0));
 
-        const words = teacherName.split(" ").filter(w => w.trim());
-        const usedNameLines = words.slice(0, 3);
+        const splitTextIntoLines = (
+            text: string,
+            font: any,
+            fontSize: number,
+            maxWidth: number
+        ): string[] => {
+            const words = text.split(" ").filter(w => w.trim());
+            const lines: string[] = [];
+            let current = "";
 
-        usedNameLines.forEach((word, i) => {
-            const y = teacherBaseY - i * (teacherFontSize + 2);
-            page.drawText(word, {
-                x: teacherX,
-                y,
+            for (const word of words) {
+                const attempt = (current ? current + " " : "") + word;
+                const w = font.widthOfTextAtSize(attempt, fontSize);
+
+                if (w <= maxWidth) {
+                    current = attempt;
+                } else {
+                    if (current) lines.push(current);
+                    current = word;
+                }
+            }
+            if (current) lines.push(current);
+            return lines;
+        };
+
+        const nameLines = splitTextIntoLines(teacherName, mainFont, teacherFontSize, teacherMaxWidth).slice(0, 3);
+        const nameLinesNum = nameLines.length;
+
+        nameLines.forEach((line, i) => {
+            const y = teacherBaseY - i * (teacherFontSize + 6);
+            const lineWidth = mainFont.widthOfTextAtSize(line, teacherFontSize);
+            const x = rightAreaX + Math.max(0, (rightAreaWidth - lineWidth) / 2);
+            page.drawText(line, {
+                x,
+                y: y - (nameLinesNum === 1 ? teacherBaseYDelta : 0),
                 size: teacherFontSize,
                 font: mainFont
             });

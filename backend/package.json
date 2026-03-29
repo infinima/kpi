@@ -23,6 +23,7 @@
     "nodemailer": "^7.0.11",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.17.2",
+    "pptx-automizer": "^0.7.4",
     "sharp": "^0.34.4",
     "socket.io": "^4.8.1",
     "swagger-ui-express": "^5.0.1",

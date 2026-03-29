@@ -11,6 +11,7 @@ import { resolveFilePath } from "../../utils/resolve-file-path.js";
 import { generateTeamsNames } from "../../utils/generate-teams-names.js";
 import { generateTeamsExcel } from "../../utils/generate-teams-excel.js";
 import { generateAwardsScript } from "../../utils/generate-awards-script.js";
+import { generateAwardingPptx } from "../../utils/generate-awarding-pptx.js";
 import { getKvartalyTable } from "../../socket/services/kvartaly-table.js";
 import { getFudziTable } from "../../socket/services/fudzi-table.js";
 import { rankTeams } from "../../utils/rank-teams.js";
@@ -484,6 +485,136 @@ leaguesRouter.get(
             res.status(500).json({
                 error: {
                     code: "PDF_GENERATION_FAILED",
+                    message: String(e)
+                }
+            });
+        }
+    }
+);
+
+// GET /api/leagues/:id/awarding-presentation
+leaguesRouter.get(
+    "/:id/awarding-presentation",
+    validate(GetOneLeagueInput, "params"),
+    checkNotDeleted("league"),
+    // checkPermission("leagues", "print_documents"),
+    async (req, res) => {
+        const { id } = (req as any).validated.params;
+
+        const [league] = await query(
+            "SELECT name FROM leagues WHERE id = ? AND deleted_at IS NULL",
+            [id], (req as any).user_id
+        );
+
+        if (!league) {
+            return res.status(404).json({
+                error: {
+                    code: "LEAGUE_NOT_FOUND",
+                    message: "League does not exist"
+                }
+            });
+        }
+
+        const rows = await query(
+            `SELECT
+                 t.name,
+                 t.special_nominations,
+                 t.diploma
+             FROM teams t
+             WHERE t.league_id = ? AND t.deleted_at IS NULL`,
+            [id], (req as any).user_id
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({
+                error: {
+                    code: "NO_TEAMS",
+                    message: "League has no teams"
+                }
+            });
+        }
+
+        const nominationMap = new Map<string, Array<{ name: string }>>();
+        const placeMap = new Map<number, Array<{ name: string }>>();
+        const diplomaToPlace: Record<string, number> = {
+            FIRST_DEGREE: 1,
+            SECOND_DEGREE: 2,
+            THIRD_DEGREE: 3
+        };
+
+        for (const row of rows as any[]) {
+            let nominations: string[] = [];
+            if (row.special_nominations) {
+                try {
+                    nominations = Array.isArray(row.special_nominations)
+                        ? row.special_nominations
+                        : JSON.parse(row.special_nominations);
+                } catch {
+                    nominations = [];
+                }
+            }
+
+            if (Array.isArray(nominations)) {
+                for (const nom of nominations) {
+                    const name = String(nom ?? "").trim();
+                    if (!name) continue;
+                    if (!nominationMap.has(name)) nominationMap.set(name, []);
+                    nominationMap.get(name)!.push({ name: row.name });
+                }
+            }
+
+            const rawDiploma = row.diploma ? String(row.diploma) : null;
+            const place = rawDiploma ? diplomaToPlace[rawDiploma] ?? null : null;
+            if (place !== null) {
+                if (!placeMap.has(place)) placeMap.set(place, []);
+                placeMap.get(place)!.push({ name: row.name });
+            }
+        }
+
+        const collator = new Intl.Collator("ru");
+
+        const nominations = Array.from(nominationMap.entries())
+            .sort(([a], [b]) => collator.compare(a, b))
+            .map(([title, teams]) => ({
+                title,
+                teams: teams.sort((a, b) => collator.compare(a.name, b.name))
+            }));
+
+        const thirdPlace = (placeMap.get(3) ?? []).sort((a, b) => collator.compare(a.name, b.name));
+        const secondPlace = (placeMap.get(2) ?? []).sort((a, b) => collator.compare(a.name, b.name));
+        const firstPlace = (placeMap.get(1) ?? []).sort((a, b) => collator.compare(a.name, b.name));
+
+        try {
+            const pptx = await generateAwardingPptx({
+                nominations,
+                thirdPlace,
+                secondPlace,
+                firstPlace
+            });
+
+            const safeName = league.name
+                .trim()
+                .replace(/\s+/g, "_")
+                .replace(/[^a-zA-Zа-яА-ЯёЁ0-9_]/g, "_");
+
+            const fileName = `${safeName}_награждение.pptx`;
+            const encoded = encodeURIComponent(fileName);
+
+            res.setHeader(
+                "Content-Type",
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            );
+            res.setHeader(
+                "Content-Disposition",
+                `attachment; filename="${encoded}"; filename*=UTF-8''${encoded}`
+            );
+
+            res.send(pptx);
+        } catch (e) {
+            console.error(e);
+            res.status(500).json({
+                error: {
+                    code: "PPTX_GENERATION_FAILED",
                     message: String(e)
                 }
             });
