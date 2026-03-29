@@ -239,6 +239,31 @@ registry.registerPath({
     },
 });
 
+// GET /api/leagues/{id}/awarding-presentation
+registry.registerPath({
+    method: "get",
+    path: "/api/leagues/{id}/awarding-presentation",
+    summary: "Скачать PPTX презентацию награждения лиги",
+    tags: ["Leagues"],
+    security: [{ BearerAuth: [] }],
+    request: {
+        params: GetOneLeagueInput,
+    },
+    responses: {
+        200: {
+            description: "OK",
+            content: {
+                "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+                    schema: { type: "string", format: "binary" },
+                },
+            },
+        },
+        400: { description: "The league is deleted" },
+        404: { description: "The league does not exist or has no teams" },
+        500: { description: "PPTX generation failed" },
+    },
+});
+
 registry.registerPath({
     method: "get",
     path: "/api/leagues/{id}/final-table",
