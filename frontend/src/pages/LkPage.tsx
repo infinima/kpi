@@ -1148,7 +1148,7 @@ export default function LkPage() {
                                                         ? team.appreciations.filter((item) => String(item ?? "").trim().length > 0).length
                                                         : 0;
                                                     const nominationsCount = Array.isArray(team.special_nominations) ? team.special_nominations.length : 0;
-                                                    const canDownloadAppreciation = team.status === "ARRIVED" && appreciationsCount > 0;
+                                                    const canDownloadAppreciation = (team.status === "ARRIVED" || team.status === "DOCUMENTS_SUBMITTED") && appreciationsCount > 0;
                                                     const canDownloadDiploma = team.league_status === "ENDED" && Boolean(team.diploma);
                                                     const canDownloadNominations = team.league_status === "ENDED" && nominationsCount > 0;
                                                     const teamFileBaseName = getTeamFileBaseName(team);
