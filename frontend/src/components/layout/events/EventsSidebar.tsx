@@ -672,7 +672,7 @@ export default function EventsSidebar() {
                                                                 locationId: locationNumber
                                                             }) ? (
                                                                 <SidebarItem
-                                                                    label="Презинтация награждения"
+                                                                    label="Презентация награждения"
                                                                     icon={<Download size={16}/>}
                                                                     onClick={() => apiGetFile(
                                                                         `leagues/${leagueInfo.id}/awarding-presentation`,
