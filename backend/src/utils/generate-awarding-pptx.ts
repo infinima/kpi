@@ -122,6 +122,7 @@ export async function generateAwardingPptx(data: AwardingInput): Promise<Buffer>
     const outputDir = fs.mkdtempSync(path.join(os.tmpdir(), "awarding-"));
     const outputPath = path.join(outputDir, `awarding_${Date.now()}.pptx`);
 
+    // @ts-ignore
     const automizer = new Automizer({
         templateDir: path.dirname(templatePath) + path.sep,
         outputDir: outputDir + path.sep,
