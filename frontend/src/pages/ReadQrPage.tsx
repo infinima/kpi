@@ -415,7 +415,7 @@ export function ReadQrPage() {
                     {teams.length > 0 ? (
                         <div className="mt-6 grid gap-4">
                             {teams.map((team) => {
-                                const isArrived = team.status === "ARRIVED";
+                                const isArrived = (team.status === "ARRIVED" || team.status === "DOCUMENTS_SUBMITTED");
                                 const isUpdating = updatingTeamId === team.id;
 
                                 return (
