@@ -634,6 +634,8 @@ leaguesRouter.get(
             SELECT
                 t.id,
                 t.name,
+                t.school,
+                t.region,
                 t.place_kvartaly,
                 t.place_fudzi,
                 (t.place_kvartaly + t.place_fudzi) AS place_sum,

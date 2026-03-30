@@ -16,6 +16,8 @@ const diplomaOptions = Object.keys(diplomaMap);
 type FinalTeam = {
   id: number;
   name: string;
+  school: string | null;
+  region: string | null;
   place_kvartaly: number | null;
   place_fudzi: number | null;
   place_sum: number | null;
@@ -179,21 +181,22 @@ export function ResultPage() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <div className={`${canDownloadDocuments ? "min-w-[1240px]" : "min-w-[1100px]"} overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]`}>
+          <div className={`${canDownloadDocuments ? "min-w-[1380px]" : "min-w-[1240px]"} overflow-hidden rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.9)] shadow-[0_18px_52px_rgba(15,23,42,0.08)]`}>
             <table className="w-full table-fixed border-collapse text-[13px] text-[var(--color-text-main)]">
               <colgroup>
                 <col className="w-[8%]" />
-                <col className="w-[17%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[8%]" />
-                <col className="w-[16%]" />
+                <col className="w-[15%]" />
                 <col className="w-[18%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[8%]" />
+                <col className="w-[14%]" />
+                <col className="w-[15%]" />
                 {canDownloadDocuments ? (
                   <>
-                    <col className="w-[6%]" />
-                    <col className="w-[4.5%]" />
-                    <col className="w-[4.5%]" />
+                    <col className="w-[4%]" />
+                    <col className="w-[4%]" />
+                    <col className="w-[4%]" />
                   </>
                 ) : null}
               </colgroup>
@@ -201,6 +204,7 @@ export function ResultPage() {
                 <tr className="bg-[var(--color-primary)] text-white">
                   <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_final")} className={headerButtonClass(sort?.key === "place_final")}>Место {sort ? sortIcon(sort.key === "place_final", sort.direction) : null}</button></th>
                   <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("name")} className={headerButtonClass(sort?.key === "name")}>Команда {sort ? sortIcon(sort.key === "name", sort.direction) : null}</button></th>
+                  <th className="px-3 py-3 text-center text-xs font-semibold uppercase tracking-[0.08em]">Школа / регион</th>
                   <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_kvartaly")} className={headerButtonClass(sort?.key === "place_kvartaly")}>Кварталы {sort ? sortIcon(sort.key === "place_kvartaly", sort.direction) : null}</button></th>
                   <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_fudzi")} className={headerButtonClass(sort?.key === "place_fudzi")}>Фудзи {sort ? sortIcon(sort.key === "place_fudzi", sort.direction) : null}</button></th>
                   <th className="px-3 py-3"><button type="button" onClick={() => toggleSort("place_sum")} className={headerButtonClass(sort?.key === "place_sum")}>Сумма {sort ? sortIcon(sort.key === "place_sum", sort.direction) : null}</button></th>
@@ -237,6 +241,12 @@ export function ResultPage() {
                   >
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center font-semibold">{team.place_final ?? "—"}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.name}</td>
+                    <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-left">
+                      <div className="space-y-1">
+                        <div className="font-medium">{team.school?.trim() || "—"}</div>
+                        <div className="text-xs text-[var(--color-text-secondary)]">{team.region?.trim() || "—"}</div>
+                      </div>
+                    </td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_kvartaly ?? "—"}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_fudzi ?? "—"}</td>
                     <td className="border-b border-r border-[var(--color-border)] px-3 py-3 text-center">{team.place_sum ?? "—"}</td>
