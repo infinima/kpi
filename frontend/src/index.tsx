@@ -1,10 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import App from './App';
-import './global.css';
+import ReactDOM from "react-dom/client";
+import { Application } from "./app/Application";
+import { configureRealtime } from "./shared/realtime/runtime";
+import "./shared/styles/global.css";
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-    //<React.StrictMode>
-        <App />
-    //</React.StrictMode>
-);
+configureRealtime("https://api.dev.kpiturnir.ru");
+ReactDOM.createRoot(document.getElementById("root")!).render(<Application />);

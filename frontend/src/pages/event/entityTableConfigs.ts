@@ -1,6 +1,9 @@
-import { createElement } from "react";
+import type { Event } from "@/entities/event/model/event";
+import type { League } from "@/entities/league/model/league";
+import type { Location } from "@/entities/location/model/location";
+import type { EntityTableColumn, EntityTableRowData } from "@/shared/ui/table/EntityTableRow";
 import type { MouseEvent as ReactMouseEvent } from "react";
-import type { EntityTableColumn, EntityTableRowData } from "@/components/ui/table/EntityTableRow";
+import { createElement } from "react";
 
 export const eventEntityColumns: EntityTableColumn[] = [
     { key: "id", label: "ID", width: 0.55, editable: false, searchable: true, sortable: true, type: "number" },
@@ -60,9 +63,7 @@ export const leagueStatusOptions = [
     { label: "Кварталы", value: "KVARTALY_GAME" },
     { label: "Обед", value: "LUNCH" },
     { label: "Фудзи", value: "FUDZI_GAME" },
-    { label: "Перерыв", value: "FUDZI_GAME_BREAK" },
     { label: "Игры завершены", value: "GAMES_ENDED" },
-    { label: "Награждение", value: "AWARDING_IN_PROGRESS" },
     { label: "Завершено", value: "ENDED" },
 ];
 
@@ -77,38 +78,38 @@ export const leagueEntityColumns: EntityTableColumn[] = [
     { key: "deleted_at", label: "Удалено", width: 1.1, editable: false, searchable: true, sortable: true, type: "text" },
 ];
 
-export function mapEventEntityRows(rows: Array<{ id: number; name: string; date: string; created_at?: string; updated_at?: string; deleted_at?: string | null }>): EntityTableRowData[] {
+export function mapEventEntityRows(rows: Event[]): EntityTableRowData[] {
     return rows.map((row) => ({
         id: row.id,
         name: row.name,
         date: row.date,
-        created_at: row.created_at ?? "",
-        updated_at: row.updated_at ?? "",
+        created_at: row.createdAt ?? "",
+        updated_at: row.updatedAt ?? "",
     }));
 }
 
-export function mapLocationEntityRows(rows: Array<{ id: number; event_id: number; name: string; address: string; photo_album_url?: string | null; created_at?: string; updated_at?: string; deleted_at?: string | null }>): EntityTableRowData[] {
+export function mapLocationEntityRows(rows: Location[]): EntityTableRowData[] {
     return rows.map((row) => ({
         id: row.id,
-        event_id: row.event_id,
+        event_id: row.eventId,
         name: row.name,
         address: row.address,
-        photo_album_url: row.photo_album_url ?? "",
-        created_at: row.created_at ?? "",
-        updated_at: row.updated_at ?? "",
+        photo_album_url: row.photoAlbumUrl ?? "",
+        created_at: row.createdAt ?? "",
+        updated_at: row.updatedAt ?? "",
     }));
 }
 
-export function mapLeagueEntityRows(rows: Array<{ id: number; location_id: number; name: string; status: string; max_teams_count?: number; created_at?: string; updated_at?: string; deleted_at?: string | null }>): EntityTableRowData[] {
+export function mapLeagueEntityRows(rows: League[]): EntityTableRowData[] {
     return rows.map((row) => ({
         id: row.id,
-        location_id: row.location_id,
+        location_id: row.locationId,
         name: row.name,
-        max_teams_count: row.max_teams_count ?? 0,
+        max_teams_count: row.maxTeamsCount ?? 0,
         status: row.status,
-        fudzi_presentation: "fudzi_presentation" in row ? (row as { fudzi_presentation?: string | null }).fudzi_presentation ?? "" : "",
-        created_at: row.created_at ?? "",
-        updated_at: row.updated_at ?? "",
-        deleted_at: row.deleted_at ?? "",
+        fudzi_presentation: row.presentation ?? "",
+        created_at: row.createdAt ?? "",
+        updated_at: row.updatedAt ?? "",
+        deleted_at: row.deletedAt ?? "",
     }));
 }

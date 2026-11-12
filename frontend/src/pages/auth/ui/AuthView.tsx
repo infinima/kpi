@@ -1,0 +1,308 @@
+import { downloadPersonalDataFile } from "@/shared/lib/legalDownloads";
+import AnimatedText from "@/shared/ui/AnimatedText";
+import Background from "@/shared/ui/Background";
+import OutlineButton from "@/shared/ui/OutlineButton";
+import PrimaryButton from "@/shared/ui/PrimaryButton";
+import { motion } from "framer-motion";
+import { Eye, EyeOff, LogIn, MailCheck, UserPlus } from "lucide-react";
+import { Link } from "react-router-dom";
+import { formatRussianPhone, inputClassName } from '../model/authSupport';
+import type { useAuthModel } from '../model/useAuthModel';
+export function AuthView(props: ReturnType<typeof useAuthModel>) {
+    const {
+        adminOnly,
+        mode,
+        setMode,
+        showLoginPassword,
+        setShowLoginPassword,
+        showRegisterPassword,
+        setShowRegisterPassword,
+        loginLoading,
+        registerLoading,
+        registerStep,
+        setRegisterStep,
+        confirmCode,
+        setConfirmCode,
+        loginForm,
+        setLoginForm,
+        registerForm,
+        setRegisterForm,
+        acceptedPersonalData,
+        setAcceptedPersonalData,
+        handleLogin,
+        handleRegister,
+        handleRegisterConfirm,
+    } = props;
+    return (
+        <div className="relative min-h-screen overflow-hidden">
+            <Background active={true} />
+
+            <div className="relative mx-auto flex min-h-screen max-w-xl items-center px-6 py-16">
+                <motion.section
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="w-full rounded-[32px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.88)] p-6 shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur-xl sm:p-8"
+                >
+                    {!adminOnly && <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[var(--color-background)] p-1">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setMode("login");
+                                setRegisterStep("form");
+                            }}
+                            className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${mode === "login" ? "bg-[var(--color-surface)] text-[var(--color-text-main)] shadow-sm" : "text-[var(--color-text-secondary)]"}`}
+                        >
+                            Вход
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setMode("register")}
+                            className={`rounded-2xl px-4 py-3 text-sm font-medium transition ${mode === "register" ? "bg-[var(--color-surface)] text-[var(--color-text-main)] shadow-sm" : "text-[var(--color-text-secondary)]"}`}
+                        >
+                            Регистрация
+                        </button>
+                    </div>}
+
+                    <div className="mt-8">
+                        <AnimatedText
+                            as="h1"
+                            text={adminOnly ? "Вход для администратора" : mode === "login" ? "Вход в аккаунт" : registerStep === "form" ? "Регистрация" : "Подтвердите код"}
+                            className="text-3xl font-semibold tracking-tight text-[var(--color-text-main)] sm:text-4xl"
+                        />
+                        <p className="mt-3 text-sm text-[var(--color-text-secondary)]">
+                            {mode === "login"
+                                ? "Введите email и пароль."
+                                : registerStep === "form"
+                                    ? "Заполните данные, затем подтвердите регистрацию кодом из письма."
+                                    : `Мы отправили код на ${registerForm.email}.`}
+                        </p>
+                    </div>
+
+                    {mode === "login" ? (
+                        <div className="mt-8 space-y-5">
+                            <label className="block space-y-2">
+                                <span className="text-sm text-[var(--color-text-secondary)]">Email</span>
+                                <input
+                                    type="email"
+                                    value={loginForm.email}
+                                    onChange={(event) => setLoginForm((prev) => ({ ...prev, email: event.target.value }))}
+                                    placeholder="team@kapitsa.ru"
+                                    className={inputClassName}
+                                />
+                            </label>
+
+                            <label className="block space-y-2">
+                                <span className="text-sm text-[var(--color-text-secondary)]">Пароль</span>
+                                <div className="relative">
+                                    <input
+                                        type={showLoginPassword ? "text" : "password"}
+                                        value={loginForm.password}
+                                        onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))}
+                                        placeholder="Введите пароль"
+                                        className={`${inputClassName} pr-12`}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowLoginPassword((prev) => !prev)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]"
+                                    >
+                                        {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                    </button>
+                                </div>
+                            </label>
+
+                            <PrimaryButton
+                                active
+                                loading={loginLoading}
+                                loadingText="Входим..."
+                                leftIcon={<LogIn size={18} />}
+                                onClick={handleLogin}
+                                className="w-full justify-center"
+                            >
+                                Войти
+                            </PrimaryButton>
+
+                            {!adminOnly && <div className="text-center">
+                                <Link
+                                    to="/forgot_pass"
+                                    className="text-sm text-[var(--color-primary)] underline underline-offset-2"
+                                >
+                                    Забыли пароль?
+                                </Link>
+                            </div>}
+                        </div>
+                    ) : (
+                        <div className="mt-8 space-y-5">
+                            {registerStep === "form" ? (
+                                <>
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <label className="block space-y-2">
+                                            <span className="text-sm text-[var(--color-text-secondary)]">Имя</span>
+                                            <input
+                                                value={registerForm.first_name}
+                                                onChange={(event) => setRegisterForm((prev) => ({ ...prev, first_name: event.target.value }))}
+                                                placeholder="Анна"
+                                                className={inputClassName}
+                                            />
+                                        </label>
+
+                                        <label className="block space-y-2">
+                                            <span className="text-sm text-[var(--color-text-secondary)]">Фамилия</span>
+                                            <input
+                                                value={registerForm.last_name}
+                                                onChange={(event) => setRegisterForm((prev) => ({ ...prev, last_name: event.target.value }))}
+                                                placeholder="Иванова"
+                                                className={inputClassName}
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Отчество</span>
+                                        <input
+                                            value={registerForm.patronymic}
+                                            onChange={(event) => setRegisterForm((prev) => ({ ...prev, patronymic: event.target.value }))}
+                                            placeholder="Сергеевна"
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Телефон</span>
+                                        <input
+                                            value={registerForm.phone_number}
+                                            onChange={(event) => setRegisterForm((prev) => ({
+                                                ...prev,
+                                                phone_number: formatRussianPhone(event.target.value),
+                                            }))}
+                                            placeholder="+7 (800) 555-35-35"
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Email</span>
+                                        <input
+                                            type="email"
+                                            value={registerForm.email}
+                                            onChange={(event) => setRegisterForm((prev) => ({ ...prev, email: event.target.value }))}
+                                            placeholder="new-user@kapitsa.ru"
+                                            className={inputClassName}
+                                        />
+                                    </label>
+
+                                    <div className="grid gap-4 sm:grid-cols-2">
+                                        <label className="block space-y-2">
+                                            <span className="text-sm text-[var(--color-text-secondary)]">Пароль</span>
+                                            <div className="relative">
+                                                <input
+                                                    type={showRegisterPassword ? "text" : "password"}
+                                                    value={registerForm.password}
+                                                    onChange={(event) => setRegisterForm((prev) => ({ ...prev, password: event.target.value }))}
+                                                    placeholder="Минимум 6 символов"
+                                                    className={`${inputClassName} pr-12`}
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowRegisterPassword((prev) => !prev)}
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--color-text-secondary)]"
+                                                >
+                                                    {showRegisterPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                                </button>
+                                            </div>
+                                        </label>
+
+                                        <label className="block space-y-2">
+                                            <span className="text-sm text-[var(--color-text-secondary)]">Повтор пароля</span>
+                                            <input
+                                                type={showRegisterPassword ? "text" : "password"}
+                                                value={registerForm.password_confirmation}
+                                                onChange={(event) => setRegisterForm((prev) => ({ ...prev, password_confirmation: event.target.value }))}
+                                                placeholder="Повторите пароль"
+                                                className={inputClassName}
+                                            />
+                                        </label>
+                                    </div>
+
+                                    <label className="flex items-start gap-3 rounded-[24px] border border-[var(--color-border)] bg-[rgba(255,255,255,0.72)] px-4 py-4">
+                                        <input
+                                            type="checkbox"
+                                            checked={acceptedPersonalData}
+                                            onChange={(event) => setAcceptedPersonalData(event.target.checked)}
+                                            className="mt-1 h-4 w-4 rounded border-[var(--color-border)]"
+                                        />
+                                        <span className="text-sm text-[var(--color-text-secondary)]">
+                                            Нажимая на регистрацию, вы даёте согласие на обработку{" "}
+                                            <button
+                                                type="button"
+                                                onClick={downloadPersonalDataFile}
+                                                className="text-[var(--color-primary)] underline underline-offset-2"
+                                            >
+                                                персональных данных
+                                            </button>
+                                            .
+                                        </span>
+                                    </label>
+
+                                    <PrimaryButton
+                                        active
+                                        loading={registerLoading}
+                                        loadingText="Отправляем код..."
+                                        leftIcon={<MailCheck size={18} />}
+                                        onClick={handleRegister}
+                                        className="w-full justify-center"
+                                    >
+                                        Получить код
+                                    </PrimaryButton>
+                                </>
+                            ) : (
+                                <>
+                                    <label className="block space-y-2">
+                                        <span className="text-sm text-[var(--color-text-secondary)]">Код из письма</span>
+                                        <input
+                                            value={confirmCode}
+                                            onChange={(event) => setConfirmCode(event.target.value)}
+                                            placeholder="1234"
+                                            maxLength={4}
+                                            className={`${inputClassName} text-center text-2xl font-semibold tracking-[0.35em]`}
+                                        />
+                                    </label>
+
+                                    <PrimaryButton
+                                        active
+                                        loading={registerLoading}
+                                        loadingText="Подтверждаем..."
+                                        leftIcon={<UserPlus size={18} />}
+                                        onClick={handleRegisterConfirm}
+                                        className="w-full justify-center"
+                                    >
+                                        Завершить регистрацию
+                                    </PrimaryButton>
+
+                                    <OutlineButton
+                                        active
+                                        onClick={() => {
+                                            setRegisterStep("form");
+                                            setConfirmCode("");
+                                        }}
+                                        className="w-full justify-center"
+                                    >
+                                        Изменить данные
+                                    </OutlineButton>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    <div className="mt-6 flex justify-center">
+                        <Link to="/">
+                            <OutlineButton active>
+                                Назад на главную
+                            </OutlineButton>
+                        </Link>
+                    </div>
+                </motion.section>
+            </div>
+        </div>
+    );
+}

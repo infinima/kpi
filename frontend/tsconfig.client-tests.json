@@ -1,0 +1,41 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "src",
+    "types": []
+  },
+  "include": [
+    "src/shared/api/**/*.ts",
+    "src/shared/lib/queryClient.ts",
+    "src/entities/permission/**/*.ts",
+    "src/pages/event/viewMode.ts",
+    "src/entities/event/**/*.ts",
+    "src/entities/location/**/*.ts",
+    "src/entities/league/**/*.ts",
+    "src/entities/team/model/**/*.ts",
+    "src/shared/realtime/**/*.ts",
+    "src/shared/lib/table.ts",
+    "src/shared/lib/urlState.ts",
+    "src/shared/lib/confirmWithNotification.ts",
+    "src/shared/lib/qr.ts",
+    "src/shared/lib/authValidation.ts",
+    "src/pages/account/model/forms.ts",
+    "src/pages/account/model/mailingsSupport.ts",
+    "src/entities/results/model/**/*.ts",
+    "src/entities/show/model/**/*.ts",
+    "src/entities/team/api/**/*.ts",
+    "src/entities/session/model/session.ts",
+    "src/entities/auth/api/**/*.ts",
+    "src/entities/account/**/*.ts",
+    "src/entities/user/**/*.ts",
+    "src/entities/mailing/**/*.ts",
+    "src/entities/team/api.ts",
+    "src/entities/log/api/snapshot.ts",
+    "src/shared/lib/navigation.ts",
+    "src/pages/account/model/dashboard/**/*.ts",
+    "src/entities/maintenance/**/*.ts"
+  ]
+}

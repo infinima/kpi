@@ -1,0 +1,65 @@
+
+> typecheck
+> tsc --noEmit
+
+src/components/FudziRow.tsx(2,9): error TS2305: Module '"@/store"' has no exported member 'useEventsNav'.
+src/components/FudziRow.tsx(2,23): error TS2305: Module '"@/store"' has no exported member 'useSocketStore'.
+src/components/FudziRow.tsx(2,39): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/FudziRow.tsx(23,42): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/FudziRow.tsx(24,40): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/FudziRow.tsx(25,43): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/FudziRow.tsx(27,32): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/FudziRow.tsx(28,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/KvartalRow.tsx(2,9): error TS2305: Module '"@/store"' has no exported member 'useEventsNav'.
+src/components/KvartalRow.tsx(2,23): error TS2305: Module '"@/store"' has no exported member 'useSocketStore'.
+src/components/KvartalRow.tsx(2,39): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/KvartalRow.tsx(15,32): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/KvartalRow.tsx(16,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/components/layout/LogModal.tsx(2,10): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/layout/MenuBar/DesktopMenuBar.tsx(3,9): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/layout/MenuBar/MenuBar.tsx(2,19): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/layout/MenuBar/PhoneMenuBar.tsx(3,9): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/layout/PhotosModal.tsx(2,10): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/layout/UserLogModal.tsx(2,10): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/lk/UserRightsModal.tsx(48,18): error TS18047: 'payload' is possibly 'null'.
+src/components/modals/FinalNominationsModal.tsx(29,19): error TS18047: 'payload' is possibly 'null'.
+src/components/modals/TeamInfoModal.tsx(171,39): error TS2345: Argument of type 'TeamTableRowData | null' is not assignable to parameter of type 'TeamTableRowData'.
+  Type 'null' is not assignable to type 'TeamTableRowData'.
+src/components/RightsModal.tsx(2,10): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/services/CropModal.tsx(122,33): error TS2322: Type '{ image: string; crop: { x: number; y: number; }; zoom: number; aspect: number; objectFit: string; onCropChange: Dispatch<SetStateAction<{ x: number; y: number; }>>; onZoomChange: Dispatch<...>; onCropComplete: (_: Area, area: Area) => void; }' is not assignable to type 'IntrinsicAttributes & CropperProps'.
+  Property 'objectFit' does not exist on type 'IntrinsicAttributes & CropperProps'.
+src/components/services/NotificationCenter.tsx(105,34): error TS2339: Property 'secondaryActionText' does not exist on type '{ id: string; type: "error" | "warning" | "info" | "success"; text: string; actionText?: string | undefined; action?: (() => void) | undefined; duration?: number | undefined; }'.
+src/components/services/NotificationCenter.tsx(105,61): error TS2339: Property 'secondaryAction' does not exist on type '{ id: string; type: "error" | "warning" | "info" | "success"; text: string; actionText?: string | undefined; action?: (() => void) | undefined; duration?: number | undefined; }'.
+src/components/services/NotificationCenter.tsx(108,45): error TS2339: Property 'secondaryAction' does not exist on type '{ id: string; type: "error" | "warning" | "info" | "success"; text: string; actionText?: string | undefined; action?: (() => void) | undefined; duration?: number | undefined; }'.
+src/components/services/NotificationCenter.tsx(115,42): error TS2339: Property 'secondaryActionText' does not exist on type '{ id: string; type: "error" | "warning" | "info" | "success"; text: string; actionText?: string | undefined; action?: (() => void) | undefined; duration?: number | undefined; }'.
+src/components/services/NotificationCenter.tsx(148,21): error TS2322: Type 'Notification' is not assignable to type '{ id: string; type: "error" | "warning" | "info" | "success"; text: string; actionText?: string | undefined; action?: (() => void) | undefined; duration?: number | undefined; }'.
+  Types of property 'duration' are incompatible.
+    Type 'number | null | undefined' is not assignable to type 'number | undefined'.
+      Type 'null' is not assignable to type 'number | undefined'.
+src/components/TableLogsModal.tsx(5,10): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/UserCard.tsx(4,27): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/components/UserCard.tsx(7,26): error TS2307: Cannot find module '@/helpers/formatDate' or its corresponding type declarations.
+src/components/UserCard.tsx(8,24): error TS2307: Cannot find module '@/config/userForm' or its corresponding type declarations.
+src/components/UserCard.tsx(33,27): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/event/LeagueStageResultsPage.tsx(389,93): error TS2345: Argument of type '{ type: "fudzi-penalty"; teamId: number; penalty: number; width: number; x: number; y: number; }' is not assignable to parameter of type 'PopupState'.
+  Type '{ type: "fudzi-penalty"; teamId: number; penalty: number; width: number; x: number; y: number; }' is missing the following properties from type '{ type: "fudzi-penalty"; teamId: number; penalty: number; width: number; x: number; y: number; anchorLeft: number; anchorRight: number; anchorTop: number; anchorBottom: number; }': anchorLeft, anchorRight, anchorTop, anchorBottom
+src/pages/event/LeagueStageResultsPage.tsx(407,99): error TS2345: Argument of type '{ type: "fudzi-answer"; teamId: number; questionIndex: number; width: number; x: number; y: number; }' is not assignable to parameter of type 'PopupState'.
+  Type '{ type: "fudzi-answer"; teamId: number; questionIndex: number; width: number; x: number; y: number; }' is missing the following properties from type '{ type: "fudzi-answer"; teamId: number; questionIndex: number; width: number; x: number; y: number; anchorLeft: number; anchorRight: number; anchorTop: number; anchorBottom: number; }': anchorLeft, anchorRight, anchorTop, anchorBottom
+src/pages/event/LeagueStageResultsPage.tsx(611,93): error TS2345: Argument of type '{ type: "kvartaly-penalty"; teamId: number; penalty: number; width: number; x: number; y: number; }' is not assignable to parameter of type 'PopupState'.
+  Type '{ type: "kvartaly-penalty"; teamId: number; penalty: number; width: number; x: number; y: number; }' is missing the following properties from type '{ type: "kvartaly-penalty"; teamId: number; penalty: number; width: number; x: number; y: number; anchorLeft: number; anchorRight: number; anchorTop: number; anchorBottom: number; }': anchorLeft, anchorRight, anchorTop, anchorBottom
+src/pages/event/LeagueStageResultsPage.tsx(632,107): error TS2345: Argument of type '{ type: "kvartaly-answer"; teamId: number; questionNumber: number; correct: number; incorrect: number; width: number; x: number; y: number; }' is not assignable to parameter of type 'PopupState'.
+  Type '{ type: "kvartaly-answer"; teamId: number; questionNumber: number; correct: number; incorrect: number; width: number; x: number; y: number; }' is missing the following properties from type '{ type: "kvartaly-answer"; teamId: number; questionNumber: number; correct: number; incorrect: number; width: number; x: number; y: number; anchorLeft: number; anchorRight: number; anchorTop: number; anchorBottom: number; }': anchorLeft, anchorRight, anchorTop, anchorBottom
+src/pages/event/LeagueStageResultsPage.tsx(652,103): error TS2345: Argument of type '{ type: "kvartaly-bonus"; teamId: number; quarterIndex: number; finished: boolean; width: number; x: number; y: number; }' is not assignable to parameter of type 'PopupState'.
+  Type '{ type: "kvartaly-bonus"; teamId: number; quarterIndex: number; finished: boolean; width: number; x: number; y: number; }' is missing the following properties from type '{ type: "kvartaly-bonus"; teamId: number; quarterIndex: number; finished: boolean; width: number; x: number; y: number; anchorLeft: number; anchorRight: number; anchorTop: number; anchorBottom: number; }': anchorLeft, anchorRight, anchorTop, anchorBottom
+src/pages/LogsPage.tsx(132,10): error TS7023: 'shortJson' implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+src/pages/LogsPage.tsx(147,25): error TS7024: Function implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+src/pages/TablePage.tsx(2,10): error TS2305: Module '"@/store"' has no exported member 'useEventsNav'.
+src/pages/TablePage.tsx(2,24): error TS2305: Module '"@/store"' has no exported member 'useSocketStore'.
+src/pages/TablePage.tsx(2,40): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/pages/TablePage.tsx(31,32): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/TablePage.tsx(32,35): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/pages/TeamQrPage.tsx(4,20): error TS7016: Could not find a declaration file for module 'qrcode'. '/Users/mihailsilaev/WebstormProjects/kpi/frontend/node_modules/qrcode/lib/index.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/qrcode` if it exists or add a new declaration (.d.ts) file containing `declare module 'qrcode';`
+src/pages/UserPage.tsx(3,9): error TS2305: Module '"@/store"' has no exported member 'useUI'.
+src/pages/UserPage.tsx(7,25): error TS2307: Cannot find module '@/components/layout/FormModal' or its corresponding type declarations.
+src/pages/UserPage.tsx(8,24): error TS2307: Cannot find module '@/config/userForm' or its corresponding type declarations.

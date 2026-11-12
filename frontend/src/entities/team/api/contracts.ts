@@ -1,0 +1,18 @@
+export type TeamInfoDto = {
+    id: number;
+    league_id: number;
+    league_name?: string | null;
+    owner_user_id: number | null;
+    owner_full_name?: string | null;
+    owner_email?: string | null;
+    owner_phone_number?: string | null;
+    name: string;
+    school: string;
+    region: string;
+    meals_count: number;
+    maintainer_full_name?: string | null;
+    maintainer_activity?: string | null;
+    status: "IN_RESERVE" | "ON_CHECKING" | "ACCEPTED" | "ARRIVED" | "DOCUMENTS_SUBMITTED";
+    created_at: string;
+    updated_at: string;
+};

@@ -1,12 +1,12 @@
-import { Link } from "react-router-dom"
-import Background from "@/components/layout/Background"
-import PrimaryButton from "@/components/ui/PrimaryButton"
-import OutlineButton from "@/components/ui/OutlineButton"
-import AnimatedText from "@/components/ui/AnimatedText"
+import AnimatedText from "@/shared/ui/AnimatedText";
+import Background from "@/shared/ui/Background";
+import OutlineButton from "@/shared/ui/OutlineButton";
+import PrimaryButton from "@/shared/ui/PrimaryButton";
+import { Link } from "react-router-dom";
 
 type NotReadyPageProps = {
-    pageName: string
-}
+    pageName: string;
+};
 
 export default function NotReadyPage({ pageName }: NotReadyPageProps) {
     return (
@@ -45,5 +45,5 @@ export default function NotReadyPage({ pageName }: NotReadyPageProps) {
                 </div>
             </main>
         </div>
-    )
+    );
 }

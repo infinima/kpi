@@ -1,4 +1,5 @@
-import type { PermissionEntity, PermissionsResponse } from "@/store/useUserStore";
+import type { PermissionEntity, PermissionsResponse } from "../../entities/permission/model/permissions.js";
+import { hasAnyPermission } from "../../entities/permission/model/permissions.js";
 
 export type CollectionViewMode = "cards" | "table";
 export type CollectionEntity = "events" | "locations" | "leagues";
@@ -9,27 +10,8 @@ export const VIEW_MODE_PARAM: Record<CollectionEntity, string> = {
     leagues: "leagues_view",
 };
 
-const MANAGE_ACTIONS = new Set(["create", "update", "delete"]);
-
 export function canUseTableMode(rights: PermissionsResponse | undefined, entity: PermissionEntity) {
-    if (!rights) {
-        return false;
-    }
-
-    const entityRights = rights[entity];
-    if (!entityRights) {
-        return false;
-    }
-
-    const groups = [
-        entityRights.global,
-        ...Object.values(entityRights.ids ?? {}),
-        ...Object.values(entityRights.by_event ?? {}),
-        ...Object.values(entityRights.by_location ?? {}),
-        ...Object.values(entityRights.by_league ?? {}),
-    ];
-
-    return groups.some((actions) => Array.isArray(actions) && actions.some((action) => MANAGE_ACTIONS.has(action)));
+    return hasAnyPermission(rights, entity, ["create", "update", "delete"]);
 }
 
 export function getCollectionViewMode(
